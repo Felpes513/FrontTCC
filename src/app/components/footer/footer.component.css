@@ -1,0 +1,89 @@
+.footer {
+  background-color: #0e1a2b;
+  color: #ffffff;
+  font-size: 14px;
+  padding: 2rem 1rem 1rem;
+
+  .footer-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 1rem;
+
+    .footer-column {
+      flex: 1 1 200px;
+
+      h4 {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        font-size: 16px;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+
+        li {
+          margin-bottom: 0.3rem;
+
+          a {
+            color: #fff;
+            text-decoration: none;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+      }
+
+      &.logo h3 {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 0.3rem;
+      }
+
+      &.logo .linha {
+        display: inline-block;
+        width: 20px;
+        height: 3px;
+        background-color: #fdb813;
+        margin-left: 5px;
+      }
+
+      &.logo p {
+        margin-top: 0;
+      }
+    }
+  }
+
+  .footer-bottom {
+    text-align: center;
+    margin-top: 1rem;
+
+    .social-icons {
+      margin-bottom: 0.5rem;
+
+      i {
+        margin: 0 0.5rem;
+        font-size: 18px;
+        cursor: pointer;
+
+        &:hover {
+          color: #fdb813;
+        }
+      }
+    }
+
+    p {
+      font-size: 12px;
+      color: #ccc;
+    }
+  }
+}
+.logo-uscs {
+  width: 100px;
+  margin-bottom: 0.5rem;
+}
