@@ -1,20 +1,17 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { register } from 'swiper/element/bundle';
-
-// Registra os elementos customizados do Swiper
-register();
+import { SwiperModule } from 'swiper/angular';
+import { NavbarComponent } from '../navbar/navbar.component';
+import { FooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SwiperModule, NavbarComponent, FooterComponent],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css'],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  styleUrls: ['./home.component.css']
 })
-export class HomeComponent implements OnInit {
-
+export class HomeComponent {
   slides = [
     {
       title: 'Pesquisa & Inovação',
@@ -33,12 +30,4 @@ export class HomeComponent implements OnInit {
       content: 'Tenha a oportunidade de publicar seus resultados em revistas acadêmicas'
     }
   ];
-
-  constructor() {
-    console.log('HomeComponent criado');
-  }
-
-  ngOnInit(): void {
-    console.log('HomeComponent iniciado com slides:', this.slides);
-  }
 }

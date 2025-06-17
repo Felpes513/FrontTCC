@@ -7,28 +7,28 @@
       <p>à Plataforma de Iniciação Científica</p>
       <p>Acesse como:</p>
       <button>Professor(a)</button>
-      <button>Funcionário(a)</button>
+      <button routerLink="/secretaria">Funcionário(a)</button>
       <button>Aluno(a)</button>
     </div>
 
     <div class="swiper-wrapper">
-      <swiper-container
-        slides-per-view="1"
-        navigation="true"
-        pagination="true"
-        loop="true"
-        autoplay-delay="3000"
-        speed="600"
-        space-between="30">
-
-        <swiper-slide *ngFor="let slide of slides">
+      <swiper
+        [slidesPerView]="1"
+        [navigation]="true"
+        [pagination]="true"
+        [loop]="true"
+        [autoplay]="{ delay: 3000 }"
+        [speed]="600"
+        [spaceBetween]="30"
+        class="mySwiper"
+      >
+        <ng-template swiperSlide *ngFor="let slide of slides">
           <div class="slide-content">
             <h3>{{ slide.title }}</h3>
             <p>{{ slide.content }}</p>
           </div>
-        </swiper-slide>
-
-      </swiper-container>
+        </ng-template>
+      </swiper>
     </div>
   </div>
 </section>
@@ -38,15 +38,21 @@
   <div class="cards">
     <div class="card">
       <h3>1 - O que é</h3>
-      <p>A Iniciação Científica é uma oportunidade para alunos de graduação desenvolverem pesquisas acadêmicas sob orientação de professores experientes.</p>
+      <p>
+        A Iniciação Científica é uma oportunidade para alunos de graduação desenvolverem pesquisas acadêmicas sob orientação de professores experientes.
+      </p>
     </div>
     <div class="card">
       <h3>2 - Benefícios</h3>
-      <p>Desenvolvimento de habilidades de pesquisa, pensamento crítico, escrita acadêmica e preparação para pós-graduação e mercado de trabalho.</p>
+      <p>
+        Desenvolvimento de habilidades de pesquisa, pensamento crítico, escrita acadêmica e preparação para pós-graduação e mercado de trabalho.
+      </p>
     </div>
     <div class="card">
       <h3>3 - Como participar</h3>
-      <p>Alunos devem escolher uma área de interesse, encontrar um orientador e submeter um projeto através desta plataforma.</p>
+      <p>
+        Alunos devem escolher uma área de interesse, encontrar um orientador e submeter um projeto através desta plataforma.
+      </p>
     </div>
   </div>
 </section>

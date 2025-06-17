@@ -1,0 +1,52 @@
+.sidenav {
+  width: 250px;
+  background-color: #ffffff;
+  padding: 1rem;
+  height: 100vh;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  font-family: sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header .icon {
+  background-color: #2563eb;
+  color: white;
+  font-weight: bold;
+  border-radius: 10px;
+  padding: 10px 15px;
+  margin-right: 10px;
+}
+
+.header .role {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+nav a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #333;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
+  transition: background-color 0.2s ease;
+}
+
+nav a i {
+  margin-right: 12px;
+  width: 20px;
+  text-align: center;
+}
+
+nav a:hover,
+nav a.active {
+  background-color: #e8f0fe;
+  color: #2563eb;
+  font-weight: 500;
+}
