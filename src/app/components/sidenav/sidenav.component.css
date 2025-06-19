@@ -50,3 +50,15 @@ nav a.active {
   color: #2563eb;
   font-weight: 500;
 }
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.conteudo {
+  flex: 1;
+  padding: 20px;
+  background-color: #f4f6f8;
+  overflow-y: auto;
+}

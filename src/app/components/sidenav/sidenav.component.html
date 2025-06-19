@@ -1,21 +1,26 @@
 <app-navbar></app-navbar>
 
-<div class="sidenav">
+<div class="layout">
+  <div class="sidenav">
     <div class="header">
-        <div class="icon"></div>
-        <span class="role">Secretaria</span>
+      <div class="icon"></div>
+      <span class="role">Secretaria</span>
     </div>
 
-
     <nav>
-    <a routerLink="/dashboard" routerLinkActive="active"><i class="fas fa-home"></i> Dashboard</a>
-    <a routerLink="/presenca"><i class="fas fa-check-square"></i> Lista de Presença</a>
-    <a routerLink="/notificacoes"><i class="fas fa-bell"></i> Notificações</a>
-    <a routerLink="/projetos"><i class="fas fa-folder-plus"></i> Gerenciar Projetos</a>
-    <a routerLink="/alunos"><i class="fas fa-user-graduate"></i> Alunos</a>
-    <a routerLink="/email"><i class="fas fa-envelope"></i> Envio de E-mail</a>
-    <a routerLink="/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a>
+      <a routerLink="/dashboard" routerLinkActive="active"><i class="fas fa-home"></i> Dashboard</a>
+      <a routerLink="/presenca"><i class="fas fa-check-square"></i> Lista de Presença</a>
+      <a routerLink="/notificacoes"><i class="fas fa-bell"></i> Notificações</a>
+      <a [routerLink]="['/secretaria', 'projetos']" routerLinkActive="active"><i class="fas fa-folder-plus"></i> Gerenciar Projetos</a>
+      <a routerLink="/alunos"><i class="fas fa-user-graduate"></i> Alunos</a>
+      <a routerLink="/email"><i class="fas fa-envelope"></i> Envio de E-mail</a>
+      <a routerLink="/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a>
     </nav>
+  </div>
+
+  <div class="conteudo">
+    <router-outlet></router-outlet>
+  </div>
 </div>
 
 <app-footer></app-footer>
