@@ -1,0 +1,31 @@
+<div class="form-container">
+  <h2>Novo Projeto</h2>
+
+  <form (ngSubmit)="salvarProjeto()">
+    <label>Nome do Projeto</label>
+    <input type="text" [(ngModel)]="projeto.nomeProjeto" name="nomeProjeto" required />
+
+    <label>Campus</label>
+    <select [(ngModel)]="projeto.campus" name="campus" required>
+      <option value="">Selecione</option>
+      <option>Barcelona</option>
+      <option>Centro</option>
+      <option>Conceição</option>
+    </select>
+
+    <label>Orientador</label>
+    <select [(ngModel)]="projeto.orientadorId" name="orientadorId" required>
+      <option value="">Selecione</option>
+      <option *ngFor="let o of orientadores" [value]="o.id">{{ o.nome }}</option>
+    </select>
+
+    <label>Alunos</label>
+    <div *ngFor="let aluno of projeto.alunos; let i = index; trackBy: trackByIndex">
+    <input type="text" [(ngModel)]="projeto.alunos[i]" name="aluno{{i}}" />
+      <button type="button" (click)="removerCampoAluno(i)" *ngIf="projeto.alunos.length > 1">Remover</button>
+    </div>
+
+    <button type="button" (click)="adicionarCampoAluno()">+ Adicionar Aluno</button>
+    <button type="submit">Salvar Projeto</button>
+  </form>
+</div>

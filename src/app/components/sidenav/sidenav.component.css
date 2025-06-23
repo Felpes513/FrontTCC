@@ -1,3 +1,7 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
 .sidenav {
   width: 250px;
   background-color: #ffffff;
@@ -55,10 +59,9 @@ nav a.active {
   display: flex;
   min-height: 100vh;
 }
-
 .conteudo {
   flex: 1;
-  padding: 20px;
+  padding: 2rem;
   background-color: #f4f6f8;
   overflow-y: auto;
 }
