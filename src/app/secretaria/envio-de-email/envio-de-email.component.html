@@ -1,0 +1,24 @@
+<h2>Envio de Certificados por Projeto</h2>
+
+<table border="1" cellpadding="8">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Projeto</th>
+      <th>Orientador</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let projeto of projetos">
+      <td>{{ projeto.id }}</td>
+      <td>{{ projeto.nome_projeto }}</td>
+      <td>{{ projeto.orientador_nome || 'Não definido' }}</td>
+      <td>
+        <button (click)="enviarCertificados(projeto.id)">
+          <i class="fas fa-envelope"></i> Enviar Certificados
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
