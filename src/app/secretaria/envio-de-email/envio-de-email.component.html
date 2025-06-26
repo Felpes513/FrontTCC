@@ -1,24 +1,72 @@
-<h2>Envio de Certificados por Projeto</h2>
+<!-- envio-certificados.component.html -->
+<div class="container">
+  <div class="header">
+    <h1>Envio de Certificados por Projeto</h1>
+  </div>
 
-<table border="1" cellpadding="8">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Projeto</th>
-      <th>Orientador</th>
-      <th>Ações</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let projeto of projetos">
-      <td>{{ projeto.id }}</td>
-      <td>{{ projeto.nome_projeto }}</td>
-      <td>{{ projeto.orientador_nome || 'Não definido' }}</td>
-      <td>
-        <button (click)="enviarCertificados(projeto.id)">
-          <i class="fas fa-envelope"></i> Enviar Certificados
-        </button>
-      </td>
-    </tr>
-  </tbody>
-</table>
+  <!-- Mensagens de Erro e Sucesso -->
+  <div *ngIf="error" class="alert alert-error">
+    <span class="alert-icon">⚠️</span>
+    <span>{{ error }}</span>
+    <button class="alert-close" (click)="limparMensagens()">×</button>
+  </div>
+
+  <div *ngIf="success" class="alert alert-success">
+    <span class="alert-icon">✅</span>
+    <span>{{ success }}</span>
+    <button class="alert-close" (click)="limparMensagens()">×</button>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <span>Carregando...</span>
+  </div>
+
+  <!-- Botão Recarregar -->
+  <div class="actions">
+    <button 
+      class="btn btn-secondary" 
+      (click)="carregarProjetos()" 
+      [disabled]="loading">
+      🔄 Recarregar Projetos
+    </button>
+  </div>
+
+  <!-- Tabela de Projetos -->
+  <div class="table-container" *ngIf="!loading">
+    <table class="projects-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Projeto</th>
+          <th>Orientador</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let projeto of projetos; trackBy: trackByProjetoId">
+          <td>{{ projeto.id }}</td>
+          <td>{{ projeto.nome_projeto }}</td>
+          <td>{{ projeto.orientador_nome || 'Não informado' }}</td>
+          <td class="actions-cell">
+            <button 
+              class="btn btn-primary"
+              (click)="enviarCertificados(projeto.id, projeto.nome_projeto)"
+              [disabled]="loading"
+              title="Enviar certificados para todos os alunos deste projeto">
+              📧 Enviar Certificados
+            </button>
+          </td>
+        </tr>
+        
+        <!-- Linha de "sem dados" -->
+        <tr *ngIf="projetos.length === 0 && !loading">
+          <td colspan="4" class="no-data">
+            Nenhum projeto encontrado
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

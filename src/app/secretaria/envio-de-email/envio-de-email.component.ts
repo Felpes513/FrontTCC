@@ -1,16 +1,34 @@
+// envio-certificados.component.ts
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
+interface Projeto {
+  id: number;
+  nome_projeto: string;
+  orientador_nome: string;
+}
+
+interface ApiResponse {
+  mensagem?: string;
+  erro?: string;
+  certificados_enviados?: number;
+  total_alunos?: number;
+  erros?: string[];
+}
 
 @Component({
-  selector: 'app-envio-de-email',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './envio-de-email.component.html'
+  selector: 'envio-de-email',
+  templateUrl: './envio-de-email.component.html',
+  styleUrls: ['./envio-de-email.component.css']
 })
 export class EnvioDeEmailComponent implements OnInit {
-  projetos: any[] = [];
+  projetos: Projeto[] = [];
+  loading = false;
+  error: string | null = null;
+  success: string | null = null;
+  private apiUrl = 'http://localhost:5000/api'; // URL do seu Flask
 
   constructor(private http: HttpClient) {}
 
@@ -18,23 +36,88 @@ export class EnvioDeEmailComponent implements OnInit {
     this.carregarProjetos();
   }
 
-carregarProjetos() {
-  this.http.get<any[]>('http://localhost:5000/api/projetos')
-    .subscribe({
-      next: data => {
-        console.log('Projetos carregados:', data);
-        this.projetos = data;
-      },
-      error: err => console.error('Erro ao carregar projetos:', err)
-    });
+  carregarProjetos(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.http.get<Projeto[]>(`${this.apiUrl}/projetos`)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error('Erro ao carregar projetos:', error);
+          this.error = 'Erro ao carregar projetos. Verifique se o servidor está rodando.';
+          return of([]);
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.projetos = data;
+          this.loading = false;
+          if (this.projetos.length === 0) {
+            this.error = 'Nenhum projeto encontrado.';
+          }
+        },
+        error: (error) => {
+          this.loading = false;
+          this.error = 'Erro inesperado ao carregar projetos.';
+          console.error('Erro:', error);
+        }
+      });
   }
 
-  enviarCertificados(projetoId: number) {
-    this.http.post('http://localhost:5000/api/enviar-certificado', {
-      projeto_id: projetoId
-    }).subscribe({
-      next: (res: any) => alert(`✅ ${res.mensagem}`),
-      error: (err) => alert(`❌ Erro: ${err.error.erro || 'Erro ao enviar certificados.'}`)
-    });
+  enviarCertificados(projetoId: number, nomeProjeto: string): void {
+    if (confirm(`Deseja enviar certificados para todos os alunos do projeto "${nomeProjeto}"?`)) {
+      this.loading = true;
+      this.error = null;
+      this.success = null;
+
+      const payload = { projeto_id: projetoId };
+
+      this.http.post<ApiResponse>(`${this.apiUrl}/enviar-certificado`, payload)
+        .pipe(
+          catchError((error: HttpErrorResponse) => {
+            console.error('Erro ao enviar certificados:', error);
+            let errorMessage = 'Erro ao enviar certificados.';
+            
+            if (error.error && error.error.erro) {
+              errorMessage = error.error.erro;
+            } else if (error.status === 0) {
+              errorMessage = 'Erro de conexão. Verifique se o servidor está rodando.';
+            }
+            
+            this.error = errorMessage;
+            return of({ erro: errorMessage });
+          })
+        )
+        .subscribe({
+          next: (response) => {
+            this.loading = false;
+            
+            if (response.erro) {
+              this.error = response.erro;
+            } else if (response.mensagem) {
+              this.success = response.mensagem;
+              
+              if (response.erros && response.erros.length > 0) {
+                this.success += ` Alguns erros ocorreram: ${response.erros.join(', ')}`;
+              }
+              
+              // Limpar mensagem de sucesso após 5 segundos
+              setTimeout(() => {
+                this.success = null;
+              }, 5000);
+            }
+          },
+          error: (error) => {
+            this.loading = false;
+            this.error = 'Erro inesperado ao enviar certificados.';
+            console.error('Erro:', error);
+          }
+        });
+    }
+  }
+
+  limparMensagens(): void {
+    this.error = null;
+    this.success = null;
   }
 }
