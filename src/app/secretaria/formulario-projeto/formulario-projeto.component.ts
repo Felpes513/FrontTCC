@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ProjetoService } from '../projeto.service';
+import { ProjetoService, ProjetoCadastro, Aluno, ProjetoDetalhado } from '../projeto.service';
 
 @Component({
   selector: 'app-formulario-projeto',
@@ -15,18 +15,13 @@ export class FormularioProjetoComponent implements OnInit {
   projeto = {
     nomeProjeto: '',
     campus: '',
-    orientadorId: '',
-    alunos: ['']
+    orientadorNome: '',
+    orientadorEmail: '',
+    alunos: [{ nome: '', email: '' }] as Aluno[]
   };
 
   edicao = false;
   idProjeto!: number;
-
-  orientadores = [
-    { id: '1', nome: 'Profa. Magda ' },
-    { id: '2', nome: 'Prof. Bognar' },
-    { id: '3', nome: 'Profa. Camininha' }
-  ];
 
   constructor(
     private router: Router,
@@ -39,12 +34,15 @@ export class FormularioProjetoComponent implements OnInit {
     console.log('ID do projeto:', id);
     if (id) {
       this.projetoService.getProjetoPorId(+id).subscribe({
-        next: (projeto) => {
+        next: (projeto: ProjetoDetalhado) => {
           this.projeto = {
             nomeProjeto: projeto.nomeProjeto,
             campus: projeto.campus,
-            orientadorId: projeto.orientador?.id,
-            alunos: projeto.alunos.map((a: any) => a.nome)
+            orientadorNome: projeto.orientador?.nome || '',
+            orientadorEmail: projeto.orientador?.email || '',
+            alunos: projeto.alunos?.length > 0
+              ? projeto.alunos.map((a) => ({ nome: a.nome, email: a.email }))
+              : [{ nome: '', email: '' }]
           };
           this.edicao = true;
           this.idProjeto = +id;
@@ -55,32 +53,68 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   salvarProjeto() {
-    const payload = {
+    if (!this.projeto.nomeProjeto.trim()) {
+      alert('Nome do projeto é obrigatório');
+      return;
+    }
+
+    if (!this.projeto.orientadorNome.trim()) {
+      alert('Nome do orientador é obrigatório');
+      return;
+    }
+
+    const alunosValidos = this.projeto.alunos.filter(aluno =>
+      aluno.nome.trim() !== ''
+    );
+
+    if (alunosValidos.length === 0) {
+      alert('Pelo menos um aluno deve ser cadastrado');
+      return;
+    }
+
+    const alunosSemEmail = alunosValidos.filter(aluno => !aluno.email.trim());
+    if (alunosSemEmail.length > 0) {
+      alert('Todos os alunos devem ter email preenchido');
+      return;
+    }
+
+    const payload: ProjetoCadastro = {
       nomeProjeto: this.projeto.nomeProjeto,
       campus: this.projeto.campus,
-      orientadorId: this.projeto.orientadorId,
-      nomesAlunos: this.projeto.alunos.filter(a => a.trim() !== '')
+      orientador: {
+        nome: this.projeto.orientadorNome,
+        email: this.projeto.orientadorEmail
+      },
+      alunos: alunosValidos
     };
+
+    console.log('Payload enviado:', payload);
 
     const acao = this.edicao
       ? this.projetoService.atualizarProjeto(this.idProjeto, payload)
       : this.projetoService.cadastrarProjeto(payload);
 
     acao.subscribe({
-      next: () => {
+      next: (response) => {
+        console.log('Resposta da API:', response);
         alert(this.edicao ? 'Projeto atualizado com sucesso!' : 'Projeto criado!');
         this.router.navigate(['/secretaria/projetos']);
       },
-      error: () => alert('Erro ao salvar projeto')
+      error: (error) => {
+        console.error('Erro ao salvar projeto:', error);
+        alert('Erro ao salvar projeto');
+      }
     });
   }
 
   adicionarCampoAluno() {
-    this.projeto.alunos.push('');
+    this.projeto.alunos.push({ nome: '', email: '' });
   }
 
   removerCampoAluno(index: number) {
-    this.projeto.alunos.splice(index, 1);
+    if (this.projeto.alunos.length > 1) {
+      this.projeto.alunos.splice(index, 1);
+    }
   }
 
   trackByIndex(index: number): number {

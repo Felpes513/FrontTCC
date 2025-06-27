@@ -1,5 +1,6 @@
 // envio-certificados.component.ts
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common'; // ✅ Adicione esta importação
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -20,6 +21,8 @@ interface ApiResponse {
 
 @Component({
   selector: 'envio-de-email',
+  standalone: true, // ✅ Necessário para usar imports
+  imports: [CommonModule], // ✅ Adicione o CommonModule aqui
   templateUrl: './envio-de-email.component.html',
   styleUrls: ['./envio-de-email.component.css']
 })
@@ -28,12 +31,17 @@ export class EnvioDeEmailComponent implements OnInit {
   loading = false;
   error: string | null = null;
   success: string | null = null;
-  private apiUrl = 'http://localhost:5000/api'; // URL do seu Flask
+  private apiUrl = 'http://localhost:5000/api';
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.carregarProjetos();
+  }
+
+  // Método para otimizar o trackBy do *ngFor
+  trackByProjetoId(index: number, projeto: Projeto): number {
+    return projeto.id;
   }
 
   carregarProjetos(): void {
@@ -85,7 +93,7 @@ export class EnvioDeEmailComponent implements OnInit {
             }
             
             this.error = errorMessage;
-            return of({ erro: errorMessage });
+            return of({ erro: errorMessage } as ApiResponse);
           })
         )
         .subscribe({
@@ -101,7 +109,6 @@ export class EnvioDeEmailComponent implements OnInit {
                 this.success += ` Alguns erros ocorreram: ${response.erros.join(', ')}`;
               }
               
-              // Limpar mensagem de sucesso após 5 segundos
               setTimeout(() => {
                 this.success = null;
               }, 5000);

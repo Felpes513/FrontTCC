@@ -1,28 +1,78 @@
 <div class="form-container">
-  <h2>Novo Projeto</h2>
+  <h2>{{ edicao ? 'Editar Projeto' : 'Novo Projeto' }}</h2>
 
   <form (ngSubmit)="salvarProjeto()">
-    <label>Nome do Projeto</label>
-    <input type="text" [(ngModel)]="projeto.nomeProjeto" name="nomeProjeto" required />
+    <!-- Nome do Projeto -->
+    <label for="nomeProjeto">Nome do Projeto</label>
+    <input
+      id="nomeProjeto"
+      type="text"
+      [(ngModel)]="projeto.nomeProjeto"
+      name="nomeProjeto"
+      required
+    />
 
-    <label>Campus</label>
-    <select [(ngModel)]="projeto.campus" name="campus" required>
+    <!-- Campus -->
+    <label for="campus">Campus</label>
+    <select
+      id="campus"
+      [(ngModel)]="projeto.campus"
+      name="campus"
+      required
+    >
       <option value="">Selecione</option>
       <option>Barcelona</option>
       <option>Centro</option>
       <option>Conceição</option>
     </select>
 
-    <label>Orientador</label>
-    <select [(ngModel)]="projeto.orientadorId" name="orientadorId" required>
-      <option value="">Selecione</option>
-      <option *ngFor="let o of orientadores" [value]="o.id">{{ o.nome }}</option>
-    </select>
+    <!-- Nome do Orientador -->
+    <label for="orientadorNome">Nome do Orientador</label>
+    <input
+      id="orientadorNome"
+      type="text"
+      [(ngModel)]="projeto.orientadorNome"
+      name="orientadorNome"
+      required
+    />
 
+    <!-- Email do Orientador -->
+    <label for="orientadorEmail">Email do Orientador</label>
+    <input
+      id="orientadorEmail"
+      type="email"
+      [(ngModel)]="projeto.orientadorEmail"
+      name="orientadorEmail"
+      required
+    />
+
+    <!-- Alunos -->
     <label>Alunos</label>
-    <div *ngFor="let aluno of projeto.alunos; let i = index; trackBy: trackByIndex">
-    <input type="text" [(ngModel)]="projeto.alunos[i]" name="aluno{{i}}" />
-      <button type="button" (click)="removerCampoAluno(i)" *ngIf="projeto.alunos.length > 1">Remover</button>
+    <div
+      *ngFor="let aluno of projeto.alunos; let i = index; trackBy: trackByIndex"
+      class="aluno-item"
+    >
+      <input
+        type="text"
+        placeholder="Nome do aluno"
+        [(ngModel)]="projeto.alunos[i].nome"
+        [name]="'alunoNome' + i"
+        required
+      />
+      <input
+        type="email"
+        placeholder="Email do aluno"
+        [(ngModel)]="projeto.alunos[i].email"
+        [name]="'alunoEmail' + i"
+        required
+      />
+      <button
+        type="button"
+        (click)="removerCampoAluno(i)"
+        *ngIf="projeto.alunos.length > 1"
+      >
+        Remover
+      </button>
     </div>
 
     <button type="button" (click)="adicionarCampoAluno()">+ Adicionar Aluno</button>

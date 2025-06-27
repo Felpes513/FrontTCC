@@ -1,34 +1,43 @@
 <div class="projects-container">
-    <div class="header">
-        <h2>Meus Projetos</h2>
-        <div class="filters">
-            <input type="text" placeholder="Buscar Projeto" [(ngModel)]="filtro" />
-            <button class="btn-add" [routerLink]="[ '/secretaria/projetos/novo']">+ Adicionar Projeto</button>
-        </div>
-    </div>
-
-<div class="card-grid">
-  <div *ngFor="let projeto of projetosFiltrados(); let i = index" class="card">
-    <div class="progress-bar" [ngStyle]="{ 'width': simularProgresso(i) + '%', 'background': getCor(i) }"></div>
-
-    <div class="card-body">
-      <h3>{{ projeto.nomeProjeto }}</h3>
-      <div class="chips">
-        <span class="chip">{{ projeto.nomeOrientador }}</span>
-        <span class="chip" *ngFor="let aluno of projeto.nomesAlunos">{{ aluno }}</span>
-      </div>
-      <p class="data">Campus: {{ projeto.campus }}</p>
-      <p class="update">Máx. alunos: {{ projeto.quantidadeMaximaAlunos }}</p>
-    </div>
-
-    <div class="card-actions">
-      <a [routerLink]="['/secretaria/projetos/editar', projeto.id]">
-        <i class="fas fa-edit"></i> Editar
-      </a>
-      <button (click)="excluirProjeto(projeto.id)" class="btn-delete">
-        <i class="fas fa-trash-alt"></i> Excluir
-      </button>
+  <div class="header">
+    <h2>Meus Projetos</h2>
+    <div class="filters">
+      <input type="text" placeholder="Buscar Projeto" [(ngModel)]="filtro" />
+      <button class="btn-add" [routerLink]="['/secretaria/projetos/novo']">+ Adicionar Projeto</button>
     </div>
   </div>
-</div>
+
+  <div class="card-grid">
+    <div *ngFor="let projeto of projetosFiltrados(); let i = index" class="card">
+      <div class="progress-bar" [ngStyle]="{ 'width': simularProgresso(i) + '%', 'background': getCor(i) }"></div>
+
+      <div class="card-body">
+        <h3>{{ projeto.nomeProjeto }}</h3>
+        <div class="chips">
+          <span class="chip">{{ projeto.nomeOrientador }}</span>
+          <span class="chip" *ngFor="let aluno of projeto.nomesAlunos">{{ aluno }}</span>
+        </div>
+
+        <p class="data">Campus: {{ projeto.campus }}</p>
+        <p class="update">Quantidade de alunos: {{ projeto.nomesAlunos.length }}</p>
+        
+        <!-- DEBUG: Mostrar o ID do projeto - REMOVA DEPOIS DE TESTAR -->
+        <p class="debug" style="color: red; font-size: 12px;">
+          Debug - ID: {{ projeto.id || 'SEM ID' }}
+        </p>
+      </div>
+
+      <div class="card-actions">
+        <!-- Botão de editar -->
+        <button (click)="editarProjeto(projeto.id)" class="btn-edit">
+        <i class="fas fa-edit"></i> Editar
+        </button>
+        
+        <!-- Botão de excluir -->
+        <button (click)="excluirProjeto(projeto.id)" class="btn-delete">
+          <i class="fas fa-trash-alt"></i> Excluir
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
