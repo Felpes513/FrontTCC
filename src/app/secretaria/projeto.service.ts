@@ -69,7 +69,6 @@ export class ProjetoService {
 
   constructor(private http: HttpClient) {}
 
-  // ✅ Criar projeto com base nos IDs
 cadastrarProjeto(projeto: ProjetoCadastro): Observable<any> {
   return this.http.post(this.apiUrl, projeto);
 }
