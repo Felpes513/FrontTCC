@@ -2,42 +2,99 @@
   <div class="header">
     <h2>Meus Projetos</h2>
     <div class="filters">
-      <input type="text" placeholder="Buscar Projeto" [(ngModel)]="filtro" />
-      <button class="btn-add" [routerLink]="['/secretaria/projetos/novo']">+ Adicionar Projeto</button>
+      <input
+        type="text"
+        placeholder="Buscar por projeto, orientador ou campus"
+        [(ngModel)]="filtro"
+        class="search-input"
+      />
+      <button class="btn-reload" (click)="recarregar()" [disabled]="carregando">
+        📱 Recarregar
+      </button>
+      <button class="btn-add" [routerLink]="['/secretaria/projetos/novo']">
+        + Adicionar Projeto
+      </button>
     </div>
   </div>
 
-  <div class="card-grid">
-    <div *ngFor="let projeto of projetosFiltrados(); let i = index" class="card">
+  <!-- ✅ INDICADOR DE CARREGAMENTO -->
+  <div *ngIf="carregando" class="loading">
+    <p>🔄 Carregando projetos...</p>
+  </div>
+
+  <!-- ✅ MENSAGEM DE ERRO -->
+  <div *ngIf="erro" class="error-message">
+    <p>⚠️ {{ erro }}</p>
+    <button class="btn-retry" (click)="recarregar()">Tentar novamente</button>
+  </div>
+
+  <!-- ✅ GRID DOS PROJETOS -->
+  <div *ngIf="!carregando && !erro" class="card-grid">
+    <div *ngFor="let projeto of projetosFiltrados(); let i = index; trackBy: trackByFn" class="card">
       <div class="progress-bar" [ngStyle]="{ 'width': simularProgresso(i) + '%', 'background': getCor(i) }"></div>
 
       <div class="card-body">
         <h3>{{ projeto.nomeProjeto }}</h3>
-        <div class="chips">
-          <span class="chip">{{ projeto.nomeOrientador }}</span>
-          <span class="chip" *ngFor="let aluno of projeto.nomesAlunos">{{ aluno }}</span>
+
+        <!-- ✅ INFORMAÇÕES DO ORIENTADOR -->
+        <div class="orientador-info">
+          <strong>Orientador:</strong>
+          <span [class.orientador-vazio]="!temOrientador(projeto)">
+            {{ getOrientadorNome(projeto) }}
+          </span>
         </div>
 
-        <p class="data">Campus: {{ projeto.campus }}</p>
-        <p class="update">Quantidade de alunos: {{ projeto.nomesAlunos.length }}</p>
-        
-        <!-- DEBUG: Mostrar o ID do projeto - REMOVA DEPOIS DE TESTAR -->
-        <p class="debug" style="color: red; font-size: 12px;">
-          Debug - ID: {{ projeto.id || 'SEM ID' }}
-        </p>
+        <!-- ✅ INFORMAÇÕES DO CAMPUS -->
+        <div class="campus-info">
+          <strong>Campus:</strong> {{ projeto.campus }}
+        </div>
+
+        <!-- ✅ QUANTIDADE DE ALUNOS -->
+        <div class="alunos-info">
+          <strong>Quantidade de alunos:</strong>
+          <span [class.sem-alunos]="!temAlunos(projeto)">
+            {{ getQuantidadeAlunos(projeto) }}
+          </span>
+          <span *ngIf="!temAlunos(projeto)" class="aviso"> (nenhum aluno cadastrado)</span>
+        </div>
+
+        <!-- ✅ LISTA DE ALUNOS (quando existir) -->
+        <div class="alunos-lista" *ngIf="temAlunos(projeto)">
+          <strong>Alunos:</strong>
+          <div class="chips">
+            <span class="chip" *ngFor="let aluno of projeto.nomesAlunos">
+              👨‍🎓 {{ aluno }}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div class="card-actions">
-        <!-- Botão de editar -->
         <button (click)="editarProjeto(projeto.id)" class="btn-edit">
-        <i class="fas fa-edit"></i> Editar
+          ✏️ Editar
         </button>
-        
-        <!-- Botão de excluir -->
         <button (click)="excluirProjeto(projeto.id)" class="btn-delete">
-          <i class="fas fa-trash-alt"></i> Excluir
+          🗑️ Excluir
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- ✅ QUANDO NÃO HÁ PROJETOS -->
+  <div *ngIf="!carregando && !erro && projetos.length === 0" class="no-projects">
+    <h3>📁 Nenhum projeto encontrado</h3>
+    <p>Comece criando seu primeiro projeto!</p>
+    <button class="btn-add" [routerLink]="['/secretaria/projetos/novo']">
+      + Criar primeiro projeto
+    </button>
+  </div>
+
+  <!-- ✅ QUANDO NÃO HÁ RESULTADOS DE BUSCA -->
+  <div *ngIf="!carregando && !erro && projetos.length > 0 && projetosFiltrados().length === 0" class="no-results">
+    <h3>🔍 Nenhum resultado encontrado</h3>
+    <p>Tente ajustar os termos da sua busca.</p>
+    <button class="btn-clear-filter" (click)="filtro = ''">
+      ❌ Limpar filtro
+    </button>
   </div>
 </div>

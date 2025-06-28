@@ -48,10 +48,7 @@
 
     <!-- Alunos -->
     <label>Alunos</label>
-    <div
-      *ngFor="let aluno of projeto.alunos; let i = index; trackBy: trackByIndex"
-      class="aluno-item"
-    >
+    <div *ngFor="let aluno of projeto.alunos; let i = index; trackBy: trackByIndex" class="aluno-item">
       <input
         type="text"
         placeholder="Nome do aluno"
@@ -66,11 +63,7 @@
         [name]="'alunoEmail' + i"
         required
       />
-      <button
-        type="button"
-        (click)="removerCampoAluno(i)"
-        *ngIf="projeto.alunos.length > 1"
-      >
+      <button type="button" (click)="removerCampoAluno(i)" *ngIf="projeto.alunos.length > 1">
         Remover
       </button>
     </div>

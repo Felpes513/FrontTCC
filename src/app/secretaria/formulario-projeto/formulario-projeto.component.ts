@@ -31,7 +31,6 @@ export class FormularioProjetoComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    console.log('ID do projeto:', id);
     if (id) {
       this.projetoService.getProjetoPorId(+id).subscribe({
         next: (projeto: ProjetoDetalhado) => {
@@ -53,28 +52,15 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   salvarProjeto() {
-    if (!this.projeto.nomeProjeto.trim()) {
-      alert('Nome do projeto é obrigatório');
+    if (!this.projeto.nomeProjeto.trim() || !this.projeto.orientadorNome.trim()) {
+      alert('Nome do projeto e do orientador são obrigatórios.');
       return;
     }
 
-    if (!this.projeto.orientadorNome.trim()) {
-      alert('Nome do orientador é obrigatório');
-      return;
-    }
-
-    const alunosValidos = this.projeto.alunos.filter(aluno =>
-      aluno.nome.trim() !== ''
-    );
+    const alunosValidos = this.projeto.alunos.filter(aluno => aluno.nome.trim() && aluno.email.trim());
 
     if (alunosValidos.length === 0) {
-      alert('Pelo menos um aluno deve ser cadastrado');
-      return;
-    }
-
-    const alunosSemEmail = alunosValidos.filter(aluno => !aluno.email.trim());
-    if (alunosSemEmail.length > 0) {
-      alert('Todos os alunos devem ter email preenchido');
+      alert('Pelo menos um aluno válido deve ser informado.');
       return;
     }
 
@@ -88,15 +74,12 @@ export class FormularioProjetoComponent implements OnInit {
       alunos: alunosValidos
     };
 
-    console.log('Payload enviado:', payload);
-
     const acao = this.edicao
       ? this.projetoService.atualizarProjeto(this.idProjeto, payload)
       : this.projetoService.cadastrarProjeto(payload);
 
     acao.subscribe({
-      next: (response) => {
-        console.log('Resposta da API:', response);
+      next: () => {
         alert(this.edicao ? 'Projeto atualizado com sucesso!' : 'Projeto criado!');
         this.router.navigate(['/secretaria/projetos']);
       },
