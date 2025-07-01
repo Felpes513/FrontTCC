@@ -1,45 +1,455 @@
-.login-container {
-  width: 300px;
-  margin: 100px auto;
-  background: #f2f2f2;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+/* Reset e variáveis CSS */
+:root {
+  --primary-color: #1976d2;
+  --primary-hover: #1565c0;
+  --secondary-color: #f39c12;
+  --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --card-background: rgba(255, 255, 255, 0.95);
+  --text-color: #2c3e50;
+  --input-border: #e0e0e0;
+  --input-focus: #1976d2;
+  --shadow-light: 0 8px 32px rgba(31, 38, 135, 0.37);
+  --shadow-hover: 0 15px 35px rgba(31, 38, 135, 0.2);
+  --border-radius: 16px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.login-container h2 {
-  margin-bottom: 20px;
-  text-align: center;
+/* Garantir centralização global */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-.login-container label {
-  display: block;
-  margin: 10px 0 5px;
+/* Background da página */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--background-gradient);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.login-container input {
+/* Garantir que o container pai também esteja centralizado */
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
   width: 100%;
-  padding: 8px;
-  margin-bottom: 15px;
+  padding: 20px;
   box-sizing: border-box;
 }
 
-.login-container button {
+/* Regra específica para o Angular - caso o componente não ocupe toda a tela */
+app-login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
   width: 100%;
-  padding: 10px;
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
-.login-container button:hover {
-  background-color: #1565c0;
+/* Container principal do login */
+.login-container {
+  width: 420px;
+  max-width: 90vw;
+  background: var(--card-background);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 40px 35px 35px 35px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-light);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
 }
 
-.erro {
-  margin-top: 10px;
-  color: red;
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.login-container:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Logo */
+.logo-USCS {
+  display: block;
+  margin: 0 auto 30px auto;
+  max-width: 120px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  transition: var(--transition);
+}
+
+.logo-USCS:hover {
+  transform: scale(1.05);
+}
+
+/* Título */
+.login-container h2 {
+  margin-bottom: 8px;
   text-align: center;
+  color: var(--text-color);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+/* Subtítulo */
+.subtitle {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 30px;
+  font-weight: 400;
+}
+
+/* Input Groups */
+.input-group {
+  margin-bottom: 20px;
+}
+
+/* Labels */
+.login-container label {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Password Container */
+.password-container {
+  position: relative;
+}
+
+/* Inputs */
+.login-container input[type="email"],
+.login-container input[type="password"],
+.login-container input[type="text"] {
+  width: 100%;
+  padding: 15px 20px;
+  margin: 0;
+  box-sizing: border-box;
+  border: 2px solid var(--input-border);
+  border-radius: 12px;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  transition: var(--transition);
+  outline: none;
+}
+
+.password-container input {
+  padding-right: 50px;
+}
+
+.login-container input:focus {
+  border-color: var(--input-focus);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+  transform: translateY(-2px);
+}
+
+.login-container input::placeholder {
+  color: #999;
+  opacity: 0.7;
+}
+
+/* Toggle Password Button */
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  opacity: 0.6;
+  transition: var(--transition);
+}
+
+.toggle-password:hover {
+  opacity: 1;
+}
+
+/* Field Errors */
+.field-error {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+/* Form Options */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 25px 0;
+  font-size: 14px;
+}
+
+/* Remember Me Checkbox */
+.remember-me {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-me input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--input-border);
+  border-radius: 4px;
+  margin-right: 8px;
+  position: relative;
+  transition: var(--transition);
+}
+
+.remember-me input:checked + .checkmark {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.remember-me input:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  top: -2px;
+  left: 2px;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Forgot Password Link */
+.forgot-password {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.forgot-password:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* Botões */
+.btn-primary, .btn-secondary {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+  color: white;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.btn-primary::before, .btn-secondary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover, .btn-secondary:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 25px rgba(25, 118, 210, 0.3);
+}
+
+.btn-secondary:hover {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 8px 25px rgba(25, 118, 210, 0.2);
+}
+
+.btn-primary:hover::before, .btn-secondary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:active, .btn-secondary:active {
+  transform: translateY(0);
+}
+
+/* Loader no botão */
+.btn-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Divider */
+.divider {
+  text-align: center;
+  margin: 25px 0;
+  position: relative;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--input-border);
+}
+
+.divider span {
+  background: var(--card-background);
+  padding: 0 15px;
+  color: #666;
+  font-size: 14px;
+  position: relative;
+}
+
+/* Mensagem de erro */
+.erro {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  color: #e74c3c;
+  text-align: center;
+  font-weight: 500;
+  padding: 12px;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #e74c3c;
+  animation: slideIn 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.error-icon {
+  font-size: 16px;
+}
+
+/* Footer */
+.login-footer {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.login-footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+  .login-container {
+    width: 100%;
+    margin: 20px;
+    padding: 30px 25px;
+  }
+
+  .login-container h2 {
+    font-size: 24px;
+  }
+
+  .logo-USCS {
+    max-width: 100px;
+  }
+}
+
+/* Estados de loading e disabled */
+.btn-primary:disabled, .btn-secondary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  color: #666;
+}
+
+.btn-primary:disabled:hover, .btn-secondary:disabled:hover {
+  box-shadow: none;
+  transform: none;
+  background: #ccc;
+}
+
+/* Animação de entrada */
+.login-container {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

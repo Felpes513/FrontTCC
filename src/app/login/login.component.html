@@ -1,27 +1,83 @@
 <div class="login-container">
-  <h2>Login da Secretaria</h2>
+  <img src="/public/assets/Logo.png" alt="Logo Universidade Municipal São Caetano do Sul" class="logo-USCS" />
+  <h2>Bem vindo!</h2>
+  <p class="subtitle">Acesso para {{ perfil === 'aluno' ? 'Alunos' : perfil === 'orientador' ? 'Orientadores' : 'Secretaria' }}</p>
 
   <form (ngSubmit)="login()" #form="ngForm">
-    <label for="email">E-mail</label>
-    <input
-      type="email"
-      id="email"
-      name="email"
-      [(ngModel)]="email"
-      required
-    />
+    <div class="input-group">
+      <label for="email">E-mail</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        [(ngModel)]="email"
+        placeholder="seu.email@exemplo.com"
+        required
+        #emailInput="ngModel"
+      />
+      <div class="field-error" *ngIf="emailInput.invalid && emailInput.touched">
+        E-mail é obrigatório e deve ser válido
+      </div>
+    </div>
 
-    <label for="senha">Senha</label>
-    <input
-      type="password"
-      id="senha"
-      name="senha"
-      [(ngModel)]="senha"
-      required
-    />
+    <div class="input-group">
+      <label for="senha">Senha</label>
+      <div class="password-container">
+        <input
+          [type]="showPassword ? 'text' : 'password'"
+          id="senha"
+          name="senha"
+          [(ngModel)]="senha"
+          placeholder="Digite sua senha"
+          required
+          #senhaInput="ngModel"
+        />
+        <button
+          type="button"
+          class="toggle-password"
+          (click)="togglePassword()"
+          aria-label="Mostrar/ocultar senha"
+        >
+          <i class="icon" [class.show]="showPassword">👁️</i>
+        </button>
+      </div>
+      <div class="field-error" *ngIf="senhaInput.invalid && senhaInput.touched">
+        Senha é obrigatória
+      </div>
+    </div>
 
-    <button type="submit" [disabled]="form.invalid">Entrar</button>
+    <div class="form-options">
+      <label class="remember-me">
+        <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe">
+        <span class="checkmark"></span>
+        Lembrar de mim
+      </label>
+      <a href="#" class="forgot-password" (click)="forgotPassword($event)">
+        Esqueceu a senha?
+      </a>
+    </div>
 
-    <div class="erro" *ngIf="erro">{{ erro }}</div>
+    <button type="submit" class="btn-primary" [disabled]="form.invalid">
+      <span class="btn-text">Entrar</span>
+      <div class="btn-loader" *ngIf="isLoading"></div>
+    </button>
+
+    <div class="erro" *ngIf="erro">
+      <i class="error-icon">⚠️</i>
+      {{ erro }}
+    </div>
   </form>
+
+  <div class="divider">
+    <span>ou</span>
+  </div>
+
+  <button type="button" class="btn-secondary" (click)="goToRegister()" *ngIf="perfil !== 'secretaria'">
+    <i class="register-icon">👤</i>
+    Criar nova conta
+  </button>
+
+  <div class="login-footer">
+    <p>Precisa de ajuda? <a href="#" (click)="contactSupport($event)">Entre em contato</a></p>
+  </div>
 </div>

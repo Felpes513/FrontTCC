@@ -17,6 +17,11 @@ export class LoginComponent {
   erro: string | null = null;
   perfil: 'aluno' | 'orientador' | 'secretaria' = 'aluno';
 
+  // Novas propriedades adicionadas
+  showPassword: boolean = false;
+  rememberMe: boolean = false;
+  isLoading: boolean = false;
+
   constructor(
     private loginService: LoginService,
     private route: ActivatedRoute,
@@ -25,13 +30,16 @@ export class LoginComponent {
     this.route.queryParams.subscribe(params => {
       this.perfil = params['perfil'] || 'aluno';
     });
+
+    // Carregar email salvo se "lembrar de mim" estava ativado
+    this.loadRememberedEmail();
   }
 
   login() {
     this.erro = null;
+    this.isLoading = true; // Ativar loading
 
     console.log('Perfil detectado:', this.perfil);
-
 
     let observable;
 
@@ -47,6 +55,9 @@ export class LoginComponent {
       next: (res) => {
         this.loginService.setTokens(res.access_token, res.refresh_token);
 
+        // Salvar email se "lembrar de mim" estiver ativado
+        this.handleRememberMe();
+
         const redirect = this.perfil === 'aluno'
           ? '/aluno/dashboard'
           : this.perfil === 'orientador'
@@ -57,7 +68,93 @@ export class LoginComponent {
       },
       error: () => {
         this.erro = 'E-mail ou senha inválidos.';
+        this.isLoading = false; // Desativar loading em caso de erro
       }
     });
+  }
+
+  // Novas funcionalidades adicionadas
+
+  // Toggle para mostrar/ocultar senha
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  // Navegar para página de esqueci a senha
+  forgotPassword(event: Event) {
+    event.preventDefault();
+
+    // Navegar baseado no perfil atual
+    const forgotPasswordRoute = `/forgot-password?perfil=${this.perfil}`;
+    this.router.navigate(['/forgot-password'], {
+      queryParams: { perfil: this.perfil }
+    });
+
+    // Alternativa: abrir modal ou página específica
+    // console.log(`Recuperação de senha para perfil: ${this.perfil}`);
+  }
+
+  // Navegar para página de cadastro
+  goToRegister() {
+    // Navegar baseado no perfil atual
+    let registerRoute = '/register';
+
+    if (this.perfil === 'aluno') {
+      registerRoute = '/register/aluno';
+    } else if (this.perfil === 'orientador') {
+      registerRoute = '/register/orientador';
+    }
+    // Secretaria geralmente não tem auto-cadastro
+
+    this.router.navigate([registerRoute]);
+
+    // Alternativa: mostrar diferentes opções baseado no perfil
+    // console.log(`Cadastro para perfil: ${this.perfil}`);
+  }
+
+  // Contatar suporte
+  contactSupport(event: Event) {
+    event.preventDefault();
+
+    // Opção 1: Abrir email
+    const supportEmails = {
+      aluno: 'suporte.aluno@uscs.edu.br',
+      orientador: 'suporte.orientador@uscs.edu.br',
+      secretaria: 'suporte.secretaria@uscs.edu.br'
+    };
+
+    const email = supportEmails[this.perfil];
+    const subject = `Suporte - Login ${this.perfil.charAt(0).toUpperCase() + this.perfil.slice(1)}`;
+    const body = `Olá, preciso de ajuda com o login como ${this.perfil}.`;
+
+    window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+
+    // Opção 2: Navegar para página de suporte
+    // this.router.navigate(['/support'], { queryParams: { perfil: this.perfil } });
+
+    // Opção 3: Abrir modal de suporte
+    // console.log(`Contato de suporte para perfil: ${this.perfil}`);
+  }
+
+  // Gerenciar "lembrar de mim"
+  private handleRememberMe() {
+    const storageKey = `rememberedEmail_${this.perfil}`;
+
+    if (this.rememberMe) {
+      localStorage.setItem(storageKey, this.email);
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+  }
+
+  // Carregar email salvo
+  private loadRememberedEmail() {
+    const storageKey = `rememberedEmail_${this.perfil}`;
+    const savedEmail = localStorage.getItem(storageKey);
+
+    if (savedEmail) {
+      this.email = savedEmail;
+      this.rememberMe = true;
+    }
   }
 }
