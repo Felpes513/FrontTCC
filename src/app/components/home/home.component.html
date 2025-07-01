@@ -6,9 +6,10 @@
       <h2>Bem vindo(a)</h2>
       <p>à Plataforma de Iniciação Científica</p>
       <p>Acesse como:</p>
-      <button>Professor(a)</button>
-      <button routerLink="/secretaria">Funcionário(a)</button>
-      <button>Aluno(a)</button>
+      <button [routerLink]="['/login']" [queryParams]="{ perfil: 'orientador' }">Professor(a)</button>
+      <button [routerLink]="['/login']" [queryParams]="{ perfil: 'secretaria' }">Funcionário(a)</button>
+      <button [routerLink]="['/login']" [queryParams]="{ perfil: 'aluno' }">Aluno(a)</button>
+
     </div>
 
     <div class="swiper-wrapper">
