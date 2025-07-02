@@ -5,11 +5,15 @@ import { ListagemProjetosComponent } from './secretaria/listagem-projetos/listag
 import { FormularioProjetoComponent } from './secretaria/formulario-projeto/formulario-projeto.component';
 import { EnvioDeEmailComponent } from './secretaria/envio-de-email/envio-de-email.component';
 import { LoginComponent } from './login/login.component';
+import { RegisterComponent } from './cadastro/cadastro.component';
+
 
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   {path: 'login', component: LoginComponent},
+  { path: 'cadastro', component: RegisterComponent },
+
   {
     path: 'secretaria',
     component: SidenavComponent,

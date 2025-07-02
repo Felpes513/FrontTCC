@@ -13,6 +13,6 @@
 
   <div class="navbar-buttons">
     <button class="login-btn">Login</button>
-    <button class="register-btn">Registrar-se</button>
+    <button class="register-btn" [routerLink]="['/cadastro']" [queryParams]="{ perfil: 'secretaria' }">Registrar-se</button>
   </div>
 </nav>

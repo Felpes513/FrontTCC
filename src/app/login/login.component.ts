@@ -37,7 +37,7 @@ export class LoginComponent {
 
   login() {
     this.erro = null;
-    this.isLoading = true; // Ativar loading
+    this.isLoading = true;
 
     console.log('Perfil detectado:', this.perfil);
 
@@ -68,7 +68,7 @@ export class LoginComponent {
       },
       error: () => {
         this.erro = 'E-mail ou senha inválidos.';
-        this.isLoading = false; // Desativar loading em caso de erro
+        this.isLoading = false;
       }
     });
   }
