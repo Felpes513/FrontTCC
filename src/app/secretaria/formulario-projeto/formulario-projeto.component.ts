@@ -107,7 +107,13 @@ export class FormularioProjetoComponent implements OnInit {
 
         // Carregar alunos inscritos se houver
         if (projeto.alunos && projeto.alunos.length > 0) {
-          this.alunosInscritos = projeto.alunos;
+          this.alunosInscritos = (projeto.alunos || []).map((a: any) => ({
+          id: a.id,
+          nome: a.nome_completo, // <-- converte de 'nome_completo' para 'nome'
+          email: a.email,
+          documentoNotasUrl: a.documentoNotasUrl
+          }));
+
         }
 
         this.carregando = false;

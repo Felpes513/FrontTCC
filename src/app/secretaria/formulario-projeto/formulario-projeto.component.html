@@ -30,21 +30,22 @@
   />
 
   <!-- Selecionar Orientador -->
-  <label for="selectOrientador">Selecionar Orientador</label>
   <select
     id="selectOrientador"
+    [(ngModel)]="orientadorSelecionadoId"
     (change)="selecionarOrientador($event)"
     required
-    name="orientador_nome"
+    name="orientadorSelecionadoId"
+>
+  <option value="">-- Selecione --</option>
+  <option
+    *ngFor="let orientador of orientadoresFiltrados"
+    [value]="orientador.id"
   >
-    <option value="">-- Selecione --</option>
-    <option
-      *ngFor="let orientador of orientadoresFiltrados"
-      [value]="orientador.id"
-    >
-      {{ orientador.nome_completo }}
-    </option>
-  </select>
+    {{ orientador.nome_completo }}
+  </option>
+</select>
+
 
   <!-- E-mail do Orientador -->
   <label for="email_orientador">E-mail do Orientador</label>
