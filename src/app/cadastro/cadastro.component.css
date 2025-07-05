@@ -283,16 +283,10 @@
 }
 
 /* Remove outline indesejado mas mantém acessibilidade */
-.profile-btn:focus {
-  outline: none;
-}
-
-.profile-btn:focus,
 .profile-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.3);
+  box-shadow: none;
 }
-
 
 
 /* Responsividade para mobile */

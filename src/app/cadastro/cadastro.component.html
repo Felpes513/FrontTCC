@@ -164,9 +164,11 @@
   <!-- Adicione este seletor ANTES do formulário, depois do header -->
 <div class="profile-selector">
   <h3>Escolha seu perfil:</h3>
-  <div class="profile-buttons">
+  <div class="profile-buttons" role="radiogroup" aria-label="Escolha seu perfil">
     <button
       type="button"
+      role="radio"
+      [attr.aria-checked]="perfil === 'orientador'"
       class="profile-btn"
       [class.active]="perfil === 'orientador'"
       (click)="perfil = 'orientador'"
@@ -180,6 +182,8 @@
 
     <button
       type="button"
+      role="radio"
+      [attr.aria-checked]="perfil === 'secretaria'"
       class="profile-btn"
       [class.active]="perfil === 'secretaria'"
       (click)="perfil = 'secretaria'"
@@ -192,6 +196,7 @@
     </button>
   </div>
 </div>
+
 
   <div class="divider">
     <span>ou</span>
