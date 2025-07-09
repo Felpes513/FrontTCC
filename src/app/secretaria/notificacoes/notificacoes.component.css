@@ -1,0 +1,92 @@
+/* Envolve o conteúdo total da tela, menos o sidenav */
+.notificacoes-wrapper {
+  padding: 30px 40px;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.notificacoes-container {
+  max-width: 1000px;
+  margin-left: 10px; /* Aproxima do sidenav */
+}
+
+.btn-marcar {
+  background-color: #2563eb;
+  color: white;
+  padding: 10px 20px;
+  margin: 10px 0 20px 0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.notificacao {
+  background-color: #f9f9f9;
+  padding: 15px;
+  margin-bottom: 12px;
+  border-left: 4px solid #2563eb;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notificacao:hover {
+  background-color: #f1f5f9;
+}
+
+.tipo {
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.mensagem {
+  font-size: 1.1rem;
+  margin: 0.2rem 0;
+}
+
+.data {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-conteudo {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 95%;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.modal-conteudo h3 {
+  margin-top: 0;
+}
+
+.modal-conteudo .fechar {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}

@@ -1,0 +1,24 @@
+<!-- notificacoes.component.html -->
+<div class="notificacoes-container">
+  <h2><i class="fas fa-bell"></i> Notificações</h2>
+
+  <button class="btn-marcar" (click)="marcarTodasComoLidas()">
+    <i class="fas fa-check-circle"></i> Ler todas as notificações
+  </button>
+
+  <div *ngFor="let notificacao of notificacoes" class="notificacao" (click)="abrirNotificacao(notificacao)">
+    <p class="tipo">{{ notificacao.tipo }}</p>
+    <p class="mensagem"><strong>{{ notificacao.mensagem }}</strong></p>
+    <p class="data">{{ notificacao.data }} às {{ notificacao.hora }}</p>
+  </div>
+
+  <!-- Modal (opcional) -->
+  <div class="modal" *ngIf="notificacaoAberta">
+    <div class="modal-conteudo">
+      <button class="fechar" (click)="fecharModal()">&times;</button>
+      <h3>{{ notificacaoAberta.tipo }}</h3>
+      <p>{{ notificacaoAberta.mensagem }}</p>
+      <small>{{ notificacaoAberta.data }} às {{ notificacaoAberta.hora }}</small>
+    </div>
+  </div>
+</div>

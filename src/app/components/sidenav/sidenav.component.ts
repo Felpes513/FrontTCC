@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from '../footer/footer.component';
-import { RouterModule } from '@angular/router'; // 👈 isso aqui importa tudo necessário
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-sidenav',
@@ -11,9 +11,16 @@ import { RouterModule } from '@angular/router'; // 👈 isso aqui importa tudo n
     CommonModule,
     NavbarComponent,
     FooterComponent,
-    RouterModule // 👈 ADICIONE AQUI
+    RouterModule
   ],
   templateUrl: './sidenav.component.html',
   styleUrls: ['./sidenav.component.css']
 })
-export class SidenavComponent {}
+export class SidenavComponent {
+  exibirBadgeNotificacao: boolean = true;
+
+  marcarNotificacoesComoLidas() {
+    this.exibirBadgeNotificacao = false;
+  }
+}
+

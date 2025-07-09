@@ -8,13 +8,15 @@
     </div>
 
   <nav>
-  <a routerLink="/dashboard" routerLinkActive="active"><i class="fas fa-home"></i> Dashboard</a>
+  <a routerLink="/secretaria/dashboard" routerLinkActive="active">
+  <i class="fas fa-home"></i> Dashboard</a>
   <a routerLink="/presenca"><i class="fas fa-check-square"></i> Lista de Presença</a>
-  <a routerLink="/notificacoes"><i class="fas fa-bell"></i> Notificações</a>
+  <a [routerLink]="['/secretaria', 'notificacoes']" (click)="marcarNotificacoesComoLidas()"><i class="fas fa-bell"></i> Notificações
+  <span *ngIf="exibirBadgeNotificacao" class="ponto-notificacao"></span></a>
   <a [routerLink]="['/secretaria', 'projetos']" routerLinkActive="active"><i class="fas fa-folder-plus"></i> Gerenciar Projetos</a>
   <a routerLink="/alunos"><i class="fas fa-user-graduate"></i> Alunos</a>
   <a routerLink="/secretaria/email" routerLinkActive="active"><i class="fas fa-envelope"></i> Envio de Certificados</a>
-  <a routerLink="/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a>
+  <a [routerLink]="['/secretaria', 'relatorios']" routerLinkActive="active"><i class="fas fa-chart-bar"></i> Relatórios</a>
 </nav>
   </div>
 

@@ -3,6 +3,8 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { tap, map, catchError, switchMap } from 'rxjs/operators';
 
+
+//Esses export interfaces definem a estrutura de dados trocados entre o frontend e o backend
 export interface ProjetoRequest {
   titulo_projeto: string;
   resumo?: string;
