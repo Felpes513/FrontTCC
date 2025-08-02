@@ -3,6 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 // Interfaces para os dados de cadastro
+interface RegisterAlunoData {
+  nomeCompleto: string;
+  cpf: string;
+  curso: string;
+  campus: string;
+  email: string;
+  senha: string;
+}
+
 interface RegisterOrientadorData {
   nomeCompleto: string;
   email: string;
@@ -24,55 +33,96 @@ interface RegisterResponse {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class RegisterService {
   private baseUrl = 'http://127.0.0.1:8000';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
+
+  // Cadastro de aluno
+  registerAluno(data: RegisterAlunoData): Observable<RegisterResponse> {
+    const payload = {
+      nome_completo: data.nomeCompleto,
+      cpf: data.cpf,
+      curso: data.curso,
+      campus: data.campus,
+      email: data.email,
+      senha: data.senha,
+    };
+
+    return this.http.post<RegisterResponse>(
+      `${this.baseUrl}/register/aluno`,
+      payload,
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
 
   // Cadastro de orientador
-  registerOrientador(data: RegisterOrientadorData): Observable<RegisterResponse> {
+  registerOrientador(
+    data: RegisterOrientadorData
+  ): Observable<RegisterResponse> {
     const payload = {
       nome_completo: data.nomeCompleto,
       email: data.email,
       senha: data.senha,
-      cpf: data.cpf.replace(/[^\d]/g, '') // Remove formatação do CPF
+      cpf: data.cpf.replace(/[^\d]/g, ''), // Remove formatação do CPF
     };
 
-    return this.http.post<RegisterResponse>(`${this.baseUrl}/register-orientador`, payload, {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return this.http.post<RegisterResponse>(
+      `${this.baseUrl}/register-orientador`,
+      payload,
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 
   // Cadastro de secretaria
-  registerSecretaria(data: RegisterSecretariaData): Observable<RegisterResponse> {
+  registerSecretaria(
+    data: RegisterSecretariaData
+  ): Observable<RegisterResponse> {
     const payload = {
       nome_completo: data.nomeCompleto,
       email: data.email,
-      senha: data.senha
+      senha: data.senha,
     };
 
-    return this.http.post<RegisterResponse>(`${this.baseUrl}/register-secretaria`, payload, {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return this.http.post<RegisterResponse>(
+      `${this.baseUrl}/register-secretaria`,
+      payload,
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 
   // Verificar se e-mail já existe
-  checkEmailExists(email: string, perfil: 'orientador' | 'secretaria'): Observable<{exists: boolean}> {
-    return this.http.get<{exists: boolean}>(`${this.baseUrl}/check-email/${perfil}/${email}`);
+  checkEmailExists(
+    email: string,
+    perfil: 'orientador' | 'secretaria'
+  ): Observable<{ exists: boolean }> {
+    return this.http.get<{ exists: boolean }>(
+      `${this.baseUrl}/check-email/${perfil}/${email}`
+    );
   }
 
   // Verificar se CPF já existe (apenas para orientador)
-  checkCPFExists(cpf: string): Observable<{exists: boolean}> {
+  checkCPFExists(cpf: string): Observable<{ exists: boolean }> {
     const cleanCPF = cpf.replace(/[^\d]/g, '');
-    return this.http.get<{exists: boolean}>(`${this.baseUrl}/check-cpf/${cleanCPF}`);
+    return this.http.get<{ exists: boolean }>(
+      `${this.baseUrl}/check-cpf/${cleanCPF}`
+    );
   }
 
   // Validar CPF no backend
-  validateCPF(cpf: string): Observable<{valid: boolean}> {
+  validateCPF(cpf: string): Observable<{ valid: boolean }> {
     const cleanCPF = cpf.replace(/[^\d]/g, '');
-    return this.http.post<{valid: boolean}>(`${this.baseUrl}/validate-cpf`, { cpf: cleanCPF });
+    return this.http.post<{ valid: boolean }>(`${this.baseUrl}/validate-cpf`, {
+      cpf: cleanCPF,
+    });
   }
 
   // Método auxiliar para validar força da senha
@@ -122,7 +172,7 @@ export class RegisterService {
     return {
       score,
       feedback,
-      isValid: score >= 3 // Considera válida se atender pelo menos 3 critérios
+      isValid: score >= 3, // Considera válida se atender pelo menos 3 critérios
     };
   }
 }

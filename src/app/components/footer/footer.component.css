@@ -83,7 +83,57 @@
     }
   }
 }
+
 .logo-uscs {
   width: 100px;
   margin-bottom: 0.5rem;
+}
+
+/* 🔽 RESPONSIVIDADE */
+@media (max-width: 768px) {
+  .footer {
+    text-align: center;
+
+    .footer-container {
+      flex-direction: column;
+      align-items: center;
+
+      .footer-column {
+        flex: 1 1 100%;
+        max-width: 100%;
+
+        ul {
+          padding: 0;
+        }
+
+        &.logo {
+          align-items: center;
+
+          p {
+            margin-top: 0.5rem;
+          }
+
+          img.logo-uscs {
+            margin: 0 auto;
+          }
+        }
+      }
+    }
+
+    .footer-bottom {
+      .social-icons {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+
+        i {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+
+  .logo-uscs {
+    width: 80px;
+  }
 }

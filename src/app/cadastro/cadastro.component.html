@@ -1,215 +1,271 @@
 <div class="main-container">
-<div class="login-container">
-  <img src="/public/assets/Logo.png" alt="Logo Universidade Municipal São Caetano do Sul" class="logo-USCS" />
-  <h2>Criar Conta</h2>
-  <p class="subtitle">Cadastro para {{ perfil === 'orientador' ? 'Orientadores' : 'Secretaria' }}</p>
+  <div class="login-container">
+    <img
+      src="/public/assets/Logo.png"
+      alt="Logo Universidade Municipal São Caetano do Sul"
+      class="logo-USCS"
+    />
+    <h2>Cadastro</h2>
+    <p class="subtitle">Preencha os dados abaixo para criar sua conta</p>
 
-  <form (ngSubmit)="register()" #form="ngForm">
-    <!-- Nome Completo -->
-    <div class="input-group">
-      <label for="nomeCompleto">Nome Completo</label>
-      <input
-        type="text"
-        id="nomeCompleto"
-        name="nomeCompleto"
-        [(ngModel)]="nomeCompleto"
-        placeholder="Digite seu nome completo"
-        required
-        minlength="3"
-        #nomeCompletoInput="ngModel"
-      />
-      <div class="field-error" *ngIf="nomeCompletoInput.invalid && nomeCompletoInput.touched">
-        <span *ngIf="nomeCompletoInput.errors?.['required']">Nome completo é obrigatório</span>
-        <span *ngIf="nomeCompletoInput.errors?.['minlength']">Nome deve ter pelo menos 3 caracteres</span>
-      </div>
-    </div>
-
-    <!-- E-mail -->
-    <div class="input-group">
-      <label for="email">E-mail</label>
-      <input
-        type="email"
-        id="email"
-        name="email"
-        [(ngModel)]="email"
-        placeholder="seu.email@exemplo.com"
-        required
-        #emailInput="ngModel"
-      />
-      <div class="field-error" *ngIf="emailInput.invalid && emailInput.touched">
-        E-mail é obrigatório e deve ser válido
-      </div>
-    </div>
-
-    <!-- CPF (apenas para orientador) -->
-    <div class="input-group" *ngIf="perfil === 'orientador'">
-      <label for="cpf">CPF</label>
-      <input
-        type="text"
-        id="cpf"
-        name="cpf"
-        [(ngModel)]="cpf"
-        (ngModelChange)="formatCPF($event)"
-        placeholder="000.000.000-00"
-        required
-        maxlength="14"
-        #cpfInput="ngModel"
-        pattern="^\d{3}\.\d{3}\.\d{3}-\d{2}$"
-/>
-
-      <div class="field-error" *ngIf="cpfInput.invalid && cpfInput.touched">
-        <span *ngIf="cpfInput.errors?.['required']">CPF é obrigatório</span>
-        <span *ngIf="cpfInput.errors?.['pattern']">CPF deve ter um formato válido</span>
-      </div>
-    </div>
-
-    <!-- Senha -->
-    <div class="input-group">
-      <label for="senha">Senha</label>
-      <div class="password-container">
+    <form (ngSubmit)="register()" #form="ngForm">
+      <!-- Nome Completo -->
+      <div class="input-group">
+        <label for="nomeCompleto">Nome Completo</label>
         <input
-          [type]="showPassword ? 'text' : 'password'"
-          id="senha"
-          name="senha"
-          [(ngModel)]="senha"
-          placeholder="Digite sua senha"
+          type="text"
+          id="nomeCompleto"
+          name="nomeCompleto"
+          [(ngModel)]="nomeCompleto"
+          placeholder="Digite seu nome completo"
           required
-          minlength="6"
-          #senhaInput="ngModel"
+          minlength="3"
+          #nomeCompletoInput="ngModel"
         />
-        <button
-          type="button"
-          class="toggle-password"
-          (click)="togglePassword()"
-          aria-label="Mostrar/ocultar senha"
+        <div
+          class="field-error"
+          *ngIf="nomeCompletoInput.invalid && nomeCompletoInput.touched"
         >
-          <i class="icon" [class.show]="showPassword">👁️</i>
-        </button>
-      </div>
-
-      <!-- Indicador de força da senha -->
-      <div class="password-strength" *ngIf="senha.length > 0">
-        <div class="strength-bar">
-          <div class="strength-fill"
-               [class.weak]="getPasswordStrength() === 'fraca'"
-               [class.medium]="getPasswordStrength() === 'média'"
-               [class.strong]="getPasswordStrength() === 'forte'">
-          </div>
+          <span *ngIf="nomeCompletoInput.errors?.['required']"
+            >Nome completo é obrigatório</span
+          >
+          <span *ngIf="nomeCompletoInput.errors?.['minlength']"
+            >Nome deve ter pelo menos 3 caracteres</span
+          >
         </div>
-        <span class="strength-text">Senha {{ getPasswordStrength() }}</span>
       </div>
 
-      <div class="field-error" *ngIf="senhaInput.invalid && senhaInput.touched">
-        <span *ngIf="senhaInput.errors?.['required']">Senha é obrigatória</span>
-        <span *ngIf="senhaInput.errors?.['minlength']">Senha deve ter pelo menos 6 caracteres</span>
-      </div>
-    </div>
-
-    <!-- Confirmar Senha -->
-    <div class="input-group">
-      <label for="confirmarSenha">Confirmar Senha</label>
-      <div class="password-container">
+      <!-- CPF -->
+      <div class="input-group">
+        <label for="cpf">CPF</label>
         <input
-          [type]="showConfirmPassword ? 'text' : 'password'"
-          id="confirmarSenha"
-          name="confirmarSenha"
-          [(ngModel)]="confirmarSenha"
-          placeholder="Confirme sua senha"
+          type="text"
+          id="cpf"
+          name="cpf"
+          [(ngModel)]="cpf"
+          placeholder="Digite seu CPF"
           required
-          #confirmarSenhaInput="ngModel"
+          pattern="\\d{11}"
+          minlength="11"
+          maxlength="11"
+          #cpfInput="ngModel"
         />
-        <button
-          type="button"
-          class="toggle-password"
-          (click)="toggleConfirmPassword()"
-          aria-label="Mostrar/ocultar confirmação de senha"
+        <div class="field-error" *ngIf="cpfInput.invalid && cpfInput.touched">
+          <span *ngIf="cpfInput.errors?.['required']">CPF é obrigatório</span>
+          <span
+            *ngIf="cpfInput.errors?.['pattern'] || cpfInput.errors?.['minlength']"
+          >
+            CPF deve conter exatamente 11 dígitos numéricos
+          </span>
+        </div>
+      </div>
+
+      <!-- Curso -->
+      <div class="input-group">
+        <label for="curso">Curso</label>
+        <input
+          type="text"
+          id="curso"
+          name="curso"
+          [(ngModel)]="curso"
+          placeholder="Digite o nome do curso"
+          required
+          minlength="3"
+          #cursoInput="ngModel"
+        />
+        <div
+          class="field-error"
+          *ngIf="cursoInput.invalid && cursoInput.touched"
         >
-          <i class="icon" [class.show]="showConfirmPassword">👁️</i>
-        </button>
+          <span *ngIf="cursoInput.errors?.['required']"
+            >Curso é obrigatório</span
+          >
+          <span *ngIf="cursoInput.errors?.['minlength']"
+            >Nome do curso muito curto</span
+          >
+        </div>
       </div>
-      <div class="field-error" *ngIf="confirmarSenhaInput.touched && senha !== confirmarSenha">
-        As senhas não coincidem
+
+      <!-- Campus -->
+      <div class="input-group">
+        <label for="campus">Campus</label>
+        <input
+          type="text"
+          id="campus"
+          name="campus"
+          [(ngModel)]="campus"
+          placeholder="Digite o nome do campus"
+          required
+          minlength="3"
+          #campusInput="ngModel"
+        />
+        <div
+          class="field-error"
+          *ngIf="campusInput.invalid && campusInput.touched"
+        >
+          <span *ngIf="campusInput.errors?.['required']"
+            >Campus é obrigatório</span
+          >
+          <span *ngIf="campusInput.errors?.['minlength']"
+            >Nome do campus muito curto</span
+          >
+        </div>
       </div>
+
+      <!-- E-mail -->
+      <div class="input-group">
+        <label for="email">E-mail</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="seu.email@exemplo.com"
+          required
+          #emailInput="ngModel"
+        />
+        <div
+          class="field-error"
+          *ngIf="emailInput.invalid && emailInput.touched"
+        >
+          E-mail é obrigatório e deve ser válido
+        </div>
+      </div>
+
+      <!-- Senha -->
+      <div class="input-group">
+        <label for="senha">Senha</label>
+        <div class="password-container">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="senha"
+            name="senha"
+            [(ngModel)]="senha"
+            placeholder="Digite sua senha"
+            required
+            minlength="6"
+            #senhaInput="ngModel"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePassword()"
+            aria-label="Mostrar/ocultar senha"
+          >
+            <i class="icon" [class.show]="showPassword">👁️</i>
+          </button>
+        </div>
+
+        <!-- Indicador de força da senha -->
+        <div class="password-strength" *ngIf="senha.length > 0">
+          <div class="strength-bar">
+            <div
+              class="strength-fill"
+              [class.weak]="getPasswordStrength() === 'fraca'"
+              [class.medium]="getPasswordStrength() === 'média'"
+              [class.strong]="getPasswordStrength() === 'forte'"
+            ></div>
+          </div>
+          <span class="strength-text">Senha {{ getPasswordStrength() }}</span>
+        </div>
+
+        <div
+          class="field-error"
+          *ngIf="senhaInput.invalid && senhaInput.touched"
+        >
+          <span *ngIf="senhaInput.errors?.['required']"
+            >Senha é obrigatória</span
+          >
+          <span *ngIf="senhaInput.errors?.['minlength']"
+            >Senha deve ter pelo menos 6 caracteres</span
+          >
+        </div>
+      </div>
+
+      <!-- Confirmar Senha -->
+      <div class="input-group">
+        <label for="confirmarSenha">Confirmar Senha</label>
+        <div class="password-container">
+          <input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            id="confirmarSenha"
+            name="confirmarSenha"
+            [(ngModel)]="confirmarSenha"
+            placeholder="Confirme sua senha"
+            required
+            #confirmarSenhaInput="ngModel"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="toggleConfirmPassword()"
+            aria-label="Mostrar/ocultar confirmação de senha"
+          >
+            <i class="icon" [class.show]="showConfirmPassword">👁️</i>
+          </button>
+        </div>
+        <div
+          class="field-error"
+          *ngIf="confirmarSenhaInput.touched && senha !== confirmarSenha"
+        >
+          As senhas não coincidem
+        </div>
+      </div>
+
+      <!-- Aceitar Termos -->
+      <div class="form-options">
+        <label class="remember-me">
+          <input
+            type="checkbox"
+            [(ngModel)]="acceptTerms"
+            name="acceptTerms"
+            required
+          />
+          <span class="checkmark"></span>
+          Aceito os <a href="#" class="forgot-password">termos de uso</a> e
+          <a href="#" class="forgot-password">política de privacidade</a>
+        </label>
+      </div>
+
+      <!-- Mensagem de erro -->
+      <div class="erro" *ngIf="erro">
+        <i class="error-icon">⚠️</i>
+        {{ erro }}
+      </div>
+
+      <!-- Mensagem de sucesso -->
+      <div class="sucesso" *ngIf="sucesso">
+        <i class="success-icon">✅</i>
+        {{ sucesso }}
+      </div>
+
+      <!-- Botão de cadastro -->
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="form.invalid || isLoading || !acceptTerms"
+      >
+        <span class="btn-text" *ngIf="!isLoading">Criar Conta</span>
+        <span class="btn-text" *ngIf="isLoading">Criando conta...</span>
+        <div class="btn-loader" *ngIf="isLoading"></div>
+      </button>
+    </form>
+
+    <div class="divider">
+      <span>ou</span>
     </div>
 
-    <!-- Aceitar Termos -->
-    <div class="form-options">
-      <label class="remember-me">
-        <input type="checkbox" [(ngModel)]="acceptTerms" name="acceptTerms" required>
-        <span class="checkmark"></span>
-        Aceito os <a href="#" class="forgot-password">termos de uso</a> e <a href="#" class="forgot-password">política de privacidade</a>
-      </label>
-    </div>
-
-    <!-- Mensagem de erro -->
-    <div class="erro" *ngIf="erro">
-      <i class="error-icon">⚠️</i>
-      {{ erro }}
-    </div>
-
-    <!-- Mensagem de sucesso -->
-    <div class="sucesso" *ngIf="sucesso">
-      <i class="success-icon">✅</i>
-      {{ sucesso }}
-    </div>
-
-    <!-- Botão de cadastro -->
-    <button type="submit" class="btn-primary" [disabled]="form.invalid || isLoading || !acceptTerms">
-      <span class="btn-text" *ngIf="!isLoading">Criar Conta</span>
-      <span class="btn-text" *ngIf="isLoading">Criando conta...</span>
-      <div class="btn-loader" *ngIf="isLoading"></div>
+    <!-- Botão para voltar ao login -->
+    <button type="button" class="btn-secondary" (click)="goToLogin()">
+      <i class="login-icon">🔑</i>
+      Já tenho uma conta
     </button>
-  </form>
 
-  <!-- Adicione este seletor ANTES do formulário, depois do header -->
-<div class="profile-selector">
-  <h3>Escolha seu perfil:</h3>
-  <div class="profile-buttons" role="radiogroup" aria-label="Escolha seu perfil">
-    <button
-      type="button"
-      role="radio"
-      [attr.aria-checked]="perfil === 'orientador'"
-      class="profile-btn"
-      [class.active]="perfil === 'orientador'"
-      (click)="perfil = 'orientador'"
-    >
-      <div class="profile-icon">👨‍🏫</div>
-      <div class="profile-info">
-        <strong>Orientador</strong>
-        <span>Professor ou orientador acadêmico</span>
-      </div>
-    </button>
-
-    <button
-      type="button"
-      role="radio"
-      [attr.aria-checked]="perfil === 'secretaria'"
-      class="profile-btn"
-      [class.active]="perfil === 'secretaria'"
-      (click)="perfil = 'secretaria'"
-    >
-      <div class="profile-icon">👩‍💼</div>
-      <div class="profile-info">
-        <strong>Secretaria</strong>
-        <span>Funcionário da secretaria acadêmica</span>
-      </div>
-    </button>
+    <div class="login-footer">
+      <p>
+        Precisa de ajuda?
+        <a href="#" (click)="contactSupport($event)">Entre em contato</a>
+      </p>
+    </div>
   </div>
-</div>
-
-
-  <div class="divider">
-    <span>ou</span>
-  </div>
-
-  <!-- Botão para voltar ao login -->
-  <button type="button" class="btn-secondary" (click)="goToLogin()">
-    <i class="login-icon">🔑</i>
-    Já tenho uma conta
-  </button>
-
-  <div class="login-footer">
-    <p>Precisa de ajuda? <a href="#" (click)="contactSupport($event)">Entre em contato</a></p>
-  </div>
-</div>
 </div>

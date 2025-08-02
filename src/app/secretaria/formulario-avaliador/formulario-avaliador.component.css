@@ -4,19 +4,67 @@
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   background-color: #fff;
 }
 
 h2 {
   margin-bottom: 20px;
   text-align: center;
+  font-size: 2rem;
 }
 
 .form-group {
   margin-bottom: 16px;
 }
 
+/* Botão ocupa toda a largura */
 .btn {
   width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}
+
+/* Responsividade para tablets */
+@media (max-width: 768px) {
+  .container {
+    margin: 20px;
+    padding: 16px;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+  }
+
+  .btn {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+}
+
+/* Responsividade para celulares pequenos */
+@media (max-width: 480px) {
+  .container {
+    margin: 15px;
+    padding: 12px;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
 }

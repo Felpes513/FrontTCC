@@ -1,18 +1,70 @@
-/* Herda todos os estilos do login.component.css */
-/* Adiciona apenas estilos específicos para o cadastro */
-
-
+/* Container principal centralizado */
 .main-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: #f5f5f5; /* ou a cor de fundo que você preferir */
+  background: #f5f5f5;
 }
+
+/* Card do formulário */
+.login-container {
+  background-color: #ffffff;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Logo */
+.logo-USCS {
+  width: 120px;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+/* Título e subtítulo */
+.login-container h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.login-container .subtitle {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+/* Campos de entrada */
+.input-group {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
 /* Indicador de força da senha */
 .password-strength {
   margin-top: 8px;
+  width: 100%;
 }
 
 .strength-bar {
@@ -53,8 +105,7 @@
 
 /* Mensagem de sucesso */
 .sucesso {
-  margin-top: 15px;
-  margin-bottom: 15px;
+  margin: 15px 0;
   color: #27ae60;
   text-align: center;
   font-weight: 500;
@@ -73,54 +124,69 @@
   font-size: 16px;
 }
 
-/* Ajustes para campos específicos do cadastro */
-.input-group {
-  margin-bottom: 18px;
+/* Botões */
+.btn-primary,
+.btn-secondary {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 12px;
 }
 
-/* Estilo específico para checkbox de termos */
-.form-options .remember-me {
+.btn-primary {
+  background-color: #2563eb;
+  color: #fff;
+  border: none;
+  transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #1e4ed8;
+}
+
+.btn-primary:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  color: #7f8c8d;
+}
+
+.btn-secondary {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+
+/* Checkbox e links */
+.form-options {
   font-size: 13px;
-  line-height: 1.4;
+  width: 100%;
+}
+
+.form-options .remember-me {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
 }
 
 .form-options .remember-me a {
   color: var(--primary-color);
-  text-decoration: none;
   font-weight: 500;
+  text-decoration: none;
 }
 
 .form-options .remember-me a:hover {
   text-decoration: underline;
 }
 
-/* Animação para campos de erro específicos */
-.field-error {
-  animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-
-/* Ajustes responsivos específicos para cadastro */
-@media (max-width: 480px) {
-  .login-container {
-    padding: 25px 20px;
-  }
-
-  .form-options .remember-me {
-    font-size: 12px;
-  }
-
-  .strength-text {
-    font-size: 11px;
-  }
-}
-
-/* Estados de validação visual */
+/* Validação visual */
 .login-container input.ng-valid.ng-touched {
   border-color: #27ae60;
 }
@@ -129,194 +195,32 @@
   border-color: #e74c3c;
 }
 
-/* Estilo para campos obrigatórios */
+/* Campo obrigatório */
 .login-container label::after {
-  content: ' *';
+  content: " *";
   color: #e74c3c;
   font-weight: bold;
 }
 
-/* Efeito de foco aprimorado para cadastro */
+/* Efeito de foco */
 .login-container input:focus {
-  border-color: var(--input-focus);
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+  border-color: #2563eb;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   transform: translateY(-1px);
 }
 
-/* Melhorias nos botões para o cadastro */
-.btn-primary:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-  transform: none;
-  color: #7f8c8d;
-}
-
-.btn-primary:disabled:hover {
-  box-shadow: none;
-  transform: none;
-  background: #bdc3c7;
-}
-
-/* Estilo específico para mensagens de validação */
-.field-error span {
-  display: block;
-  margin-bottom: 2px;
-}
-
-.field-error span:last-child {
-  margin-bottom: 0;
-}
-
-/* Animação de carregamento melhorada */
-.btn-primary .btn-loader {
-  margin-left: 8px;
-}
-
-/* Estilo para ícones nos botões */
-.register-icon,
-.login-icon {
-  font-size: 16px;
-  margin-right: 4px;
-}
-
-/* Ajuste na altura do container para cadastro */
-.login-container {
-  min-height: auto;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-/* Scroll customizado */
-.login-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.login-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-.login-container::-webkit-scrollbar-thumb {
-  background: rgba(25, 118, 210, 0.3);
-  border-radius: 3px;
-}
-
-.login-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(25, 118, 210, 0.5);
-}
-
-/* Adicione este CSS ao seu arquivo atual */
-
-/* Seletor de perfil */
-.profile-selector {
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.profile-selector h3 {
-  color: #333;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-.profile-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-.profile-btn {
-  background: #f8f9fa;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  padding: 20px 15px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  height: 140px; /* Altura fixa para garantir simetria */
-}
-
-.profile-btn:hover {
-  border-color: #1976d2;
-  background: #f0f7ff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
-}
-
-.profile-btn.active {
-  border-color: #1976d2;
-  background: #e3f2fd;
-  color: #1976d2;
-}
-
-.profile-icon {
-  font-size: 32px;
-  margin-bottom: 10px;
-}
-
-.profile-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  justify-content: center;
-  flex: 1;
-}
-
-.profile-info strong {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.profile-info span {
-  font-size: 12px;
-  color: #666;
-  line-height: 1.3;
-}
-
-.profile-btn.active .profile-info span {
-  color: #1565c0;
-}
-
-/* Remove outline indesejado mas mantém acessibilidade */
-.profile-btn:focus-visible {
-  outline: none;
-  box-shadow: none;
-}
-
-
-/* Responsividade para mobile */
+/* Responsivo */
 @media (max-width: 480px) {
-  .profile-buttons {
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .login-container {
+    padding: 25px 20px;
   }
 
-  .profile-btn {
-    padding: 15px 12px;
-    height: 120px; /* Altura fixa menor para mobile */
+  .input-group input {
+    font-size: 13px;
   }
 
-  .profile-icon {
-    font-size: 28px;
-    margin-bottom: 8px;
-  }
-
-  .profile-info strong {
-    font-size: 14px;
-  }
-
-  .profile-info span {
+  .strength-text {
     font-size: 11px;
   }
 }
-
-.profile-btn {
-  max-width: 100%;
-  box-sizing: border-box;
-}
-

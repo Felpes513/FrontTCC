@@ -317,3 +317,73 @@
   font-family: monospace;
   line-height: 1.4;
 }
+
+@media (max-width: 480px) {
+  .projects-container {
+    padding: 15px;
+  }
+
+  .header h2 {
+    font-size: 22px;
+    text-align: center;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filters input {
+    width: 100%;
+    font-size: 13px;
+  }
+
+  .btn-add {
+    width: 100%;
+    font-size: 13px;
+    padding: 10px 16px;
+    justify-content: center;
+  }
+
+  .card h3 {
+    font-size: 16px;
+  }
+
+  .chip {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .data,
+  .update {
+    font-size: 12px;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .card-actions {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .empty-state h3 {
+    font-size: 18px;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+  }
+
+  .orientador-info {
+    font-size: 13px;
+  }
+
+  .projects-table {
+    font-size: 13px;
+  }
+}

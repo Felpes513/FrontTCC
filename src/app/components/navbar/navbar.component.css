@@ -1,7 +1,8 @@
-img{
+img {
   width: 100px;
   margin-bottom: 0.5rem;
 }
+
 /* Estilo geral da navbar */
 .navbar {
   display: flex;
@@ -10,7 +11,18 @@ img{
   background-color: #ffffff;
   padding: 1rem 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
 }
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 1rem;
+}
+
 
 /* Logo da USCS */
 .navbar-logo {
@@ -78,22 +90,54 @@ img{
   background-color: #002b5c;
 }
 
-/* Responsividade para telas pequenas */
 @media (max-width: 768px) {
   .navbar {
+    padding: 1rem;
+  }
+
+  .navbar-content {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
   }
 
   .navbar-links {
     flex-direction: column;
-    gap: 0.75rem;
+    width: 100%;
   }
 
   .navbar-buttons {
     width: 100%;
-    justify-content: flex-start;
-    gap: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .navbar-buttons button {
+    width: 100%;
+  }
+}
+
+
+/* Responsivo até 480px (celulares pequenos) */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 1rem;
+  }
+
+  .navbar-links a {
+    font-size: 0.95rem;
+  }
+
+  .navbar-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .navbar-buttons button {
+    width: 100%;
+    font-size: 0.95rem;
+  }
+
+  .navbar-logo img {
+    height: 50px;
   }
 }

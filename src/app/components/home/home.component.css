@@ -205,3 +205,64 @@
 .swiper-pagination-bullet-active {
   background: white;
 }
+@media (max-width: 480px) {
+  .home {
+    padding: 20px 10px;
+  }
+
+  .home-box {
+    gap: 20px;
+  }
+
+  .left h2 {
+    font-size: 1.7rem;
+  }
+
+  .left p {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .left button {
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+  .mySwiper {
+    height: 250px;
+  }
+
+  .slide-content h3 {
+    font-size: 1.5rem;
+  }
+
+  .slide-content p {
+    font-size: 0.95rem;
+    padding: 0 10px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .card h3 {
+    font-size: 1.3rem;
+  }
+
+  .card p {
+    font-size: 0.95rem;
+  }
+
+  .swiper-button-next,
+  .swiper-button-prev {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+}

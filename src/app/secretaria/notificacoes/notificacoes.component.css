@@ -90,3 +90,73 @@
   border: none;
   cursor: pointer;
 }
+
+@media (max-width: 768px) {
+  .notificacoes-wrapper {
+    padding: 20px;
+  }
+
+  .notificacoes-container {
+    margin-left: 0;
+  }
+
+  .btn-marcar {
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+  .mensagem {
+    font-size: 1rem;
+  }
+
+  .modal-conteudo {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .modal-conteudo h3 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .notificacoes-wrapper {
+    padding: 15px;
+  }
+
+  .btn-marcar {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+
+  .notificacao {
+    padding: 12px;
+  }
+
+  .tipo {
+    font-size: 0.95rem;
+  }
+
+  .mensagem {
+    font-size: 0.95rem;
+  }
+
+  .data {
+    font-size: 0.75rem;
+  }
+
+  .modal-conteudo {
+    padding: 15px;
+  }
+
+  .modal-conteudo h3 {
+    font-size: 1.1rem;
+  }
+
+  .modal-conteudo .fechar {
+    top: 8px;
+    right: 10px;
+    font-size: 20px;
+  }
+}

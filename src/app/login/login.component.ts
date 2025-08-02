@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent {
   email = '';
@@ -27,12 +27,10 @@ export class LoginComponent {
     private route: ActivatedRoute,
     private router: Router
   ) {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       this.perfil = params['perfil'] || 'aluno';
+      this.loadRememberedEmail();
     });
-
-    // Carregar email salvo se "lembrar de mim" estava ativado
-    this.loadRememberedEmail();
   }
 
   login() {
@@ -58,22 +56,20 @@ export class LoginComponent {
         // Salvar email se "lembrar de mim" estiver ativado
         this.handleRememberMe();
 
-        const redirect = this.perfil === 'aluno'
-          ? '/aluno/dashboard'
-          : this.perfil === 'orientador'
-          ? '/orientador/dashboard'
-          : '/secretaria/projetos';
+        const redirects = {
+          aluno: '/aluno/dashboard',
+          orientador: '/orientador/dashboard',
+          secretaria: '/secretaria/projetos',
+        };
 
-        this.router.navigate([redirect]);
+        this.router.navigate([redirects[this.perfil]]);
       },
       error: () => {
         this.erro = 'E-mail ou senha inválidos.';
         this.isLoading = false;
-      }
+      },
     });
   }
-
-  // Novas funcionalidades adicionadas
 
   // Toggle para mostrar/ocultar senha
   togglePassword() {
@@ -87,31 +83,16 @@ export class LoginComponent {
     // Navegar baseado no perfil atual
     const forgotPasswordRoute = `/forgot-password?perfil=${this.perfil}`;
     this.router.navigate(['/forgot-password'], {
-      queryParams: { perfil: this.perfil }
+      queryParams: { perfil: this.perfil },
     });
-
-    // Alternativa: abrir modal ou página específica
-    // console.log(`Recuperação de senha para perfil: ${this.perfil}`);
   }
 
   // Navegar para página de cadastro
   goToRegister() {
-    // Navegar baseado no perfil atual
-    let registerRoute = '/register';
-
     if (this.perfil === 'aluno') {
-      registerRoute = '/register/aluno';
-    } else if (this.perfil === 'orientador') {
-      registerRoute = '/register/orientador';
+      this.router.navigate(['/register/aluno']);
     }
-    // Secretaria geralmente não tem auto-cadastro
-
-    this.router.navigate([registerRoute]);
-
-    // Alternativa: mostrar diferentes opções baseado no perfil
-    // console.log(`Cadastro para perfil: ${this.perfil}`);
   }
-
   // Contatar suporte
   contactSupport(event: Event) {
     event.preventDefault();
@@ -120,14 +101,20 @@ export class LoginComponent {
     const supportEmails = {
       aluno: 'suporte.aluno@uscs.edu.br',
       orientador: 'suporte.orientador@uscs.edu.br',
-      secretaria: 'suporte.secretaria@uscs.edu.br'
+      secretaria: 'suporte.secretaria@uscs.edu.br',
     };
 
     const email = supportEmails[this.perfil];
-    const subject = `Suporte - Login ${this.perfil.charAt(0).toUpperCase() + this.perfil.slice(1)}`;
+    const subject = `Suporte - Login ${
+      this.perfil.charAt(0).toUpperCase() + this.perfil.slice(1)
+    }`;
     const body = `Olá, preciso de ajuda com o login como ${this.perfil}.`;
 
-    window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    window.open(
+      `mailto:${email}?subject=${encodeURIComponent(
+        subject
+      )}&body=${encodeURIComponent(body)}`
+    );
 
     // Opção 2: Navegar para página de suporte
     // this.router.navigate(['/support'], { queryParams: { perfil: this.perfil } });

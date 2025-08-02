@@ -18,6 +18,7 @@ export class FormularioAvaliadorComponent implements OnInit {
   avaliador = {
     id: null,
     nome: '',
+    email: '',
     especialidade: '',
     subespecialidade: '',
     lattes_link: ''
