@@ -10,7 +10,8 @@
   <nav>
   <a routerLink="/secretaria/dashboard" routerLinkActive="active">
   <i class="fas fa-home"></i> Dashboard</a>
-  <a routerLink="/presenca"><i class="fas fa-check-square"></i> Lista de Presença</a>
+  <a [routerLink]="['/secretaria', 'avaliadores']" routerLinkActive="active">
+  <i class="fas fa-user-tie"></i> Avaliadores Externos</a>
   <a [routerLink]="['/secretaria', 'notificacoes']" (click)="marcarNotificacoesComoLidas()"><i class="fas fa-bell"></i> Notificações
   <span *ngIf="exibirBadgeNotificacao" class="ponto-notificacao"></span></a>
   <a [routerLink]="['/secretaria', 'projetos']" routerLinkActive="active"><i class="fas fa-folder-plus"></i> Gerenciar Projetos</a>

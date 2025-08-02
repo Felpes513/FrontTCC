@@ -1,0 +1,41 @@
+<div class="container">
+  <h2><fa-icon [icon]="'users'"></fa-icon> Avaliadores Externos</h2>
+
+  <div class="mb-3 text-end">
+    <a class="btn btn-primary" [routerLink]="['/secretaria/avaliadores/novo']">
+      <fa-icon [icon]="'plus'"></fa-icon> Novo Avaliador
+    </a>
+  </div>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Especialidade</th>
+        <th>Subespecialidade</th>
+        <th>Lattes</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let a of avaliadores">
+        <td>{{ a.nome }}</td>
+        <td>{{ a.especialidade }}</td>
+        <td>{{ a.subespecialidade }}</td>
+        <td>
+          <a [href]="a.lattes_link" target="_blank" *ngIf="a.lattes_link">
+            Ver Lattes
+          </a>
+        </td>
+        <td>
+          <button class="btn btn-warning btn-sm" (click)="editar(a)">
+            <fa-icon [icon]="'edit'"></fa-icon>
+          </button>
+          <button class="btn btn-danger btn-sm" (click)="excluir(a.id)">
+            <fa-icon [icon]="'trash'"></fa-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
