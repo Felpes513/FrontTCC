@@ -8,19 +8,15 @@ import {
   ProjetoDetalhado,
   Orientador,
   Aluno,
-  Campus
+  Campus,
 } from '../projeto.service';
 
 @Component({
   selector: 'app-formulario-projeto',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule
-  ],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './formulario-projeto.component.html',
-  styleUrls: ['./formulario-projeto.component.css']
+  styleUrls: ['./formulario-projeto.component.css'],
 })
 export class FormularioProjetoComponent implements OnInit {
   projeto: ProjetoCadastro = {
@@ -28,8 +24,8 @@ export class FormularioProjetoComponent implements OnInit {
     resumo: '',
     orientador_nome: '',
     orientador_email: '',
-    campus_nome: '',
-    quantidadeMaximaAlunos: 0
+    quantidadeMaximaAlunos: 0,
+    id_campus: 0,
   };
 
   orientadores: Orientador[] = [];
@@ -80,32 +76,33 @@ export class FormularioProjetoComponent implements OnInit {
     this.erro = null;
     this.projetoService.getProjetoDetalhado(id).subscribe({
       next: (projeto: ProjetoDetalhado) => {
-        console.log('✅ Projeto carregado para edição:', projeto);
         this.projeto = {
           titulo_projeto: projeto.titulo_projeto || projeto.nomeProjeto,
           resumo: projeto.resumo || '',
           orientador_nome: projeto.nomeOrientador,
           orientador_email: projeto.orientador_email || '',
-          campus_nome: projeto.campus,
-          quantidadeMaximaAlunos: projeto.quantidadeMaximaAlunos
+          quantidadeMaximaAlunos: projeto.quantidadeMaximaAlunos,
+          id_campus: projeto.id_campus || 0,
         };
         this.orientadorSelecionadoId = projeto.id_orientador || 0;
         this.emailOrientador = projeto.orientador_email || '';
+        this.campusSelecionadoId = projeto.id_campus || 0;
+
         if (projeto.alunos && projeto.alunos.length > 0) {
           this.alunosInscritos = projeto.alunos.map((a: any) => ({
             id: a.id,
             nome: a.nome_completo,
             email: a.email,
-            documentoNotasUrl: a.documentoNotasUrl
+            documentoNotasUrl: a.documentoNotasUrl,
           }));
         }
         this.carregando = false;
       },
       error: (error) => {
-        console.error('❌ Erro ao carregar projeto:', error);
+        console.error('Erro ao carregar projeto:', error);
         this.erro = 'Erro ao carregar dados do projeto';
         this.carregando = false;
-      }
+      },
     });
   }
 
@@ -114,36 +111,30 @@ export class FormularioProjetoComponent implements OnInit {
       next: (orientadores: Orientador[]) => {
         this.orientadores = orientadores;
         this.orientadoresFiltrados = orientadores;
-        console.log('✅ Orientadores carregados:', orientadores);
       },
       error: (error) => {
-        console.error('❌ Erro ao carregar orientadores:', error);
-      }
+        console.error('Erro ao carregar orientadores:', error);
+      },
     });
   }
 
   private carregarCampus(): void {
     this.projetoService.listarCampus().subscribe({
-      next: (lista: Campus[]) => {
-        this.campus = lista;
-        this.campusFiltrados = lista;
-        console.log('✅ Campus carregados:', lista);
+      next: (res: Campus[]) => {
+        this.campus = res;
+        this.campusFiltrados = res;
       },
       error: (error) => {
-        console.error('❌ Erro ao carregar campus:', error);
+        console.error('Erro ao carregar campus:', error);
         this.erro = 'Erro ao carregar lista de campus';
-      }
+      },
     });
   }
 
   filtrarOrientadores(): void {
-    if (!this.buscaOrientador || this.buscaOrientador.trim() === '') {
-      this.orientadoresFiltrados = this.orientadores;
-      return;
-    }
     const filtro = this.buscaOrientador.toLowerCase().trim();
-    this.orientadoresFiltrados = this.orientadores.filter(orientador =>
-      orientador.nome_completo.toLowerCase().includes(filtro)
+    this.orientadoresFiltrados = this.orientadores.filter((o) =>
+      o.nome_completo.toLowerCase().includes(filtro)
     );
   }
 
@@ -152,42 +143,51 @@ export class FormularioProjetoComponent implements OnInit {
     const orientadorId = Number(target.value);
     if (!orientadorId || isNaN(orientadorId)) return;
     this.orientadorSelecionadoId = orientadorId;
-    const orientadorSelecionado = this.orientadores.find(o => o.id === orientadorId);
+    const orientadorSelecionado = this.orientadores.find(
+      (o) => o.id === orientadorId
+    );
     if (orientadorSelecionado) {
       this.projeto.orientador_nome = orientadorSelecionado.nome_completo;
       this.projeto.orientador_email = orientadorSelecionado.email || '';
       this.emailOrientador = orientadorSelecionado.email || '';
-      console.log('✅ Orientador selecionado:', orientadorSelecionado);
     }
   }
 
   selecionarCampus(event: Event): void {
     const id = Number((event.target as HTMLSelectElement).value);
-    const campusSelecionado = this.campus.find(c => c.id === id);
+    const campusSelecionado = this.campus.find((c) => c.id_campus === id);
     if (campusSelecionado) {
-      this.projeto.campus_nome = campusSelecionado.campus;
+      this.projeto.id_campus = campusSelecionado.id_campus;
     }
   }
 
   salvarProjeto(): void {
     if (!this.validarFormulario()) return;
+
     this.carregando = true;
     this.erro = null;
-    console.log('💾 Salvando projeto:', this.projeto);
+
     const operacao = this.modoEdicao
       ? this.projetoService.atualizarProjeto(this.projetoId, this.projeto)
-      : this.projetoService.cadastrarProjetoCompleto(this.projeto);
+      : this.projetoService.cadastrarProjetoCompleto(
+          this.projeto,
+          this.orientadorSelecionadoId
+        );
+
     operacao.subscribe({
-      next: (response) => {
-        console.log('✅ Projeto salvo com sucesso:', response);
-        alert(this.modoEdicao ? 'Projeto atualizado com sucesso!' : 'Projeto cadastrado com sucesso!');
+      next: () => {
+        alert(
+          this.modoEdicao
+            ? 'Projeto atualizado com sucesso!'
+            : 'Projeto cadastrado com sucesso!'
+        );
         this.router.navigate(['/secretaria/projetos']);
       },
       error: (error) => {
-        console.error('❌ Erro ao salvar projeto:', error);
+        console.error('Erro ao salvar projeto:', error);
         this.erro = error.message || 'Erro ao salvar projeto';
         this.carregando = false;
-      }
+      },
     });
   }
 
@@ -196,12 +196,16 @@ export class FormularioProjetoComponent implements OnInit {
       alert('Por favor, informe o título do projeto');
       return false;
     }
+    if (!this.projeto.resumo?.trim()) {
+      alert('Por favor, preencha o resumo do projeto');
+      return false;
+    }
     if (!this.projeto.orientador_nome?.trim()) {
       alert('Por favor, selecione um orientador');
       return false;
     }
-    if (!this.projeto.campus_nome?.trim()) {
-      alert('Por favor, informe o campus');
+    if (!this.projeto.id_campus || this.projeto.id_campus <= 0) {
+      alert('Por favor, selecione um campus');
       return false;
     }
     return true;
@@ -212,9 +216,11 @@ export class FormularioProjetoComponent implements OnInit {
     this.projetoService.aprovarAluno(alunoId).subscribe({
       next: () => {
         alert(`Aluno aprovado com sucesso!`);
-        this.alunosInscritos = this.alunosInscritos.filter(a => a.id !== alunoId);
+        this.alunosInscritos = this.alunosInscritos.filter(
+          (a) => a.id !== alunoId
+        );
       },
-      error: () => alert('Erro ao aprovar aluno.')
+      error: () => alert('Erro ao aprovar aluno.'),
     });
   }
 
@@ -224,9 +230,11 @@ export class FormularioProjetoComponent implements OnInit {
     this.projetoService.excluirAluno(alunoId).subscribe({
       next: () => {
         alert(`Aluno excluído com sucesso!`);
-        this.alunosInscritos = this.alunosInscritos.filter(a => a.id !== alunoId);
+        this.alunosInscritos = this.alunosInscritos.filter(
+          (a) => a.id !== alunoId
+        );
       },
-      error: () => alert('Erro ao excluir aluno.')
+      error: () => alert('Erro ao excluir aluno.'),
     });
   }
 
@@ -240,8 +248,8 @@ export class FormularioProjetoComponent implements OnInit {
       resumo: '',
       orientador_nome: '',
       orientador_email: '',
-      campus_nome: '',
-      quantidadeMaximaAlunos: 0
+      quantidadeMaximaAlunos: 0,
+      id_campus: 0,
     };
     this.orientadorSelecionadoId = 0;
     this.emailOrientador = '';

@@ -21,8 +21,8 @@ interface ApiResponse {
 
 @Component({
   selector: 'envio-de-email',
-  standalone: true, // ✅ Necessário para usar imports
-  imports: [CommonModule], // ✅ Adicione o CommonModule aqui
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './envio-de-email.component.html',
   styleUrls: ['./envio-de-email.component.css']
 })
@@ -85,13 +85,13 @@ export class EnvioDeEmailComponent implements OnInit {
           catchError((error: HttpErrorResponse) => {
             console.error('Erro ao enviar certificados:', error);
             let errorMessage = 'Erro ao enviar certificados.';
-            
+
             if (error.error && error.error.erro) {
               errorMessage = error.error.erro;
             } else if (error.status === 0) {
               errorMessage = 'Erro de conexão. Verifique se o servidor está rodando.';
             }
-            
+
             this.error = errorMessage;
             return of({ erro: errorMessage } as ApiResponse);
           })
@@ -99,16 +99,16 @@ export class EnvioDeEmailComponent implements OnInit {
         .subscribe({
           next: (response) => {
             this.loading = false;
-            
+
             if (response.erro) {
               this.error = response.erro;
             } else if (response.mensagem) {
               this.success = response.mensagem;
-              
+
               if (response.erros && response.erros.length > 0) {
                 this.success += ` Alguns erros ocorreram: ${response.erros.join(', ')}`;
               }
-              
+
               setTimeout(() => {
                 this.success = null;
               }, 5000);

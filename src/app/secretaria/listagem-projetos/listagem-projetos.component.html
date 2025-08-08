@@ -17,6 +17,12 @@
     </div>
   </div>
 
+  <div class="filter-buttons">
+    <button (click)="filtroStatus = ''">📄 Todos</button>
+    <button (click)="filtroStatus = 'EM_EXECUCAO'">🚀 Em Execução</button>
+    <button (click)="filtroStatus = 'CONCLUIDO'">✅ Concluídos</button>
+  </div>
+
   <!-- ✅ INDICADOR DE CARREGAMENTO -->
   <div *ngIf="carregando" class="loading">
     <p>🔄 Carregando projetos...</p>
@@ -30,8 +36,18 @@
 
   <!-- ✅ GRID DOS PROJETOS -->
   <div *ngIf="!carregando && !erro" class="card-grid">
-    <div *ngFor="let projeto of projetosFiltrados(); let i = index; trackBy: trackByFn" class="card">
-      <div class="progress-bar" [ngStyle]="{ 'width': simularProgresso(i) + '%', 'background': getCor(i) }"></div>
+    <div
+      *ngFor="
+        let projeto of projetosFiltrados();
+        let i = index;
+        trackBy: trackByFn
+      "
+      class="card"
+    >
+      <div
+        class="progress-bar"
+        [ngStyle]="{ width: simularProgresso(i) + '%', background: getCor(i) }"
+      ></div>
 
       <div class="card-body">
         <h3>{{ projeto.nomeProjeto }}</h3>
@@ -55,7 +71,9 @@
           <span [class.sem-alunos]="!temAlunos(projeto)">
             {{ getQuantidadeAlunos(projeto) }}
           </span>
-          <span *ngIf="!temAlunos(projeto)" class="aviso"> (nenhum aluno cadastrado)</span>
+          <span *ngIf="!temAlunos(projeto)" class="aviso">
+            (nenhum aluno cadastrado)</span
+          >
         </div>
 
         <!-- ✅ LISTA DE ALUNOS (quando existir) -->
@@ -81,7 +99,10 @@
   </div>
 
   <!-- ✅ QUANDO NÃO HÁ PROJETOS -->
-  <div *ngIf="!carregando && !erro && projetos.length === 0" class="no-projects">
+  <div
+    *ngIf="!carregando && !erro && projetos.length === 0"
+    class="no-projects"
+  >
     <h3>📁 Nenhum projeto encontrado</h3>
     <p>Comece criando seu primeiro projeto!</p>
     <button class="btn-add" [routerLink]="['/secretaria/projetos/novo']">
@@ -90,7 +111,15 @@
   </div>
 
   <!-- ✅ QUANDO NÃO HÁ RESULTADOS DE BUSCA -->
-  <div *ngIf="!carregando && !erro && projetos.length > 0 && projetosFiltrados().length === 0" class="no-results">
+  <div
+    *ngIf="
+      !carregando &&
+      !erro &&
+      projetos.length > 0 &&
+      projetosFiltrados().length === 0
+    "
+    class="no-results"
+  >
     <h3>🔍 Nenhum resultado encontrado</h3>
     <p>Tente ajustar os termos da sua busca.</p>
     <button class="btn-clear-filter" (click)="filtro = ''">

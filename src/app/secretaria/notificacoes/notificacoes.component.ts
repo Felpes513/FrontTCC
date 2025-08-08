@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ProjetoService } from '../projeto.service'; // ajuste se necessário
 
 interface Notificacao {
   tipo: string;
@@ -8,7 +9,6 @@ interface Notificacao {
   hora: string;
   lida: boolean;
 }
-
 
 @Component({
   selector: 'app-notificacoes',
@@ -23,25 +23,32 @@ export class NotificacoesComponent implements OnInit {
   temNotificacoesNaoLidas: boolean = true;
   notificacaoAberta: Notificacao | null = null;
 
-  ngOnInit(): void {
-    this.notificacoes = [
-      {
-        tipo: 'Atualização de Projeto',
-        mensagem: 'Projeto P-001 SGPIC foi atualizado.',
-        data: '09/07/2025',
-        hora: '15:21',
-        lida: false
-      },
-      {
-        tipo: 'Aprovação de Aluno',
-        mensagem: 'Aluno Felipe Souza Moreira foi aprovado com sucesso.',
-        data: '09/07/2025',
-        hora: '15:22',
-        lida: false
-      }
-    ];
+  constructor(private projetoService: ProjetoService) {}
 
-    this.temNotificacoesNaoLidas = this.novasNotificacoes;
+  ngOnInit(): void {
+    this.carregarNotificacoes();
+  }
+
+  carregarNotificacoes(): void {
+    this.projetoService.getNotificacoes('secretaria').subscribe({
+      next: (lista) => {
+        this.notificacoes = lista.map(n => {
+          const dataHora = new Date(n.data_criacao);
+          return {
+            tipo: n.tipo,
+            mensagem: n.mensagem,
+            data: dataHora.toLocaleDateString(),
+            hora: dataHora.toLocaleTimeString(),
+            lida: n.lida
+          };
+        });
+        this.temNotificacoesNaoLidas = this.novasNotificacoes;
+        console.log('✅ Notificações recebidas:', this.notificacoes);
+      },
+      error: (err) => {
+        console.error('❌ Erro ao buscar notificações:', err);
+      }
+    });
   }
 
   marcarTodasComoLidas(): void {

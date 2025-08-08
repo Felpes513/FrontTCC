@@ -40,13 +40,13 @@ export class FormularioAvaliadorComponent implements OnInit {
 
   salvarAvaliador() {
     if (this.edicao) {
-      this.http.put(`http://localhost:8000/avaliadores-externos/${this.avaliador.id}`, this.avaliador)
+      this.http.put(`http://localhost:8001/avaliadores-externos/${this.avaliador.id}`, this.avaliador)
         .subscribe(() => {
           alert('Avaliador atualizado com sucesso!');
           this.router.navigate(['/secretaria/listagem-avaliadores']);
         });
     } else {
-      this.http.post('http://localhost:8000/avaliadores-externos', this.avaliador)
+      this.http.post('http://localhost:8001/avaliadores-externos', this.avaliador)
         .subscribe(() => {
           alert('Avaliador cadastrado com sucesso!');
           this.router.navigate(['/secretaria/listagem-avaliadores']);

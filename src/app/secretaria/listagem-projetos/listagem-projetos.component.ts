@@ -7,24 +7,18 @@ import { ProjetoService, Projeto } from '../projeto.service';
 @Component({
   selector: 'app-listagem-projetos',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule
-  ],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './listagem-projetos.component.html',
-  styleUrls: ['./listagem-projetos.component.css']
+  styleUrls: ['./listagem-projetos.component.css'],
 })
 export class ListagemProjetosComponent implements OnInit {
   projetos: Projeto[] = [];
   filtro: string = '';
   carregando: boolean = false;
   erro: string | null = null;
+  filtroStatus: string = '';
 
-  constructor(
-    private projetoService: ProjetoService,
-    private router: Router
-  ) {}
+  constructor(private projetoService: ProjetoService, private router: Router) {}
 
   trackByFn(index: number, item: Projeto): any {
     return item.id || index;
@@ -46,9 +40,14 @@ export class ListagemProjetosComponent implements OnInit {
         console.log('✅ Projetos processados e normalizados:', projetos);
 
         // Verificar se todos os projetos têm IDs válidos
-        const projetosComIdInvalido = projetos.filter(p => !p.id || p.id <= 0);
+        const projetosComIdInvalido = projetos.filter(
+          (p) => !p.id || p.id <= 0
+        );
         if (projetosComIdInvalido.length > 0) {
-          console.warn('⚠️ Projetos com ID inválido encontrados:', projetosComIdInvalido);
+          console.warn(
+            '⚠️ Projetos com ID inválido encontrados:',
+            projetosComIdInvalido
+          );
         }
 
         this.projetos = projetos;
@@ -57,16 +56,21 @@ export class ListagemProjetosComponent implements OnInit {
         // Debug final - resumo do que foi carregado
         console.log('📊 RESUMO FINAL DOS PROJETOS:', {
           totalProjetos: this.projetos.length,
-          projetosComIdValido: this.projetos.filter(p => p.id && p.id > 0).length,
-          projetosComOrientador: this.projetos.filter(p => p.nomeOrientador !== 'Orientador não informado').length,
-          projetosComAlunos: this.projetos.filter(p => p.nomesAlunos.length > 0).length,
-          detalhePorProjeto: this.projetos.map(p => ({
+          projetosComIdValido: this.projetos.filter((p) => p.id && p.id > 0)
+            .length,
+          projetosComOrientador: this.projetos.filter(
+            (p) => p.nomeOrientador !== 'Orientador não informado'
+          ).length,
+          projetosComAlunos: this.projetos.filter(
+            (p) => p.nomesAlunos.length > 0
+          ).length,
+          detalhePorProjeto: this.projetos.map((p) => ({
             id: p.id,
             nome: p.nomeProjeto,
             orientador: p.nomeOrientador,
             qtdAlunos: p.nomesAlunos.length,
-            idValido: this.temIdValido(p)
-          }))
+            idValido: this.temIdValido(p),
+          })),
         });
       },
       error: (error) => {
@@ -74,32 +78,38 @@ export class ListagemProjetosComponent implements OnInit {
 
         // Mensagem de erro mais detalhada baseada no status HTTP
         if (error.status === 0) {
-          this.erro = 'Erro de conexão: Verifique se a API FastAPI está rodando na porta 8000.';
+          this.erro =
+            'Erro de conexão: Verifique se a API FastAPI está rodando na porta 8000.';
         } else if (error.status === 404) {
-          this.erro = 'Endpoint não encontrado: Verifique se a rota /projetos está configurada corretamente.';
+          this.erro =
+            'Endpoint não encontrado: Verifique se a rota /projetos está configurada corretamente.';
         } else if (error.status >= 500) {
-          this.erro = 'Erro interno do servidor: Verifique os logs da API FastAPI.';
+          this.erro =
+            'Erro interno do servidor: Verifique os logs da API FastAPI.';
         } else {
           this.erro = error.message || 'Erro desconhecido ao carregar projetos';
         }
 
         this.carregando = false;
-      }
+      },
     });
   }
 
   // ✅ Filtro de projetos
   projetosFiltrados(): Projeto[] {
-    if (!this.filtro || this.filtro.trim() === '') {
-      return this.projetos;
-    }
+    const filtroLower = this.filtro.toLowerCase().trim();
 
-    const filtroLower = this.filtro.toLowerCase();
-    return this.projetos.filter(projeto =>
-      projeto.nomeProjeto.toLowerCase().includes(filtroLower) ||
-      projeto.nomeOrientador.toLowerCase().includes(filtroLower) ||
-      projeto.campus.toLowerCase().includes(filtroLower)
-    );
+    return this.projetos.filter((projeto) => {
+      const combinaTexto =
+        projeto.nomeProjeto.toLowerCase().includes(filtroLower) ||
+        projeto.nomeOrientador?.toLowerCase().includes(filtroLower) ||
+        projeto.campus.toLowerCase().includes(filtroLower);
+
+      const combinaStatus =
+        !this.filtroStatus || projeto.status === this.filtroStatus;
+
+      return combinaTexto && combinaStatus;
+    });
   }
 
   // ✅ Métodos auxiliares para o template
@@ -108,11 +118,11 @@ export class ListagemProjetosComponent implements OnInit {
   }
 
   getQuantidadeAlunos(projeto: Projeto): number {
-    return projeto.nomesAlunos.length;
+    return projeto.quantidadeMaximaAlunos || 0;
   }
 
   temAlunos(projeto: Projeto): boolean {
-    return projeto.nomesAlunos.length > 0;
+    return projeto.quantidadeMaximaAlunos > 0;
   }
 
   temOrientador(projeto: Projeto): boolean {
@@ -136,7 +146,7 @@ export class ListagemProjetosComponent implements OnInit {
     // Extrair ID e objeto do projeto
     if (typeof projeto === 'number') {
       id = projeto;
-      projetoObj = this.projetos.find(p => p.id === id) || null;
+      projetoObj = this.projetos.find((p) => p.id === id) || null;
     } else {
       id = projeto.id;
       projetoObj = projeto;
@@ -151,8 +161,14 @@ export class ListagemProjetosComponent implements OnInit {
       idEhNumero: typeof id === 'number',
       idEhNaN: isNaN(id),
       idMaiorQueZero: id > 0,
-      projetoEncontrado: projetoObj ? { id: projetoObj.id, nome: projetoObj.nomeProjeto } : null,
-      listaTodosIds: this.projetos.map(p => ({ id: p.id, tipo: typeof p.id, nome: p.nomeProjeto }))
+      projetoEncontrado: projetoObj
+        ? { id: projetoObj.id, nome: projetoObj.nomeProjeto }
+        : null,
+      listaTodosIds: this.projetos.map((p) => ({
+        id: p.id,
+        tipo: typeof p.id,
+        nome: p.nomeProjeto,
+      })),
     });
 
     // Validação rigorosa do ID
@@ -164,22 +180,28 @@ export class ListagemProjetosComponent implements OnInit {
         ehUndefined: id === undefined,
         ehNull: id === null,
         ehZero: id === 0,
-        ehNegativo: id < 0
+        ehNegativo: id < 0,
       });
 
-      alert('Erro: ID do projeto não foi encontrado ou é inválido. Recarregue a página e tente novamente.');
+      alert(
+        'Erro: ID do projeto não foi encontrado ou é inválido. Recarregue a página e tente novamente.'
+      );
       return;
     }
 
     if (!projetoObj) {
       console.error('❌ Projeto não encontrado na lista local com ID:', id);
-      alert('Erro: Projeto não encontrado. Recarregue a página e tente novamente.');
+      alert(
+        'Erro: Projeto não encontrado. Recarregue a página e tente novamente.'
+      );
       return;
     }
 
     // Confirmação de exclusão
     const nomeExibicao = projetoObj.nomeProjeto || 'Desconhecido';
-    const confirmacao = confirm(`Tem certeza que deseja excluir o projeto "${nomeExibicao}"?\n\nID: ${id}`);
+    const confirmacao = confirm(
+      `Tem certeza que deseja excluir o projeto "${nomeExibicao}"?\n\nID: ${id}`
+    );
 
     if (!confirmacao) {
       console.log('❌ Exclusão cancelada pelo usuário');
@@ -189,7 +211,7 @@ export class ListagemProjetosComponent implements OnInit {
     console.log('🗑️ Iniciando exclusão do projeto:', {
       id,
       nome: nomeExibicao,
-      url: `projetos/${id}`
+      url: `projetos/${id}`,
     });
 
     // Executar exclusão
@@ -198,10 +220,13 @@ export class ListagemProjetosComponent implements OnInit {
         console.log('✅ Projeto excluído com sucesso:', response);
 
         // Remover da lista local
-        const indexRemover = this.projetos.findIndex(p => p.id === id);
+        const indexRemover = this.projetos.findIndex((p) => p.id === id);
         if (indexRemover !== -1) {
           this.projetos.splice(indexRemover, 1);
-          console.log('✅ Projeto removido da lista local. Projetos restantes:', this.projetos.length);
+          console.log(
+            '✅ Projeto removido da lista local. Projetos restantes:',
+            this.projetos.length
+          );
         }
 
         // Exibir mensagem de sucesso
@@ -218,7 +243,7 @@ export class ListagemProjetosComponent implements OnInit {
           message: error.message,
           detail: error.error?.detail,
           url: error.url,
-          errorCompleto: error
+          errorCompleto: error,
         });
 
         // Mensagem de erro específica
@@ -237,7 +262,7 @@ export class ListagemProjetosComponent implements OnInit {
         }
 
         alert(`Erro ao excluir projeto: ${mensagemErro}`);
-      }
+      },
     });
   }
 
@@ -287,11 +312,13 @@ export class ListagemProjetosComponent implements OnInit {
 
   // ✅ Validador de ID centralizado
   private isIdValido(id: any): boolean {
-    return id !== undefined &&
-           id !== null &&
-           typeof id === 'number' &&
-           !isNaN(id) &&
-           id > 0;
+    return (
+      id !== undefined &&
+      id !== null &&
+      typeof id === 'number' &&
+      !isNaN(id) &&
+      id > 0
+    );
   }
 
   // ✅ Método para obter status do projeto baseado nos dados
@@ -349,7 +376,8 @@ export class ListagemProjetosComponent implements OnInit {
       return 0;
     }
 
-    const progresso = (projeto.nomesAlunos.length / projeto.quantidadeMaximaAlunos) * 100;
+    const progresso =
+      (projeto.nomesAlunos.length / projeto.quantidadeMaximaAlunos) * 100;
     return Math.min(progresso, 100);
   }
 
@@ -366,35 +394,36 @@ export class ListagemProjetosComponent implements OnInit {
       alunos: projeto.nomesAlunos,
       qtdAlunosAtual: projeto.nomesAlunos.length,
       status: this.getStatusProjeto(projeto),
-      progresso: this.calcularProgresso(projeto)
+      progresso: this.calcularProgresso(projeto),
     });
   }
 
   debugListaProjetos(): void {
     console.log('🔍 Debug da lista completa:', {
       totalProjetos: this.projetos.length,
-      projetosComIdValido: this.projetos.filter(p => this.temIdValido(p)).length,
-      projetos: this.projetos.map(p => ({
+      projetosComIdValido: this.projetos.filter((p) => this.temIdValido(p))
+        .length,
+      projetos: this.projetos.map((p) => ({
         id: p.id,
         tipoId: typeof p.id,
         nome: p.nomeProjeto,
         temIdValido: this.temIdValido(p),
-        status: this.getStatusProjeto(p)
-      }))
+        status: this.getStatusProjeto(p),
+      })),
     });
   }
 
   // ✅ Método para exportar lista de projetos (funcionalidade extra)
   exportarProjetos(): void {
-    const dadosExportacao = this.projetos.map(p => ({
+    const dadosExportacao = this.projetos.map((p) => ({
       ID: p.id,
       'Nome do Projeto': p.nomeProjeto,
       Campus: p.campus,
       Orientador: p.nomeOrientador,
       'Máximo de Alunos': p.quantidadeMaximaAlunos,
       'Alunos Inscritos': p.nomesAlunos.length,
-      'Status': this.getTextoStatus(this.getStatusProjeto(p)),
-      'Progresso (%)': this.calcularProgresso(p).toFixed(1)
+      Status: this.getTextoStatus(this.getStatusProjeto(p)),
+      'Progresso (%)': this.calcularProgresso(p).toFixed(1),
     }));
 
     console.log('📊 Dados para exportação:', dadosExportacao);

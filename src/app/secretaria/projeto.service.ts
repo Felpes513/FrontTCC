@@ -3,11 +3,10 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { tap, map, catchError, switchMap } from 'rxjs/operators';
 
-
 //Esses export interfaces definem a estrutura de dados trocados entre o frontend e o backend
 export interface ProjetoRequest {
   titulo_projeto: string;
-  resumo?: string;
+  resumo: string;
   id_orientador: number;
   id_campus: number;
 }
@@ -16,26 +15,26 @@ export interface Projeto {
   id: number;
   nomeProjeto: string;
   campus: string;
-  quantidadeMaximaAlunos: number;
+  quantidadeMaximaAlunos: number; // <- isso agora representa o número de alunos atuais
   nomeOrientador: string;
-  nomesAlunos: string[];
+  nomesAlunos: string[]; // <- pode deixar vazio por enquanto
+  status?: 'EM_EXECUCAO' | 'CONCLUIDO';
 }
 
-export interface ProjetoFormulario {
+interface ProjetoFormulario {
   titulo_projeto: string;
   resumo?: string;
   orientador_nome: string;
-  orientador_email?: string;
-  campus_nome: string;
+  id_campus: number; // adicione isso
 }
 
 export interface ProjetoCadastro {
   titulo_projeto: string;
-  resumo?: string;
+  resumo: string;
   orientador_nome: string;
-  orientador_email?: string;
-  campus_nome: string;
-  quantidadeMaximaAlunos?: number;
+  orientador_email: string;
+  id_campus: number; // ✅ correta
+  quantidadeMaximaAlunos: number;
 }
 
 export interface Aluno {
@@ -73,46 +72,53 @@ export interface Orientador {
 }
 
 export interface Campus {
-  id: number;
+  id_campus: number;
   campus: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class ProjetoService {
-  private apiUrl = 'http://localhost:8000/projetos';
+  private apiUrl = 'http://localhost:8001/projetos';
 
   constructor(private http: HttpClient) {}
 
-  cadastrarProjetoCompleto(projeto: ProjetoCadastro): Observable<any> {
-    const formulario: ProjetoFormulario = {
+  cadastrarProjetoCompleto(
+    projeto: ProjetoCadastro,
+    id_orientador: number
+  ): Observable<any> {
+    if (projeto.id_campus == null) {
+      return throwError(() => ({
+        message: 'id_campus é obrigatório para cadastrar o projeto.',
+      }));
+    }
+
+    const projetoRequest: ProjetoRequest = {
       titulo_projeto: projeto.titulo_projeto,
-      resumo: projeto.resumo,
-      orientador_nome: projeto.orientador_nome,
-      orientador_email: projeto.orientador_email,
-      campus_nome: projeto.campus_nome
+      resumo: projeto.resumo.trim(),
+      id_orientador: id_orientador,
+      id_campus: projeto.id_campus,
     };
 
-    return this.processarDadosECadastrar(formulario);
+    return this.http.post(this.apiUrl, projetoRequest).pipe(
+      tap((response) => console.log('✅ Projeto cadastrado:', response)),
+      catchError(this.handleError)
+    );
   }
 
-  private processarDadosECadastrar(formulario: ProjetoFormulario): Observable<any> {
+  private processarDadosECadastrar(
+    formulario: ProjetoFormulario
+  ): Observable<any> {
     return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
-      switchMap((orientador: Orientador) =>
-        this.buscarCampusPorNome(formulario.campus_nome).pipe(
-          catchError(() => this.criarCampus(formulario.campus_nome)),
-          map((campus: Campus) => ({ orientador, campus }))
-        )
-      ),
-      switchMap(({ orientador, campus }) => {
+      switchMap((orientador: Orientador) => {
         const projetoRequest: ProjetoRequest = {
           titulo_projeto: formulario.titulo_projeto,
           resumo: formulario.resumo || '',
           id_orientador: orientador.id,
-          id_campus: campus.id
+          id_campus: formulario.id_campus,
         };
 
         return this.http.post(this.apiUrl, projetoRequest).pipe(
-          tap(response => console.log('✅ Projeto cadastrado:', response)),
+          tap((response) => console.log('✅ Projeto cadastrado:', response)),
           catchError(this.handleError)
         );
       })
@@ -121,112 +127,116 @@ export class ProjetoService {
 
   listarProjetos(): Observable<Projeto[]> {
     return this.http.get<any[]>(this.apiUrl).pipe(
-      map(projetos => projetos.map(p => this.normalizarProjeto(p))),
+      map((projetos) => projetos.map((p: any) => this.normalizarProjeto(p))),
       catchError(this.handleError)
     );
   }
 
   getProjetoPorId(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
-      catchError(this.handleError)
-    );
+    return this.http
+      .get<any>(`${this.apiUrl}/${id}`)
+      .pipe(catchError(this.handleError));
   }
 
   getProjetoDetalhado(id: number): Observable<ProjetoDetalhado> {
     return this.http.get<any>(`${this.apiUrl}/${id}/detalhado`).pipe(
-      map(projeto => this.normalizarProjetoDetalhado(projeto)),
-      catchError(() => this.getProjetoPorId(id).pipe(
-        map(projeto => this.normalizarProjetoDetalhado(projeto))
-      ))
+      map((projeto) => this.normalizarProjetoDetalhado(projeto)),
+      catchError(() =>
+        this.getProjetoPorId(id).pipe(
+          map((projeto) => this.normalizarProjetoDetalhado(projeto))
+        )
+      )
     );
   }
 
   atualizarProjeto(id: number, formulario: ProjetoFormulario): Observable<any> {
     return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
-      switchMap((orientador: Orientador) =>
-        this.buscarCampusPorNome(formulario.campus_nome).pipe(
-          catchError(() => this.criarCampus(formulario.campus_nome)),
-          map((campus: Campus) => ({ orientador, campus }))
-        )
-      ),
-      switchMap(({ orientador, campus }) => {
+      switchMap((orientador: Orientador) => {
         const projetoRequest: ProjetoRequest = {
           titulo_projeto: formulario.titulo_projeto,
           resumo: formulario.resumo || '',
           id_orientador: orientador.id,
-          id_campus: campus.id
+          id_campus: formulario.id_campus,
         };
 
-        return this.http.put(`${this.apiUrl}/${id}`, projetoRequest).pipe(
-          catchError(this.handleError)
-        );
+        return this.http
+          .put(`${this.apiUrl}/${id}`, projetoRequest)
+          .pipe(catchError(this.handleError));
       })
     );
   }
 
   excluirProjeto(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
-      catchError(this.handleError)
-    );
+    return this.http
+      .delete(`${this.apiUrl}/${id}`)
+      .pipe(catchError(this.handleError));
   }
 
   // === ORIENTADORES E CAMPUS ===
 
   listarOrientadores(): Observable<Orientador[]> {
-    return this.http.get<Orientador[]>('http://localhost:8000/orientadores/').pipe(
-      catchError(this.handleError)
-    );
+    return this.http
+      .get<Orientador[]>('http://localhost:8001/orientadores/')
+      .pipe(catchError(this.handleError));
   }
 
   buscarOrientadorPorNome(nome: string): Observable<Orientador> {
-    return this.http.get<Orientador>(
-      `http://localhost:8000/orientadores/buscar?nome=${encodeURIComponent(nome)}`
-    ).pipe(
-      catchError(this.handleError)
-    );
+    return this.http
+      .get<Orientador>(
+        `http://localhost:8001/orientadores/buscar?nome=${encodeURIComponent(
+          nome
+        )}`
+      )
+      .pipe(catchError(this.handleError));
   }
 
   listarCampus(): Observable<Campus[]> {
-    return this.http.get<Campus[]>('http://localhost:8000/campus/').pipe(
-      catchError(this.handleError)
-    );
+    return this.http
+      .get<Campus[]>('http://localhost:8001/campus/')
+      .pipe(catchError(this.handleError));
   }
 
   buscarCampusPorNome(nome: string): Observable<Campus> {
-    return this.http.get<Campus>(
-      `http://localhost:8000/campus/buscar?nome=${encodeURIComponent(nome)}`
-    ).pipe(
-      catchError(this.handleError)
-    );
+    return this.http
+      .get<Campus>(
+        `http://localhost:8001/campus/buscar?nome=${encodeURIComponent(nome)}`
+      )
+      .pipe(catchError(this.handleError));
   }
 
   criarCampus(nome: string): Observable<Campus> {
-    return this.http.post<Campus>('http://localhost:8000/campus/', {
-      campus: nome
-    }).pipe(
-      catchError(this.handleError)
-    );
+    return this.http
+      .post<Campus>('http://localhost:8001/campus/', {
+        campus: nome,
+      })
+      .pipe(catchError(this.handleError));
   }
 
   // === ALUNOS E INSCRIÇÕES ===
 
   listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
-    return this.http.get<any[]>(
-      `http://localhost:8000/inscricoes/projetos/${idProjeto}/inscricoes`
-    ).pipe(
-      catchError(this.handleError)
-    );
+    return this.http
+      .get<any[]>(
+        `http://localhost:8001/inscricoes/projetos/${idProjeto}/inscricoes`
+      )
+      .pipe(catchError(this.handleError));
   }
 
   aprovarAluno(id: number): Observable<any> {
-    return this.http.post(`http://localhost:8000/inscricoes/${id}/aprovar`, {}).pipe(
-      catchError(this.handleError)
-    );
+    return this.http
+      .post(`http://localhost:8001/inscricoes/${id}/aprovar`, {})
+      .pipe(catchError(this.handleError));
   }
 
   excluirAluno(id: number): Observable<any> {
-    return this.http.delete(`http://localhost:8000/inscricoes/${id}`).pipe(
-      catchError(this.handleError)
+    return this.http
+      .delete(`http://localhost:8001/inscricoes/${id}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getNotificacoes(destinatario: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      `http://localhost:8001/notificacoes?destinatario=${destinatario}`
     );
   }
 
@@ -237,9 +247,10 @@ export class ProjetoService {
       id: dados.id || dados.id_projeto,
       nomeProjeto: dados.nomeProjeto || dados.titulo_projeto || 'Sem título',
       campus: dados.campus || '',
-      quantidadeMaximaAlunos: dados.quantidadeMaximaAlunos || 0,
-      nomeOrientador: dados.nomeOrientador || '',
-      nomesAlunos: dados.nomesAlunos || []
+      quantidadeMaximaAlunos: dados.quantidade_alunos || 0, // ✅ aqui!
+      nomeOrientador:
+        dados.nomeOrientador || dados.orientador || 'Não informado',
+      nomesAlunos: dados.nomesAlunos || [],
     };
   }
 
@@ -259,7 +270,7 @@ export class ProjetoService {
       id_campus: dados.id_campus || 0,
       data_criacao: dados.data_criacao || '',
       data_atualizacao: dados.data_atualizacao || '',
-      status: dados.status || ''
+      status: dados.status || '',
     };
   }
 
@@ -274,7 +285,21 @@ export class ProjetoService {
     return throwError(() => ({
       message: errorMessage,
       status: error.status,
-      error: error.error
+      error: error.error,
     }));
+  };
+
+  // === AÇÕES DO ORIENTADOR ===
+  updateAlunosProjeto(
+    id_projeto: number,
+    id_alunos: number[]
+  ): Observable<any> {
+    const body = { id_projeto, id_alunos };
+    return this.http
+      .post('http://localhost:8001/projetos/update-alunos', body)
+      .pipe(
+        tap((res) => console.log('✅ Alunos atualizados com sucesso:', res)),
+        catchError(this.handleError)
+      );
   }
 }

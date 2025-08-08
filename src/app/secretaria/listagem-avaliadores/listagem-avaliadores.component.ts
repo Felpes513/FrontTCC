@@ -22,7 +22,7 @@ export class ListagemAvaliadoresComponent implements OnInit {
     iconLib.addIcons(faEdit, faTrash, faUsers, faPlus);
   }
   ngOnInit() {
-    this.http.get<any[]>('http://localhost:8000/avaliadores-externos')
+    this.http.get<any[]>('http://localhost:8001/avaliadores-externos')
       .subscribe(data => this.avaliadores = data);
   }
 
@@ -32,7 +32,7 @@ export class ListagemAvaliadoresComponent implements OnInit {
 
   excluir(id: number) {
     if (confirm('Deseja excluir este avaliador?')) {
-      this.http.delete(`http://localhost:8000/avaliadores-externos/${id}`)
+      this.http.delete(`http://localhost:8001/avaliadores-externos/${id}`)
         .subscribe(() => {
           this.avaliadores = this.avaliadores.filter(a => a.id !== id);
         });

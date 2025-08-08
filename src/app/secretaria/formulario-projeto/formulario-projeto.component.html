@@ -3,34 +3,81 @@
 <form class="form-container" (ngSubmit)="salvarProjeto()" *ngIf="projeto">
   <!-- Nome do Projeto -->
   <label for="titulo"><i class="fas fa-book"></i> Título do Projeto</label>
-  <input id="titulo" type="text" [(ngModel)]="projeto.titulo_projeto" name="titulo_projeto" required />
+  <input
+    id="titulo"
+    type="text"
+    [(ngModel)]="projeto.titulo_projeto"
+    name="titulo_projeto"
+    required
+  />
 
   <!-- Resumo do Projeto -->
-  <label for="resumo"><i class="fas fa-align-left"></i> Resumo do Projeto</label>
-  <textarea id="resumo" [(ngModel)]="projeto.resumo" name="resumo" required></textarea>
+  <label for="resumo"
+    ><i class="fas fa-align-left"></i> Resumo do Projeto</label
+  >
+  <textarea
+    id="resumo"
+    [(ngModel)]="projeto.resumo"
+    name="resumo"
+    required
+  ></textarea>
 
   <!-- Filtro de Orientador -->
-  <label for="buscaOrientador"><i class="fas fa-search"></i> Buscar Orientador</label>
-  <input id="buscaOrientador" type="text" [(ngModel)]="buscaOrientador" (input)="filtrarOrientadores()" name="busca_orientador" placeholder="Digite o nome do orientador" />
+  <label for="buscaOrientador"
+    ><i class="fas fa-search"></i> Buscar Orientador</label
+  >
+  <input
+    id="buscaOrientador"
+    type="text"
+    [(ngModel)]="buscaOrientador"
+    (input)="filtrarOrientadores()"
+    name="busca_orientador"
+    placeholder="Digite o nome do orientador"
+  />
 
   <!-- Selecionar Orientador -->
-  <label for="selectOrientador"><i class="fas fa-user-tie"></i> Selecionar Orientador</label>
-  <select id="selectOrientador" [(ngModel)]="orientadorSelecionadoId" (change)="selecionarOrientador($event)" required name="orientadorSelecionadoId">
+  <label for="selectOrientador"
+    ><i class="fas fa-user-tie"></i> Selecionar Orientador</label
+  >
+  <select
+    id="selectOrientador"
+    [(ngModel)]="orientadorSelecionadoId"
+    (change)="selecionarOrientador($event)"
+    required
+    name="orientadorSelecionadoId"
+  >
     <option value="">-- Selecione --</option>
-    <option *ngFor="let orientador of orientadoresFiltrados" [value]="orientador.id">
+    <option
+      *ngFor="let orientador of orientadoresFiltrados"
+      [value]="orientador.id"
+    >
       {{ orientador.nome_completo }}
     </option>
   </select>
 
   <!-- E-mail do Orientador -->
-  <label for="email_orientador"><i class="fas fa-envelope"></i> E-mail do Orientador</label>
-  <input id="email_orientador" type="email" [value]="emailOrientador" name="email_orientador" readonly />
+  <label for="email_orientador"
+    ><i class="fas fa-envelope"></i> E-mail do Orientador</label
+  >
+  <input
+    id="email_orientador"
+    type="email"
+    [value]="emailOrientador"
+    name="email_orientador"
+    readonly
+  />
 
   <!-- Campus -->
   <label for="selectCampus"><i class="fas fa-building"></i> Campus</label>
-  <select id="selectCampus" [(ngModel)]="campusSelecionadoId" (change)="selecionarCampus($event)" required name="campusSelecionadoId">
+  <select
+    id="selectCampus"
+    [(ngModel)]="campusSelecionadoId"
+    (change)="selecionarCampus($event)"
+    required
+    name="campusSelecionadoId"
+  >
     <option value="">-- Selecione --</option>
-    <option *ngFor="let campus of campusFiltrados" [value]="campus.id">
+    <option *ngFor="let campus of campusFiltrados" [value]="campus.id_campus">
       {{ campus.campus }}
     </option>
   </select>
@@ -39,16 +86,33 @@
   <div *ngIf="alunosInscritos.length > 0">
     <h3><i class="fas fa-users"></i> Alunos Inscritos</h3>
     <div *ngFor="let aluno of alunosInscritos" class="aluno-card">
-      <p><strong><i class="fas fa-user"></i> Nome:</strong> {{ aluno.nome }}</p>
-      <p><strong><i class="fas fa-envelope"></i> E-mail:</strong> {{ aluno.email }}</p>
-      <a *ngIf="aluno.documentoNotasUrl" [href]="aluno.documentoNotasUrl" target="_blank">
+      <p>
+        <strong><i class="fas fa-user"></i> Nome:</strong> {{ aluno.nome }}
+      </p>
+      <p>
+        <strong><i class="fas fa-envelope"></i> E-mail:</strong>
+        {{ aluno.email }}
+      </p>
+      <a
+        *ngIf="aluno.documentoNotasUrl"
+        [href]="aluno.documentoNotasUrl"
+        target="_blank"
+      >
         <i class="fas fa-file-alt"></i> Visualizar Notas
       </a>
       <div class="aluno-actions">
-        <button type="button" (click)="aprovarAluno(aluno.id)" class="btn-approve">
+        <button
+          type="button"
+          (click)="aprovarAluno(aluno.id)"
+          class="btn-approve"
+        >
           <i class="fas fa-check"></i> Aprovar
         </button>
-        <button type="button" (click)="excluirAluno(aluno.id)" class="btn-delete">
+        <button
+          type="button"
+          (click)="excluirAluno(aluno.id)"
+          class="btn-delete"
+        >
           <i class="fas fa-trash"></i> Excluir
         </button>
       </div>

@@ -1,4 +1,6 @@
-/* Envolve o conteúdo total da tela, menos o sidenav */
+/* ======================================= */
+/* 📦 Wrapper geral da tela de notificações */
+/* ======================================= */
 .notificacoes-wrapper {
   padding: 30px 40px;
   width: 100%;
@@ -9,11 +11,17 @@
   box-sizing: border-box;
 }
 
+/* ============================== */
+/* 🧾 Container das notificações */
+/* ============================== */
 .notificacoes-container {
   max-width: 1000px;
   margin-left: 10px; /* Aproxima do sidenav */
 }
 
+/* ============================== */
+/* ✅ Botão "Ler todas as notificações" */
+/* ============================== */
 .btn-marcar {
   background-color: #2563eb;
   color: white;
@@ -24,6 +32,9 @@
   cursor: pointer;
 }
 
+/* ============================== */
+/* 🔔 Cartão de notificação individual */
+/* ============================== */
 .notificacao {
   background-color: #f9f9f9;
   padding: 15px;
@@ -38,6 +49,7 @@
   background-color: #f1f5f9;
 }
 
+/* Detalhes da notificação */
 .tipo {
   font-weight: 600;
   color: #4b5563;
@@ -53,7 +65,9 @@
   font-size: 0.8rem;
 }
 
-/* Modal */
+/* ============================== */
+/* 🪟 Modal de exibição da notificação */
+/* ============================== */
 .modal {
   position: fixed;
   top: 0;
@@ -91,6 +105,9 @@
   cursor: pointer;
 }
 
+/* ============================== */
+/* 📱 Responsividade: tablets */
+/* ============================== */
 @media (max-width: 768px) {
   .notificacoes-wrapper {
     padding: 20px;
@@ -120,6 +137,9 @@
   }
 }
 
+/* ============================== */
+/* 📱 Responsividade: celulares */
+/* ============================== */
 @media (max-width: 480px) {
   .notificacoes-wrapper {
     padding: 15px;
