@@ -133,6 +133,42 @@ body {
     font-size: 13px;
 }
 
+html, body { height: 100%; overflow: hidden; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr; /* menu + conteúdo */
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidenav {
+  grid-column: 1;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow: auto;
+  background: #fff;
+  border-right: 1px solid #eee;
+  z-index: 2;
+}
+
+.conteudo {
+  grid-column: 2;
+  height: 100vh;
+  overflow: auto;
+  background: #f5f7fb;
+  padding: 24px;
+}
+
+@media (max-width: 720px) {
+  html, body { overflow: auto; }
+  .layout { grid-template-columns: 1fr; height: auto; }
+  .sidenav { position: static; height: auto; border-right: 0; border-bottom: 1px solid #eee; }
+  .conteudo { height: auto; overflow: visible; }
+}
+
+
 /* Responsividade */
 @media (max-width: 768px) {
     .footer-top {

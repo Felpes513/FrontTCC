@@ -10,9 +10,18 @@ import { Router, RouterModule } from '@angular/router';
   styleUrls: ['./sidenav-secretaria.component.css']
 })
 export class SidenavSecretariaComponent {
-  exibirBadgeNotificacao = true;
+  exibirBadgeNotificacao = false;
 
-  marcarNotificacoesComoLidas() {
+  constructor(private router: Router) {}
+
+  confirmarSaida(event: Event): void {
+    event.preventDefault(); // impede a navegação padrão do <a>
+    const ok = window.confirm('Tem certeza que deseja sair?');
+    if (!ok) return;
+    this.router.navigate(['/login'], { replaceUrl: true });
+  }
+
+  marcarNotificacoesComoLidas(): void {
     this.exibirBadgeNotificacao = false;
   }
 }

@@ -1,56 +1,92 @@
+// formulario-avaliador.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faUserTie, faSave } from '@fortawesome/free-solid-svg-icons';
+import { ProjetoService, AvaliadorExterno } from '../projeto.service';
 
 @Component({
   selector: 'app-formulario-avaliador',
   standalone: true,
   imports: [CommonModule, FormsModule, FontAwesomeModule],
   templateUrl: './formulario-avaliador.component.html',
-  styleUrls: ['./formulario-avaliador.component.css']
+  styleUrls: ['./formulario-avaliador.component.css'],
 })
 export class FormularioAvaliadorComponent implements OnInit {
   avaliador = {
-    id: null,
+    id: null as number | null,
     nome: '',
     email: '',
     especialidade: '',
     subespecialidade: '',
-    lattes_link: ''
+    link_lattes: '',
   };
 
-  edicao: boolean = false;
+  edicao = false;
 
-  constructor(private http: HttpClient, private router: Router, private iconLib: FaIconLibrary) {
+  constructor(
+    private router: Router,
+    private iconLib: FaIconLibrary,
+    private projetoService: ProjetoService
+  ) {
     iconLib.addIcons(faUserTie, faSave);
   }
 
   ngOnInit(): void {
     const estado = history.state;
-    if (estado && estado.avaliador) {
-      this.avaliador = estado.avaliador;
+    if (estado?.avaliador) {
+      const a = estado.avaliador;
+      this.avaliador = {
+        id: a.id ?? null,
+        nome: a.nome ?? '',
+        email: a.email ?? '',
+        especialidade: a.especialidade ?? '',
+        subespecialidade: a.subespecialidade ?? '',
+        link_lattes: a.link_lattes ?? a.lattes_link ?? '',
+      };
       this.edicao = true;
     }
   }
 
   salvarAvaliador() {
-    if (this.edicao) {
-      this.http.put(`http://localhost:8001/avaliadores-externos/${this.avaliador.id}`, this.avaliador)
-        .subscribe(() => {
+    if (!this.avaliador.nome.trim() || !this.avaliador.email.trim()) {
+      alert('Preencha pelo menos Nome e E-mail.');
+      return;
+    }
+
+    const payload: AvaliadorExterno = {
+      nome: this.avaliador.nome.trim(),
+      email: this.avaliador.email.trim(),
+      especialidade: this.avaliador.especialidade.trim(),
+      subespecialidade: this.avaliador.subespecialidade.trim(),
+      link_lattes: this.avaliador.link_lattes.trim(),
+    };
+
+    const goToList = () =>
+      this.router.navigate(['/secretaria/avaliadores'], {
+        replaceUrl: true,
+        state: { reload: true }, // opcional: sinal p/ a listagem recarregar
+      });
+
+    if (this.edicao && this.avaliador.id) {
+      this.projetoService.atualizarAvaliador(this.avaliador.id, payload).subscribe({
+        next: () => {
           alert('Avaliador atualizado com sucesso!');
-          this.router.navigate(['/secretaria/listagem-avaliadores']);
-        });
+          goToList();
+        },
+        error: (err) => alert(`Erro: ${err.message || 'Falha ao atualizar'}`),
+      });
     } else {
-      this.http.post('http://localhost:8001/avaliadores-externos', this.avaliador)
-        .subscribe(() => {
+      this.projetoService.criarAvaliador(payload).subscribe({
+        next: () => {
           alert('Avaliador cadastrado com sucesso!');
-          this.router.navigate(['/secretaria/listagem-avaliadores']);
-        });
+          goToList();
+        },
+        error: (err) => alert(`Erro: ${err.message || 'Falha ao cadastrar'}`),
+      });
     }
   }
 }

@@ -4,11 +4,12 @@
 .notificacoes-wrapper {
   padding: 30px 40px;
   width: 100%;
-  min-height: 100vh;
+  /* min-height: 100vh;  <-- REMOVIDO para não conflitar com o container rolável */
   background-color: #fff;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  overflow: visible; /* garante que o conteúdo não force scroll no body */
 }
 
 /* ============================== */
@@ -50,34 +51,19 @@
 }
 
 /* Detalhes da notificação */
-.tipo {
-  font-weight: 600;
-  color: #4b5563;
-}
-
-.mensagem {
-  font-size: 1.1rem;
-  margin: 0.2rem 0;
-}
-
-.data {
-  color: #6b7280;
-  font-size: 0.8rem;
-}
+.tipo { font-weight: 600; color: #4b5563; }
+.mensagem { font-size: 1.1rem; margin: 0.2rem 0; }
+.data { color: #6b7280; font-size: 0.8rem; }
 
 /* ============================== */
 /* 🪟 Modal de exibição da notificação */
 /* ============================== */
 .modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background-color: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   z-index: 999;
 }
 
@@ -85,98 +71,50 @@
   background-color: #fff;
   padding: 30px;
   border-radius: 8px;
-  width: 400px;
-  max-width: 95%;
+  width: 400px; max-width: 95%;
   box-shadow: 0 0 15px rgba(0,0,0,0.2);
   position: relative;
 }
 
-.modal-conteudo h3 {
-  margin-top: 0;
+.modal-conteudo h3 { margin-top: 0; }
+.modal-conteudo .fechar {
+  position: absolute; right: 15px; top: 10px;
+  font-size: 24px; background: none; border: none; cursor: pointer;
 }
 
-.modal-conteudo .fechar {
-  position: absolute;
-  right: 15px;
-  top: 10px;
-  font-size: 24px;
-  background: none;
-  border: none;
-  cursor: pointer;
+.notificacao.lida {
+  opacity: 0.55;
+  background-color: #f3f4f6;
 }
+.toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+.paginacao { display:flex; align-items:center; gap:8px; }
+.paginacao button { padding:6px 10px; border:1px solid #e5e7eb; background:#fff; border-radius:6px; cursor:pointer; }
+.paginacao button:disabled { opacity:.5; cursor:not-allowed; }
+
 
 /* ============================== */
 /* 📱 Responsividade: tablets */
 /* ============================== */
 @media (max-width: 768px) {
-  .notificacoes-wrapper {
-    padding: 20px;
-  }
-
-  .notificacoes-container {
-    margin-left: 0;
-  }
-
-  .btn-marcar {
-    width: 100%;
-    font-size: 0.95rem;
-    padding: 10px;
-  }
-
-  .mensagem {
-    font-size: 1rem;
-  }
-
-  .modal-conteudo {
-    width: 90%;
-    padding: 20px;
-  }
-
-  .modal-conteudo h3 {
-    font-size: 1.2rem;
-  }
+  .notificacoes-wrapper { padding: 20px; }
+  .notificacoes-container { margin-left: 0; }
+  .btn-marcar { width: 100%; font-size: 0.95rem; padding: 10px; }
+  .mensagem { font-size: 1rem; }
+  .modal-conteudo { width: 90%; padding: 20px; }
+  .modal-conteudo h3 { font-size: 1.2rem; }
 }
 
 /* ============================== */
 /* 📱 Responsividade: celulares */
 /* ============================== */
 @media (max-width: 480px) {
-  .notificacoes-wrapper {
-    padding: 15px;
-  }
-
-  .btn-marcar {
-    font-size: 0.9rem;
-    padding: 8px 12px;
-  }
-
-  .notificacao {
-    padding: 12px;
-  }
-
-  .tipo {
-    font-size: 0.95rem;
-  }
-
-  .mensagem {
-    font-size: 0.95rem;
-  }
-
-  .data {
-    font-size: 0.75rem;
-  }
-
-  .modal-conteudo {
-    padding: 15px;
-  }
-
-  .modal-conteudo h3 {
-    font-size: 1.1rem;
-  }
-
-  .modal-conteudo .fechar {
-    top: 8px;
-    right: 10px;
-    font-size: 20px;
-  }
+  .notificacoes-wrapper { padding: 15px; }
+  .btn-marcar { font-size: 0.9rem; padding: 8px 12px; }
+  .notificacao { padding: 12px; }
+  .tipo { font-size: 0.95rem; }
+  .mensagem { font-size: 0.95rem; }
+  .data { font-size: 0.75rem; }
+  .modal-conteudo { padding: 15px; }
+  .modal-conteudo h3 { font-size: 1.1rem; }
+  .modal-conteudo .fechar { top: 8px; right: 10px; font-size: 20px; }
 }

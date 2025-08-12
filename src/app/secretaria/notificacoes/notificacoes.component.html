@@ -2,11 +2,22 @@
 <div class="notificacoes-container">
   <h2><i class="fas fa-bell"></i> Notificações</h2>
 
-  <button class="btn-marcar" (click)="marcarTodasComoLidas()">
-    <i class="fas fa-check-circle"></i> Ler todas as notificações
-  </button>
+  <div class="toolbar">
+    <button class="btn-marcar" (click)="marcarTodasComoLidas()">
+      <i class="fas fa-check-circle"></i> Ler todas as notificações
+    </button>
 
-  <div *ngFor="let notificacao of notificacoes" class="notificacao" (click)="abrirNotificacao(notificacao)">
+    <div class="paginacao">
+      <button (click)="anterior()" [disabled]="page<=1">‹</button>
+      <span>Página {{ page }} / {{ totalPages }}</span>
+      <button (click)="proxima()" [disabled]="page>=totalPages">›</button>
+    </div>
+  </div>
+
+  <div *ngFor="let notificacao of paginaAtual"
+       class="notificacao"
+       [class.lida]="notificacao.lida"
+       (click)="abrirNotificacao(notificacao)">
     <p class="tipo">{{ notificacao.tipo }}</p>
     <p class="mensagem"><strong>{{ notificacao.mensagem }}</strong></p>
     <p class="data">{{ notificacao.data }} às {{ notificacao.hora }}</p>

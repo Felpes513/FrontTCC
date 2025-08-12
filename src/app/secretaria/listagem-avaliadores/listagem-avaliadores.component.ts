@@ -1,41 +1,74 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { Router, RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEdit, faTrash, faUsers, faPlus } from '@fortawesome/free-solid-svg-icons';
-
+import { faUsers, faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { ProjetoService, AvaliadorExterno } from '../projeto.service';
 
 @Component({
   selector: 'app-listagem-avaliadores',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, RouterModule], // 👈 ADICIONE AQUI
+  imports: [CommonModule, RouterModule, FontAwesomeModule],
   templateUrl: './listagem-avaliadores.component.html',
   styleUrls: ['./listagem-avaliadores.component.css']
 })
 export class ListagemAvaliadoresComponent implements OnInit {
-  avaliadores: any[] = [];
+  avaliadores: AvaliadorExterno[] = [];
+  carregando = false;
+  erro = '';
 
-  constructor(private http: HttpClient, private router: Router, private iconLib: FaIconLibrary) {
-    iconLib.addIcons(faEdit, faTrash, faUsers, faPlus);
-  }
-  ngOnInit() {
-    this.http.get<any[]>('http://localhost:8001/avaliadores-externos')
-      .subscribe(data => this.avaliadores = data);
+  // ícones
+  icUsers = faUsers;
+  icPlus = faPlus;
+  icEdit = faEdit;
+  icTrash = faTrash;
+
+  constructor(
+    private service: ProjetoService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.carregar();
+      if (history.state?.reload) this.carregar();
   }
 
-  editar(avaliador: any) {
-    this.router.navigate(['/secretaria/formulario-avaliador'], { state: { avaliador } });
+  carregar(): void {
+    this.carregando = true;
+    this.erro = '';
+    this.service.listarAvaliadoresExternos().subscribe({
+      next: (lista) => {
+        // garante compat com back que pode retornar 'link_lattes'
+        this.avaliadores = (lista || []).map(a => ({
+          ...a,
+          link_lattes: (a as any).link_lattes ?? (a as any).lattes_link ?? ''
+        }));
+        this.carregando = false;
+      },
+      error: (err) => {
+        this.erro = err?.message || 'Falha ao carregar avaliadores';
+        this.carregando = false;
+      }
+    });
   }
 
-  excluir(id: number) {
-    if (confirm('Deseja excluir este avaliador?')) {
-      this.http.delete(`http://localhost:8001/avaliadores-externos/${id}`)
-        .subscribe(() => {
-          this.avaliadores = this.avaliadores.filter(a => a.id !== id);
-        });
-    }
+  editar(a: AvaliadorExterno): void {
+    // Navega para o formulário reutilizando o mesmo componente de "novo"
+    this.router.navigate(['/secretaria/avaliadores/novo'], {
+      state: { avaliador: a }
+    });
+  }
+
+  excluir(id?: number): void {
+    if (!id) return;
+    if (!confirm('Deseja excluir este avaliador?')) return;
+
+    this.service.deleteAvaliador(id).subscribe({
+      next: () => {
+        // Remove da lista sem recarregar tudo
+        this.avaliadores = this.avaliadores.filter(av => av.id !== id);
+      },
+      error: (err) => alert(err?.message || 'Erro ao excluir')
+    });
   }
 }

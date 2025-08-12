@@ -11,6 +11,7 @@
     <thead>
       <tr>
         <th>Nome</th>
+        <th>E-mail</th>
         <th>Especialidade</th>
         <th>Subespecialidade</th>
         <th>Lattes</th>
@@ -19,20 +20,22 @@
     </thead>
     <tbody>
       <tr *ngFor="let a of avaliadores">
-        <td>{{ a.nome }}</td>
-        <td>{{ a.especialidade }}</td>
-        <td>{{ a.subespecialidade }}</td>
-        <td>
-          <a [href]="a.lattes_link" target="_blank" *ngIf="a.lattes_link">
+        <td data-label="Nome:">{{ a.nome }}</td>
+        <td data-label="E-mail:">{{ a.email }}</td>
+        <td data-label="Especialidade:">{{ a.especialidade }}</td>
+        <td data-label="Subespecialidade:">{{ a.subespecialidade }}</td>
+        <td data-label="Lattes:">
+          <a [href]="a.link_lattes" target="_blank" *ngIf="a.link_lattes">
             Ver Lattes
           </a>
+          <span *ngIf="!a.link_lattes" class="text-muted">Não informado</span>
         </td>
-        <td>
-          <button class="btn btn-warning btn-sm" (click)="editar(a)">
-            <fa-icon [icon]="'edit'"></fa-icon>
+        <td class="actions" data-label="Ações:">
+          <button class="btn btn-warning btn-sm" (click)="editar(a)" title="Editar">
+            <fa-icon [icon]="icEdit"></fa-icon>
           </button>
-          <button class="btn btn-danger btn-sm" (click)="excluir(a.id)">
-            <fa-icon [icon]="'trash'"></fa-icon>
+          <button class="btn btn-danger btn-sm" (click)="excluir(a.id)" title="Excluir">
+            <fa-icon [icon]="icTrash"></fa-icon>
           </button>
         </td>
       </tr>
