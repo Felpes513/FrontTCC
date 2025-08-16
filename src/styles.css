@@ -133,18 +133,25 @@ body {
     font-size: 13px;
 }
 
-html, body { height: 100%; overflow: hidden; }
+/* --- DESBLOQUEAR O SCROLL GLOBAL --- */
+html, body {
+  min-height: 100%;
+  height: auto;           /* deixa a página crescer além da viewport */
+  overflow-y: auto;       /* rolagem vertical liberada */
+  overflow-x: hidden;     /* evita barra horizontal indesejada */
+}
 
+/* --- LAYOUT --- */
 .layout {
-  display: grid;
-  grid-template-columns: 260px 1fr; /* menu + conteúdo */
-  height: 100vh;
-  overflow: hidden;
+  /* height: 100vh;  <-- evite height fixa */
+  min-height: 100dvh;     /* viewport dinâmica mais estável que 100vh */
+  /* overflow: hidden;    <-- remova para não podar a página */
 }
 
 .sidenav {
   grid-column: 1;
-  height: 100vh;
+  /* height: 100vh;  */
+  height: 100dvh;         /* mantém a lateral “presa” à viewport */
   position: sticky;
   top: 0;
   overflow: auto;
@@ -155,17 +162,19 @@ html, body { height: 100%; overflow: hidden; }
 
 .conteudo {
   grid-column: 2;
-  height: 100vh;
-  overflow: auto;
+  /* height: 100vh;  */
+  min-height: 100dvh;     /* cresce com o conteúdo */
+  overflow: auto;         /* rolagem do conteúdo principal */
   background: #f5f7fb;
   padding: 24px;
 }
 
+/* --- BREAKPOINT --- */
 @media (max-width: 720px) {
-  html, body { overflow: auto; }
-  .layout { grid-template-columns: 1fr; height: auto; }
+  /* html, body { overflow: auto; }  <-- não precisa mais */
+  .layout { grid-template-columns: 1fr; min-height: auto; }
   .sidenav { position: static; height: auto; border-right: 0; border-bottom: 1px solid #eee; }
-  .conteudo { height: auto; overflow: visible; }
+  .conteudo { min-height: auto; overflow: visible; }
 }
 
 

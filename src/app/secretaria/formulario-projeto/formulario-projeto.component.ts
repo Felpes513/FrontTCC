@@ -9,12 +9,18 @@ import {
   Orientador,
   Aluno,
   Campus,
-} from '../projeto.service';
+} from '../../services/projeto.service';
+import { ListagemAlunosComponent } from '../listagem-alunos/listagem-alunos.component'; // <-- NOVO
 
 @Component({
   selector: 'app-formulario-projeto',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    ListagemAlunosComponent,
+  ],
   templateUrl: './formulario-projeto.component.html',
   styleUrls: ['./formulario-projeto.component.css'],
 })

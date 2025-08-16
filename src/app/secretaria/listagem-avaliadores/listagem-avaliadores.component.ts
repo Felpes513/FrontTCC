@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faUsers, faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { ProjetoService, AvaliadorExterno } from '../projeto.service';
+import { ProjetoService, AvaliadorExterno } from '../../services/projeto.service';
 
 @Component({
   selector: 'app-listagem-avaliadores',

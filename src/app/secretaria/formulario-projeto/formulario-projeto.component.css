@@ -181,3 +181,29 @@ button:hover {
     padding: 0.5rem;
   }
 }
+
+
+/* Layout lado a lado: form (maior) + painel inscritos (menor) */
+.editor-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Faz o painel acompanhar a rolagem, mas sem “grudar” no topo quando mobile */
+.col-inscritos {
+  position: sticky;
+  top: 24px;
+}
+
+/* Responsivo: empilha abaixo do form */
+@media (max-width: 1024px) {
+  .editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .col-inscritos {
+    position: static;
+    top: auto;
+  }
+}

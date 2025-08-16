@@ -116,8 +116,7 @@ export class ProjetoService {
   private readonly apiUrlCampus = 'http://localhost:8001/campus';
   private readonly apiUrlInscricoes = 'http://localhost:8001/inscricoes';
   private readonly apiUrlNotificacoes = 'http://localhost:8001/notificacoes';
-  private readonly apiUrlAvaliadoresExternos =
-    'http://localhost:8001/avaliadores-externos';
+  private readonly apiUrlAvaliadoresExternos ='http://localhost:8001/avaliadores-externos';
 
   constructor(private http: HttpClient) {}
 

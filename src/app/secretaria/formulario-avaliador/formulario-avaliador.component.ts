@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faUserTie, faSave } from '@fortawesome/free-solid-svg-icons';
-import { ProjetoService, AvaliadorExterno } from '../projeto.service';
+import { ProjetoService, AvaliadorExterno } from '../../services/projeto.service';
 
 @Component({
   selector: 'app-formulario-avaliador',
@@ -68,7 +68,7 @@ export class FormularioAvaliadorComponent implements OnInit {
     const goToList = () =>
       this.router.navigate(['/secretaria/avaliadores'], {
         replaceUrl: true,
-        state: { reload: true }, // opcional: sinal p/ a listagem recarregar
+        state: { reload: true },
       });
 
     if (this.edicao && this.avaliador.id) {

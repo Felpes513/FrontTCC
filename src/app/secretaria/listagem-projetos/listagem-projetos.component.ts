@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { ProjetoService, Projeto } from '../projeto.service';
+import { ProjetoService, Projeto } from '../../services/projeto.service';
 
 @Component({
   selector: 'app-listagem-projetos',
