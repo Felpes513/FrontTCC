@@ -1,9 +1,3 @@
-// projeto.service.ts
-// ============================================================================
-// Serviço central para operações de Projetos, Orientadores, Campus, Inscrições
-// e Avaliadores Externos.
-// ============================================================================
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
@@ -26,7 +20,6 @@ export interface Projeto {
   id: number;
   nomeProjeto: string;
   campus: string;
-  /** Representa a quantidade atual de alunos no projeto (mapeado do backend) */
   quantidadeMaximaAlunos: number;
   nomeOrientador: string;
   nomesAlunos: string[];
@@ -110,13 +103,13 @@ export interface AvaliadorExterno {
 
 @Injectable({ providedIn: 'root' })
 export class ProjetoService {
-  // ❗️Sugestão: mova estas URLs para environment.ts (ex.: environment.apiBaseUrl)
-  private readonly apiUrlProjetos = 'http://localhost:8001/projetos';
-  private readonly apiUrlOrientadores = 'http://localhost:8001/orientadores';
-  private readonly apiUrlCampus = 'http://localhost:8001/campus';
-  private readonly apiUrlInscricoes = 'http://localhost:8001/inscricoes';
-  private readonly apiUrlNotificacoes = 'http://localhost:8001/notificacoes';
-  private readonly apiUrlAvaliadoresExternos ='http://localhost:8001/avaliadores-externos';
+  private readonly apiBase = '/api';
+  private readonly apiUrlProjetos = `${this.apiBase}/projetos`;
+  private readonly apiUrlOrientadores = `${this.apiBase}/orientadores`;
+  private readonly apiUrlCampus = `${this.apiBase}/campus`;
+  private readonly apiUrlInscricoes = `${this.apiBase}/inscricoes`;
+  private readonly apiUrlNotificacoes = `${this.apiBase}/notificacoes`;
+  private readonly apiUrlAvaliadoresExternos = `${this.apiBase}/avaliadores-externos/`;
 
   constructor(private http: HttpClient) {}
 
@@ -177,8 +170,11 @@ export class ProjetoService {
 
   /** Lista projetos (visão resumida) */
   listarProjetos(): Observable<Projeto[]> {
-    return this.http.get<any[]>(this.apiUrlProjetos).pipe(
-      map((projetos) => projetos.map((p: any) => this.normalizarProjeto(p))),
+    // opcionalmente use a barra final para casar com o router.get("/")
+    return this.http.get<{ projetos: any[] }>(`${this.apiUrlProjetos}/`).pipe(
+      map((res) =>
+        (res.projetos || []).map((p: any) => this.normalizarProjeto(p))
+      ),
       catchError(this.handleError)
     );
   }
@@ -314,23 +310,28 @@ export class ProjetoService {
 
   // --- NOTIFICAÇÕES PAGINADAS ---
   getNotificacoesPaginado(destinatario: string, page = 1, size = 20) {
-    const url = `http://localhost:8001/notificacoes?destinatario=${encodeURIComponent(
-      destinatario
-    )}&page=${page}&size=${size}`;
     return this.http.get<{
       items: any[];
       page: number;
       size: number;
       total: number;
-    }>(url);
+    }>(
+      `${this.apiUrlNotificacoes}?destinatario=${encodeURIComponent(
+        destinatario
+      )}&page=${page}&size=${size}`
+    );
   }
 
-  // --- MARCAR TODAS COMO LIDAS (não apaga nada) ---
+  // --- MARCAR TODAS COMO LIDAS ---
   marcarTodasComoLidas(destinatario: string) {
-    const url = `http://localhost:8001/notificacoes/marcar-todas-como-lidas?destinatario=${encodeURIComponent(
-      destinatario
-    )}`;
-    return this.http.post<{ updated: number }>(url, {});
+    return this.http.post<{ updated: number }>(
+      `${
+        this.apiUrlNotificacoes
+      }/marcar-todas-como-lidas?destinatario=${encodeURIComponent(
+        destinatario
+      )}`,
+      {}
+    );
   }
 
   // ==========================================================================
@@ -338,21 +339,16 @@ export class ProjetoService {
   // ==========================================================================
 
   /** Cria um Avaliador Externo */
-  criarAvaliador(avaliador: AvaliadorExterno): Observable<any> {
-    return this.http.post(this.apiUrlAvaliadoresExternos, avaliador).pipe(
-      tap(() => console.log('✅ Avaliador criado')),
-      catchError(this.handleError)
-    );
+  criarAvaliador(a: AvaliadorExterno): Observable<{ id_avaliador: number }> {
+    return this.http
+      .post<{ id_avaliador: number }>(this.apiUrlAvaliadoresExternos, a)
+      .pipe(catchError(this.handleError));
   }
 
-  /** Atualiza um Avaliador Externo */
-  atualizarAvaliador(id: number, avaliador: AvaliadorExterno): Observable<any> {
+  atualizarAvaliador(id: number, a: AvaliadorExterno): Observable<void> {
     return this.http
-      .put(`${this.apiUrlAvaliadoresExternos}/${id}`, avaliador)
-      .pipe(
-        tap(() => console.log('✅ Avaliador atualizado')),
-        catchError(this.handleError)
-      );
+      .put<void>(`${this.apiUrlAvaliadoresExternos}${id}`, a)
+      .pipe(catchError(this.handleError));
   }
 
   /** Lista Avaliadores Externos */
@@ -362,11 +358,11 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  deleteAvaliador(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrlAvaliadoresExternos}/${id}`).pipe(
-      tap(() => console.log('🗑️ Avaliador deletado')),
-      catchError(this.handleError)
-    );
+  /** Deleta um Avaliador Externo */
+  deleteAvaliador(id: number): Observable<void> {
+    return this.http
+      .delete<void>(`${this.apiUrlAvaliadoresExternos}${id}`)
+      .pipe(catchError(this.handleError));
   }
 
   // ==========================================================================
@@ -415,7 +411,8 @@ export class ProjetoService {
       titulo_projeto: dados.titulo_projeto || dados.nomeProjeto || '',
       resumo: dados.resumo || '',
       campus: dados.campus || '',
-      quantidadeMaximaAlunos: dados.quantidadeMaximaAlunos || 0,
+      quantidadeMaximaAlunos:
+        dados.quantidadeMaximaAlunos ?? dados.quantidade_alunos ?? 0,
       nomeOrientador: dados.nomeOrientador || '',
       orientador_email: dados.orientador_email || '',
       nomesAlunos: dados.nomesAlunos || [],
@@ -438,12 +435,24 @@ export class ProjetoService {
    */
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     console.error('❌ Erro HTTP:', error);
+
     let message = 'Erro inesperado';
+
     if (error.error instanceof ErrorEvent) {
+      // Falha de rede / CORS etc.
       message = `Erro de rede: ${error.error.message}`;
+    } else if (error.status === 422 && Array.isArray(error.error?.detail)) {
+      // FastAPI validation error — mostra o que faltou
+      message = error.error.detail
+        .map((d: any) => `${(d.loc || []).join('.')}: ${d.msg}`)
+        .join(' | ');
     } else {
       message = error.error?.detail || `Erro ${error.status}`;
     }
+
+    // Loga o body bruto pra facilitar
+    console.error('➡️ Body do servidor:', error.error);
+
     return throwError(() => ({
       message,
       status: error.status,
