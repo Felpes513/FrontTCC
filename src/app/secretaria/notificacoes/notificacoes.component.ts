@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProjetoService } from '../../services/projeto.service';
+import { ProjetoService } from '@services/projeto.service';
 
 interface Notificacao {
   tipo: string;

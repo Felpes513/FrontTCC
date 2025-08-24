@@ -2,104 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { tap, map, catchError, switchMap } from 'rxjs/operators';
-
-// ============================================================================
-// Interfaces (DTOs) trocadas entre Front e Back
-// ============================================================================
-
-/** Payload mínimo aceito pelo backend ao criar/atualizar projeto */
-export interface ProjetoRequest {
-  titulo_projeto: string;
-  resumo: string;
-  id_orientador: number;
-  id_campus: number;
-}
-
-/** Entidade de projeto utilizada na listagem básica do frontend */
-export interface Projeto {
-  id: number;
-  nomeProjeto: string;
-  campus: string;
-  quantidadeMaximaAlunos: number;
-  nomeOrientador: string;
-  nomesAlunos: string[];
-  status?: 'EM_EXECUCAO' | 'CONCLUIDO';
-}
-
-/** Formulário interno usado para montar o ProjetoRequest */
-interface ProjetoFormulario {
-  titulo_projeto: string;
-  resumo?: string;
-  orientador_nome: string;
-  id_campus: number;
-}
-
-/** Dados do formulário de criação completa de projeto */
-export interface ProjetoCadastro {
-  titulo_projeto: string;
-  resumo: string;
-  orientador_nome: string;
-  orientador_email: string;
-  id_campus: number;
-  quantidadeMaximaAlunos: number;
-}
-
-/** Representa um aluno relacionado ao projeto */
-export interface Aluno {
-  id?: number;
-  nome: string;
-  email: string;
-  ra?: string;
-  curso?: string;
-  telefone?: string;
-  documentoNotasUrl?: string;
-}
-
-/** Detalhes completos do projeto (tela de detalhes) */
-export interface ProjetoDetalhado {
-  id: number;
-  nomeProjeto: string;
-  titulo_projeto: string;
-  resumo?: string;
-  campus: string;
-  quantidadeMaximaAlunos: number;
-  nomeOrientador: string;
-  orientador_email?: string;
-  nomesAlunos: string[];
-  alunos?: Aluno[];
-  id_orientador: number;
-  id_campus: number;
-  data_criacao?: string;
-  data_atualizacao?: string;
-  status?: string;
-}
-
-/** Orientador */
-export interface Orientador {
-  id: number;
-  nome_completo: string;
-  email?: string;
-}
-
-/** Campus */
-export interface Campus {
-  id_campus: number;
-  campus: string;
-}
-
-/** Avaliador Externo */
-export interface AvaliadorExterno {
-  id?: number;
-  nome: string;
-  email: string;
-  especialidade: string;
-  subespecialidade: string;
-  link_lattes: string;
-}
-
-// ============================================================================
-// Serviço
-// ============================================================================
+import {
+  ProjetoRequest,
+  Projeto,
+  ProjetoDetalhado,
+  ProjetoCadastro,
+  ProjetoFormulario,
+} from '@interfaces/projeto';
+import { Aluno } from '@interfaces/aluno';
+import { Orientador } from '@interfaces/orientador';
+import { Campus } from '@interfaces/campus';
+import { AvaliadorExterno } from '@interfaces/avaliador_externo';
 
 @Injectable({ providedIn: 'root' })
 export class ProjetoService {
@@ -113,14 +26,6 @@ export class ProjetoService {
 
   constructor(private http: HttpClient) {}
 
-  // ==========================================================================
-  // PROJETOS
-  // ==========================================================================
-
-  /**
-   * Cria um novo projeto a partir do formulário completo.
-   * Faz validações mínimas e mapeia para o DTO aceito pelo backend.
-   */
   cadastrarProjetoCompleto(
     projeto: ProjetoCadastro,
     id_orientador: number
@@ -144,10 +49,6 @@ export class ProjetoService {
     );
   }
 
-  /**
-   * Converte dados do formulário (com nome do orientador) para o payload aceito pelo backend
-   * e executa o POST de criação do projeto.
-   */
   private processarDadosECadastrar(
     formulario: ProjetoFormulario
   ): Observable<any> {
@@ -168,9 +69,7 @@ export class ProjetoService {
     );
   }
 
-  /** Lista projetos (visão resumida) */
   listarProjetos(): Observable<Projeto[]> {
-    // opcionalmente use a barra final para casar com o router.get("/")
     return this.http.get<{ projetos: any[] }>(`${this.apiUrlProjetos}/`).pipe(
       map((res) =>
         (res.projetos || []).map((p: any) => this.normalizarProjeto(p))
@@ -179,14 +78,12 @@ export class ProjetoService {
     );
   }
 
-  /** Busca um projeto por id (payload cru do backend) */
   getProjetoPorId(id: number): Observable<any> {
     return this.http
       .get<any>(`${this.apiUrlProjetos}/${id}`)
       .pipe(catchError(this.handleError));
   }
 
-  /** Busca detalhes do projeto e normaliza; fallback para GET /:id se rota /detalhado não existir */
   getProjetoDetalhado(id: number): Observable<ProjetoDetalhado> {
     return this.http.get<any>(`${this.apiUrlProjetos}/${id}/detalhado`).pipe(
       map((projeto) => this.normalizarProjetoDetalhado(projeto)),
@@ -198,7 +95,6 @@ export class ProjetoService {
     );
   }
 
-  /** Atualiza um projeto mapeando nome do orientador → id_orientador */
   atualizarProjeto(id: number, formulario: ProjetoFormulario): Observable<any> {
     return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
       switchMap((orientador: Orientador) => {
@@ -216,25 +112,18 @@ export class ProjetoService {
     );
   }
 
-  /** Exclui um projeto pelo id */
   excluirProjeto(id: number): Observable<any> {
     return this.http
       .delete(`${this.apiUrlProjetos}/${id}`)
       .pipe(catchError(this.handleError));
   }
 
-  // ==========================================================================
-  // ORIENTADORES
-  // ==========================================================================
-
-  /** Lista orientadores */
   listarOrientadores(): Observable<Orientador[]> {
     return this.http
       .get<Orientador[]>(`${this.apiUrlOrientadores}/`)
       .pipe(catchError(this.handleError));
   }
 
-  /** Busca orientador por nome (usado para mapear nome → id) */
   buscarOrientadorPorNome(nome: string): Observable<Orientador> {
     return this.http
       .get<Orientador>(
@@ -243,18 +132,12 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  // ==========================================================================
-  // CAMPUS
-  // ==========================================================================
-
-  /** Lista todos os campus */
   listarCampus(): Observable<Campus[]> {
     return this.http
       .get<Campus[]>(`${this.apiUrlCampus}/`)
       .pipe(catchError(this.handleError));
   }
 
-  /** Busca campus por nome */
   buscarCampusPorNome(nome: string): Observable<Campus> {
     return this.http
       .get<Campus>(
@@ -263,43 +146,30 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  /** Cria um novo campus */
   criarCampus(nome: string): Observable<Campus> {
     return this.http
       .post<Campus>(`${this.apiUrlCampus}/`, { campus: nome })
       .pipe(catchError(this.handleError));
   }
 
-  // ==========================================================================
-  // INSCRIÇÕES / ALUNOS
-  // ==========================================================================
-
-  /** Lista inscrições de um projeto específico */
   listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
     return this.http
       .get<any[]>(`${this.apiUrlInscricoes}/projetos/${idProjeto}/inscricoes`)
       .pipe(catchError(this.handleError));
   }
 
-  /** Aprova um aluno por id de inscrição */
   aprovarAluno(id: number): Observable<any> {
     return this.http
       .post(`${this.apiUrlInscricoes}/${id}/aprovar`, {})
       .pipe(catchError(this.handleError));
   }
 
-  /** Exclui uma inscrição de aluno */
   excluirAluno(id: number): Observable<any> {
     return this.http
       .delete(`${this.apiUrlInscricoes}/${id}`)
       .pipe(catchError(this.handleError));
   }
 
-  // ==========================================================================
-  // NOTIFICAÇÕES
-  // ==========================================================================
-
-  /** Busca notificações por destinatário (email ou outro identificador) */
   getNotificacoes(destinatario: string): Observable<any[]> {
     return this.http.get<any[]>(
       `${this.apiUrlNotificacoes}?destinatario=${encodeURIComponent(
@@ -308,7 +178,6 @@ export class ProjetoService {
     );
   }
 
-  // --- NOTIFICAÇÕES PAGINADAS ---
   getNotificacoesPaginado(destinatario: string, page = 1, size = 20) {
     return this.http.get<{
       items: any[];
@@ -322,7 +191,6 @@ export class ProjetoService {
     );
   }
 
-  // --- MARCAR TODAS COMO LIDAS ---
   marcarTodasComoLidas(destinatario: string) {
     return this.http.post<{ updated: number }>(
       `${
@@ -334,11 +202,6 @@ export class ProjetoService {
     );
   }
 
-  // ==========================================================================
-  // AVALIADORES EXTERNOS
-  // ==========================================================================
-
-  /** Cria um Avaliador Externo */
   criarAvaliador(a: AvaliadorExterno): Observable<{ id_avaliador: number }> {
     return this.http
       .post<{ id_avaliador: number }>(this.apiUrlAvaliadoresExternos, a)
@@ -351,28 +214,18 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  /** Lista Avaliadores Externos */
   listarAvaliadoresExternos(): Observable<AvaliadorExterno[]> {
     return this.http
       .get<AvaliadorExterno[]>(this.apiUrlAvaliadoresExternos)
       .pipe(catchError(this.handleError));
   }
 
-  /** Deleta um Avaliador Externo */
   deleteAvaliador(id: number): Observable<void> {
     return this.http
       .delete<void>(`${this.apiUrlAvaliadoresExternos}${id}`)
       .pipe(catchError(this.handleError));
   }
 
-  // ==========================================================================
-  // AÇÕES DO ORIENTADOR
-  // ==========================================================================
-
-  /**
-   * Atualiza a lista de alunos associados a um projeto
-   * (depende de um endpoint específico do backend).
-   */
   updateAlunosProjeto(
     id_projeto: number,
     id_alunos: number[]
@@ -384,18 +237,15 @@ export class ProjetoService {
     );
   }
 
-  // ==========================================================================
-  // NORMALIZAÇÃO (mapeia payloads do backend para o formato usado no front)
-  // ==========================================================================
+  listarProjetosDoOrientador() {
+    return this.http.get<Projeto[]>(`${this.apiUrlProjetos}/orientador/meus`);
+  }
 
-  /** Normaliza um projeto para a listagem simples */
   private normalizarProjeto(dados: any): Projeto {
     return {
       id: dados.id || dados.id_projeto,
       nomeProjeto: dados.nomeProjeto || dados.titulo_projeto || 'Sem título',
       campus: dados.campus || '',
-      // ❗ Atenção: backend envia `quantidade_alunos`? Se o correto for `quantidadeMaximaAlunos`,
-      // alinhar com a API para evitar confusão.
       quantidadeMaximaAlunos: dados.quantidade_alunos || 0,
       nomeOrientador:
         dados.nomeOrientador || dados.orientador || 'Não informado',
@@ -403,7 +253,6 @@ export class ProjetoService {
     };
   }
 
-  /** Normaliza um projeto para a visão detalhada */
   private normalizarProjetoDetalhado(dados: any): ProjetoDetalhado {
     return {
       id: dados.id || dados.id_projeto,
@@ -425,14 +274,6 @@ export class ProjetoService {
     };
   }
 
-  // ==========================================================================
-  // ERROS
-  // ==========================================================================
-
-  /**
-   * Handler único de erros HTTP. Retorna um objeto coeso para o caller.
-   * Mantém logs no console (útil em dev).
-   */
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     console.error('❌ Erro HTTP:', error);
 
@@ -450,7 +291,6 @@ export class ProjetoService {
       message = error.error?.detail || `Erro ${error.status}`;
     }
 
-    // Loga o body bruto pra facilitar
     console.error('➡️ Body do servidor:', error.error);
 
     return throwError(() => ({

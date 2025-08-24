@@ -4,13 +4,13 @@ import { DashboardComponent } from './secretaria/dashboard/dashboard.component';
 import { ListagemProjetosComponent } from './secretaria/listagem-projetos/listagem-projetos.component';
 import { FormularioProjetoComponent } from './secretaria/formulario-projeto/formulario-projeto.component';
 import { EnvioDeEmailComponent } from './secretaria/envio-de-email/envio-de-email.component';
-import { LoginComponent } from './login/login.component';
-import { RegisterComponent } from './cadastro/cadastro.component';
+import { LoginComponent } from './shared/login/login.component';
+import { RegisterComponent } from './shared/cadastro/cadastro.component';
 import { RelatoriosComponent } from './secretaria/relatorios/relatorios.component';
 import { NotificacoesComponent } from './secretaria/notificacoes/notificacoes.component';
 import { ListagemAvaliadoresComponent } from './secretaria/listagem-avaliadores/listagem-avaliadores.component';
 import { FormularioAvaliadorComponent } from './secretaria/formulario-avaliador/formulario-avaliador.component';
-import { SidenavSecretariaComponent } from './secretaria/sidenav-secretaria/sidenav-secretaria.component'; // ✅ importe o novo sidenav
+import { SidenavSecretariaComponent } from './shared/sidenav/sidenav-secretaria.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -30,7 +30,15 @@ export const routes: Routes = [
       { path: 'projetos/novo', component: FormularioProjetoComponent },
       { path: 'projetos/editar/:id', component: FormularioProjetoComponent },
       { path: 'email', component: EnvioDeEmailComponent },
-      { path: 'relatorios', component: RelatoriosComponent }
-    ]
-  }
+      { path: 'relatorios', component: RelatoriosComponent },
+    ],
+  },
+  
+  {
+    path: 'orientador/projetos',
+    loadComponent: () =>
+      import('./orientador/listagem-projetos/listagem-projetos.component').then(
+        (m) => m.ListagemProjetosComponent
+      ),
+  },
 ];

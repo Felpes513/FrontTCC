@@ -6,7 +6,8 @@ import { Router } from '@angular/router';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faUserTie, faSave } from '@fortawesome/free-solid-svg-icons';
-import { ProjetoService, AvaliadorExterno } from '../../services/projeto.service';
+import { AvaliadorExterno } from '@interfaces/avaliador_externo';
+import { ProjetoService } from '@services/projeto.service';
 
 @Component({
   selector: 'app-formulario-avaliador',
