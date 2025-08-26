@@ -19,7 +19,7 @@ export const routes: Routes = [
 
   {
     path: 'secretaria',
-    component: SidenavSecretariaComponent, // ✅ aqui está a mudança principal
+    component: SidenavSecretariaComponent,
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
@@ -33,7 +33,7 @@ export const routes: Routes = [
       { path: 'relatorios', component: RelatoriosComponent },
     ],
   },
-  
+
   {
     path: 'orientador/projetos',
     loadComponent: () =>

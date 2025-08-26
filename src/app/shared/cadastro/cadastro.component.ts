@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { RegisterService } from './cadastro.service';
+import { RegisterService } from '../../services/cadastro.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
