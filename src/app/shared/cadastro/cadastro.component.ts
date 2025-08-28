@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { RegisterService } from '../../services/cadastro.service';
+import { RegisterService } from '@services/cadastro.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -12,7 +12,6 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./cadastro.component.css']
 })
 export class RegisterComponent {
-  // Dados do aluno
   nomeCompleto = '';
   cpf = '';
   curso = '';

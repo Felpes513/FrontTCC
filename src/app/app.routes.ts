@@ -1,44 +1,89 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './components/home/home.component';
-import { DashboardComponent } from './secretaria/dashboard/dashboard.component';
-import { ListagemProjetosComponent } from './secretaria/listagem-projetos/listagem-projetos.component';
-import { FormularioProjetoComponent } from './secretaria/formulario-projeto/formulario-projeto.component';
-import { EnvioDeEmailComponent } from './secretaria/envio-de-email/envio-de-email.component';
-import { LoginComponent } from './shared/login/login.component';
-import { RegisterComponent } from './shared/cadastro/cadastro.component';
-import { RelatoriosComponent } from './secretaria/relatorios/relatorios.component';
-import { NotificacoesComponent } from './secretaria/notificacoes/notificacoes.component';
-import { ListagemAvaliadoresComponent } from './secretaria/listagem-avaliadores/listagem-avaliadores.component';
-import { FormularioAvaliadorComponent } from './secretaria/formulario-avaliador/formulario-avaliador.component';
-import { SidenavSecretariaComponent } from './shared/sidenav/sidenav-secretaria.component';
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'cadastro', component: RegisterComponent },
-
+  {
+    path: '',
+    loadComponent: () =>
+      import('./components/home/home.component').then(m => m.HomeComponent),
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./shared/login/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path: 'cadastro',
+    loadComponent: () =>
+      import('./shared/cadastro/cadastro.component').then(m => m.RegisterComponent),
+  },
   {
     path: 'secretaria',
-    component: SidenavSecretariaComponent,
+    loadComponent: () =>
+      import('./shared/sidenav/sidenav-secretaria.component')
+        .then(m => m.SidenavSecretariaComponent),
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
-      { path: 'avaliadores', component: ListagemAvaliadoresComponent },
-      { path: 'avaliadores/novo', component: FormularioAvaliadorComponent },
-      { path: 'notificacoes', component: NotificacoesComponent },
-      { path: 'projetos', component: ListagemProjetosComponent },
-      { path: 'projetos/novo', component: FormularioProjetoComponent },
-      { path: 'projetos/editar/:id', component: FormularioProjetoComponent },
-      { path: 'email', component: EnvioDeEmailComponent },
-      { path: 'relatorios', component: RelatoriosComponent },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./secretaria/dashboard/dashboard.component')
+            .then(m => m.DashboardComponent),
+      },
+      {
+        path: 'avaliadores',
+        loadComponent: () =>
+          import('./secretaria/listagem-avaliadores/listagem-avaliadores.component')
+            .then(m => m.ListagemAvaliadoresComponent),
+      },
+      {
+        path: 'avaliadores/novo',
+        loadComponent: () =>
+          import('./secretaria/formulario-avaliador/formulario-avaliador.component')
+            .then(m => m.FormularioAvaliadorComponent),
+      },
+      {
+        path: 'notificacoes',
+        loadComponent: () =>
+          import('./secretaria/notificacoes/notificacoes.component')
+            .then(m => m.NotificacoesComponent),
+      },
+      {
+        path: 'projetos',
+        loadComponent: () =>
+          import('./secretaria/listagem-projetos/listagem-projetos.component')
+            .then(m => m.ListagemProjetosComponent),
+      },
+      {
+        path: 'projetos/novo',
+        loadComponent: () =>
+          import('./secretaria/formulario-projeto/formulario-projeto.component')
+            .then(m => m.FormularioProjetoComponent),
+      },
+      {
+        path: 'projetos/editar/:id',
+        loadComponent: () =>
+          import('./secretaria/formulario-projeto/formulario-projeto.component')
+            .then(m => m.FormularioProjetoComponent),
+      },
+      {
+        path: 'email',
+        loadComponent: () =>
+          import('./secretaria/envio-de-email/envio-de-email.component')
+            .then(m => m.EnvioDeEmailComponent),   // <- só se você corrigir o arquivo (Opção A)
+      },
+      {
+        path: 'relatorios',
+        loadComponent: () =>
+          import('./secretaria/relatorios/relatorios.component')
+            .then(m => m.RelatoriosComponent),
+      },
     ],
   },
-
   {
     path: 'orientador/projetos',
     loadComponent: () =>
-      import('./orientador/listagem-projetos/listagem-projetos.component').then(
-        (m) => m.ListagemProjetosComponent
-      ),
+      import('./orientador/listagem-projetos/listagem-projetos.component')
+        .then(m => m.ListagemProjetosComponent),
   },
+  { path: '**', redirectTo: '' },
 ];

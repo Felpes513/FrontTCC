@@ -19,7 +19,6 @@ interface Notificacao {
   styleUrls: ['./notificacoes.component.css']
 })
 export class NotificacoesComponent implements OnInit {
-  // caixa da secretaria; ajuste para o identificador correto
   private readonly destinatario = 'secretaria';
 
   notificacoes: Notificacao[] = [];

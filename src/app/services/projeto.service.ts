@@ -13,11 +13,12 @@ import { Aluno } from '@interfaces/aluno';
 import { Orientador } from '@interfaces/orientador';
 import { Campus } from '@interfaces/campus';
 import { AvaliadorExterno } from '@interfaces/avaliador_externo';
+import { ApiMensagem } from '@interfaces/api';
 
 @Injectable({ providedIn: 'root' })
 export class ProjetoService {
   private readonly apiBase = '/api';
-  private readonly apiUrlProjetos = `${this.apiBase}/projetos`;
+  private readonly apiUrlProjetos = `${this.apiBase}/projetos/`;
   private readonly apiUrlOrientadores = `${this.apiBase}/orientadores`;
   private readonly apiUrlCampus = `${this.apiBase}/campus`;
   private readonly apiUrlInscricoes = `${this.apiBase}/inscricoes`;
@@ -70,32 +71,31 @@ export class ProjetoService {
   }
 
   listarProjetos(): Observable<Projeto[]> {
-    return this.http.get<{ projetos: any[] }>(`${this.apiUrlProjetos}/`).pipe(
-      map((res) =>
-        (res.projetos || []).map((p: any) => this.normalizarProjeto(p))
-      ),
+    // não precisa colocar outra barra
+    return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
+      map((res) => (res.projetos || []).map((p) => this.normalizarProjeto(p))),
       catchError(this.handleError)
     );
   }
 
-  getProjetoPorId(id: number): Observable<any> {
+  getProjetoPorId(id: number) {
     return this.http
-      .get<any>(`${this.apiUrlProjetos}/${id}`)
+      .get<any>(`${this.apiUrlProjetos}${id}`)
       .pipe(catchError(this.handleError));
   }
 
-  getProjetoDetalhado(id: number): Observable<ProjetoDetalhado> {
-    return this.http.get<any>(`${this.apiUrlProjetos}/${id}/detalhado`).pipe(
-      map((projeto) => this.normalizarProjetoDetalhado(projeto)),
+  getProjetoDetalhado(id: number) {
+    return this.http.get<any>(`${this.apiUrlProjetos}${id}/detalhado`).pipe(
+      map((p) => this.normalizarProjetoDetalhado(p)),
       catchError(() =>
         this.getProjetoPorId(id).pipe(
-          map((projeto) => this.normalizarProjetoDetalhado(projeto))
+          map((p) => this.normalizarProjetoDetalhado(p))
         )
       )
     );
   }
 
-  atualizarProjeto(id: number, formulario: ProjetoFormulario): Observable<any> {
+  atualizarProjeto(id: number, formulario: ProjetoFormulario) {
     return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
       switchMap((orientador: Orientador) => {
         const payload: ProjetoRequest = {
@@ -104,17 +104,16 @@ export class ProjetoService {
           id_orientador: orientador.id,
           id_campus: formulario.id_campus,
         };
-
         return this.http
-          .put(`${this.apiUrlProjetos}/${id}`, payload)
+          .put(`${this.apiUrlProjetos}${id}`, payload)
           .pipe(catchError(this.handleError));
       })
     );
   }
 
-  excluirProjeto(id: number): Observable<any> {
+  excluirProjeto(id: number): Observable<ApiMensagem> {
     return this.http
-      .delete(`${this.apiUrlProjetos}/${id}`)
+      .delete<ApiMensagem>(`${this.apiUrlProjetos}${id}`)
       .pipe(catchError(this.handleError));
   }
 
@@ -133,9 +132,10 @@ export class ProjetoService {
   }
 
   listarCampus(): Observable<Campus[]> {
-    return this.http
-      .get<Campus[]>(`${this.apiUrlCampus}/`)
-      .pipe(catchError(this.handleError));
+    return this.http.get<{ campus: Campus[] }>(`${this.apiUrlCampus}/`).pipe(
+      map((res) => res.campus),
+      catchError(this.handleError)
+    );
   }
 
   buscarCampusPorNome(nome: string): Observable<Campus> {
@@ -148,7 +148,7 @@ export class ProjetoService {
 
   criarCampus(nome: string): Observable<Campus> {
     return this.http
-      .post<Campus>(`${this.apiUrlCampus}/`, { campus: nome })
+      .post<Campus>(`${this.apiUrlCampus}/`, { nome })
       .pipe(catchError(this.handleError));
   }
 
@@ -226,19 +226,16 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  updateAlunosProjeto(
-    id_projeto: number,
-    id_alunos: number[]
-  ): Observable<any> {
+  updateAlunosProjeto(id_projeto: number, id_alunos: number[]) {
     const body = { id_projeto, id_alunos };
-    return this.http.post(`${this.apiUrlProjetos}/update-alunos`, body).pipe(
+    return this.http.post(`${this.apiUrlProjetos}update-alunos`, body).pipe(
       tap((res) => console.log('✅ Alunos atualizados com sucesso:', res)),
       catchError(this.handleError)
     );
   }
 
   listarProjetosDoOrientador() {
-    return this.http.get<Projeto[]>(`${this.apiUrlProjetos}/orientador/meus`);
+    return this.http.get<Projeto[]>(`${this.apiUrlProjetos}orientador/meus`);
   }
 
   private normalizarProjeto(dados: any): Projeto {

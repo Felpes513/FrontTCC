@@ -28,7 +28,7 @@ export class ListagemAlunosComponent implements OnInit {
     this.loading.set(true);
     this.svc.listarPorProjeto(this.projetoId).subscribe({
       next: (data) => {
-        this.lista.set(data ?? []); // ✅ data já é Inscricao[]
+        this.lista.set(data ?? []);
         this.loading.set(false);
       },
       error: () => {

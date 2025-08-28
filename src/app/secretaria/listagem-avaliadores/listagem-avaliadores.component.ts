@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faUsers, faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { AvaliadorExterno } from '@interfaces/avaliador_externo';
 import { ProjetoService } from '@services/projeto.service';
@@ -9,7 +8,7 @@ import { ProjetoService } from '@services/projeto.service';
 @Component({
   selector: 'app-listagem-avaliadores',
   standalone: true,
-  imports: [CommonModule, RouterModule, FontAwesomeModule],
+  imports: [CommonModule, RouterModule, ],
   templateUrl: './listagem-avaliadores.component.html',
   styleUrls: ['./listagem-avaliadores.component.css']
 })

@@ -1,18 +1,14 @@
-// formulario-avaliador.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faUserTie, faSave } from '@fortawesome/free-solid-svg-icons';
 import { AvaliadorExterno } from '@interfaces/avaliador_externo';
 import { ProjetoService } from '@services/projeto.service';
 
 @Component({
   selector: 'app-formulario-avaliador',
   standalone: true,
-  imports: [CommonModule, FormsModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './formulario-avaliador.component.html',
   styleUrls: ['./formulario-avaliador.component.css'],
 })
@@ -30,11 +26,8 @@ export class FormularioAvaliadorComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private iconLib: FaIconLibrary,
     private projetoService: ProjetoService
-  ) {
-    iconLib.addIcons(faUserTie, faSave);
-  }
+  ) {}
 
   ngOnInit(): void {
     const estado = history.state;
@@ -74,18 +67,12 @@ export class FormularioAvaliadorComponent implements OnInit {
 
     if (this.edicao && this.avaliador.id) {
       this.projetoService.atualizarAvaliador(this.avaliador.id, payload).subscribe({
-        next: () => {
-          alert('Avaliador atualizado com sucesso!');
-          goToList();
-        },
+        next: () => { alert('Avaliador atualizado com sucesso!'); goToList(); },
         error: (err) => alert(`Erro: ${err.message || 'Falha ao atualizar'}`),
       });
     } else {
       this.projetoService.criarAvaliador(payload).subscribe({
-        next: () => {
-          alert('Avaliador cadastrado com sucesso!');
-          goToList();
-        },
+        next: () => { alert('Avaliador cadastrado com sucesso!'); goToList(); },
         error: (err) => alert(`Erro: ${err.message || 'Falha ao cadastrar'}`),
       });
     }

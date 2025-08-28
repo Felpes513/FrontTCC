@@ -1,5 +1,8 @@
 <div class="container">
-  <h2><fa-icon [icon]="'user-tie'"></fa-icon> Cadastro de Avaliador Externo</h2>
+  <h2>
+    <i class="fa-solid fa-user-tie"></i>
+    Cadastro de Avaliador Externo
+  </h2>
 
   <form (ngSubmit)="salvarAvaliador()" #form="ngForm">
     <div class="form-group">
@@ -61,7 +64,8 @@
     </div>
 
     <button type="submit" class="btn btn-success" [disabled]="form.invalid">
-      <fa-icon [icon]="'save'"></fa-icon> Salvar
+      <i class="fa-solid fa-floppy-disk"></i>
+      Salvar
     </button>
   </form>
 </div>
