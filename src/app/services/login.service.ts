@@ -12,7 +12,7 @@ type Role = 'SECRETARIA' | 'ORIENTADOR' | 'ALUNO';
 
 @Injectable({ providedIn: 'root' })
 export class LoginService {
-  private baseUrl = 'http://127.0.0.1:8001';
+  private baseUrl = '/api';
 
   constructor(private http: HttpClient) {}
 
@@ -23,9 +23,7 @@ export class LoginService {
     return this.http.post<LoginResponse>(
       `${this.baseUrl}/login`,
       body.toString(),
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
   }
 
@@ -36,9 +34,7 @@ export class LoginService {
     return this.http.post<LoginResponse>(
       `${this.baseUrl}/login-orientador`,
       body.toString(),
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
   }
 
@@ -49,9 +45,7 @@ export class LoginService {
     return this.http.post<LoginResponse>(
       `${this.baseUrl}/login-secretaria`,
       body.toString(),
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
   }
 
@@ -65,24 +59,16 @@ export class LoginService {
 
   getRole(): Role | null {
     const r = localStorage.getItem('role');
-    return r === 'SECRETARIA' || r === 'ORIENTADOR' || r === 'ALUNO'
-      ? (r as Role)
-      : null;
+    return r === 'SECRETARIA' || r === 'ORIENTADOR' || r === 'ALUNO' ? (r as Role) : null;
   }
 
   private decodeRoleFromJwt(token: string): Role | null {
     try {
-      const payload = JSON.parse(
-        this.base64UrlDecode(token.split('.')[1] || '')
-      );
-      const raw = (payload.role ||
-        payload.roles?.[0] ||
-        payload.authorities?.[0]) as string | undefined;
+      const payload = JSON.parse(this.base64UrlDecode(token.split('.')[1] || ''));
+      const raw = (payload.role || payload.roles?.[0] || payload.authorities?.[0]) as string | undefined;
       if (!raw) return null;
       const upper = raw.toUpperCase();
-      return ['SECRETARIA', 'ORIENTADOR', 'ALUNO'].includes(upper)
-        ? (upper as Role)
-        : null;
+      return ['SECRETARIA', 'ORIENTADOR', 'ALUNO'].includes(upper) ? (upper as Role) : null;
     } catch {
       return null;
     }

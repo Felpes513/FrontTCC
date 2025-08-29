@@ -9,7 +9,6 @@ export class AuthService {
   constructor(private router: Router) {}
 
   setSession(access: string, refresh?: string): Role | null {
-    // 🔄 usa as MESMAS chaves do login.service e do interceptor
     localStorage.setItem('access_token', access);
     if (refresh) localStorage.setItem('refresh_token', refresh);
     const role = this.decodeRole(access);
@@ -49,7 +48,7 @@ export class AuthService {
     switch (r) {
       case 'ORIENTADOR': this.router.navigate(['/orientador/projetos']); break;
       case 'SECRETARIA': this.router.navigate(['/secretaria/dashboard']); break;
-      case 'ALUNO':      this.router.navigate(['/aluno/dashboard']); break; // ✅ padronizado
+      case 'ALUNO':      this.router.navigate(['/aluno/dashboard']); break;
       default:           this.router.navigate(['/']);
     }
   }

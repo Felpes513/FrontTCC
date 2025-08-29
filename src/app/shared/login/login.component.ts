@@ -1,3 +1,4 @@
+// src/app/shared/login/login.component.ts
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -33,17 +34,21 @@ export class LoginComponent {
   }
 
   login() {
+    if (this.isLoading) return; // evita duplo clique
     this.erro = null;
     this.isLoading = true;
 
+    const email = this.email.trim();
+    const senha = this.senha;
+
     let observable;
     if (this.perfil === 'aluno') {
-      observable = this.loginService.loginAluno(this.email, this.senha);
+      observable = this.loginService.loginAluno(email, senha);
     } else if (this.perfil === 'orientador') {
-      observable = this.loginService.loginOrientador(this.email, this.senha);
+      observable = this.loginService.loginOrientador(email, senha);
     } else {
-      // ⚠️ Só funciona se existir /login-secretaria no back
-      observable = this.loginService.loginSecretaria(this.email, this.senha);
+      // enquanto SSO não estiver pronto, isso retornará 501
+      observable = this.loginService.loginSecretaria(email, senha);
     }
 
     observable.subscribe({
@@ -51,24 +56,37 @@ export class LoginComponent {
         this.loginService.setTokens(res.access_token, res.refresh_token);
         this.handleRememberMe();
 
-        // ✅ usa o ROLE do JWT para decidir o destino
+        // debug opcional do payload:
+        // console.log('payload', JSON.parse(atob(res.access_token.split('.')[1])));
+
         const role = this.loginService.getRole();
+        console.log('[LOGIN OK] role extraída do JWT:', role);
 
         const redirects: Record<string, string> = {
-          ALUNO: '/aluno/dashboard',            // ajuste se sua rota for outra
-          ORIENTADOR: '/orientador/projetos',   // você já tem esta rota
-          SECRETARIA: '/secretaria/projetos',   // você já tem esta rota
+          ALUNO: '/aluno/dashboard',
+          ORIENTADOR: '/orientador/projetos',
+          SECRETARIA: '/secretaria/projetos',
         };
+        const destino = (role && redirects[role]) || '/';
 
-        const destino = role ? redirects[role] : '/';
         this.isLoading = false;
-        this.router.navigate([destino]);
+        this.router.navigateByUrl(destino);
       },
       error: (e) => {
-        this.erro = e?.error?.detail || e?.error?.message || 'E-mail ou senha inválidos.';
+        const status = e?.status;
+        if (status === 501 && this.perfil === 'secretaria') {
+          this.erro = "Login da Secretaria usa SSO. Clique em 'Entrar com SSO'.";
+        } else {
+          this.erro = e?.error?.detail || e?.error?.message || 'E-mail ou senha inválidos.';
+        }
         this.isLoading = false;
       },
     });
+  }
+
+  entrarComSSO() {
+    // ajuste quando o backend de SSO estiver pronto
+    window.location.href = 'http://127.0.0.1:8001/sso/redirect?provider=empresa';
   }
 
   togglePassword() { this.showPassword = !this.showPassword; }
@@ -82,7 +100,6 @@ export class LoginComponent {
     if (this.perfil === 'aluno') {
       this.router.navigate(['/register/aluno']);
     } else if (this.perfil === 'orientador') {
-      // se você tiver cadastro de orientador:
       this.router.navigate(['/cadastro'], { queryParams: { perfil: 'orientador' } });
     }
   }
