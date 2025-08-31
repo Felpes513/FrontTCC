@@ -235,7 +235,11 @@ export class ProjetoService {
   }
 
   listarProjetosDoOrientador() {
-    return this.http.get<Projeto[]>(`${this.apiUrlProjetos}orientador/meus`);
+    return this.http
+      .get<{ projetos: any[] }>(`${this.apiUrlProjetos}me`)
+      .pipe(
+        map((res) => (res.projetos || []).map((p) => this.normalizarProjeto(p)))
+      );
   }
 
   private normalizarProjeto(dados: any): Projeto {

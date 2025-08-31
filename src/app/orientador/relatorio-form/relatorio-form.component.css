@@ -1,0 +1,241 @@
+/* ==========
+   Paleta (fallbacks)
+   ========== */
+:host {
+  --accent: var(--accent, #2563eb);
+  --accent-contrast: var(--accent-contrast, #fff);
+  --text: var(--text, #1f2937);
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --surface: var(--surface, #ffffff);
+  --app-bg: var(--app-bg, #f4f6f8);
+  --danger: #ef4444;
+}
+
+/* ==========
+   Container geral
+   ========== */
+.painel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+
+/* ==========
+   Cabeçalho
+   ========== */
+.head {
+  margin-bottom: 1rem;
+}
+.head h3 {
+  margin: 0 0 .25rem 0;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+.head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .95rem;
+}
+
+/* ==========
+   Grid: formulário | lista
+   ========== */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1rem;
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========
+   Formulário
+   ========== */
+form {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-bottom: .85rem;
+}
+
+.row label {
+  font-weight: 600;
+  color: var(--text);
+  font-size: .95rem;
+}
+
+.row input[type="month"],
+.row input[type="number"],
+.row input[type="text"],
+.row textarea {
+  appearance: none;
+  width: 100%;
+  padding: .65rem .75rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: .95rem;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.row input[type="file"] {
+  font-size: .95rem;
+}
+
+.row textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+.row input:focus,
+.row textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Angular: inválido e tocado */
+.ng-invalid.ng-touched {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 20%, transparent) !important;
+}
+
+/* Dicas/erros (se usar) */
+.row .hint { color: var(--muted); font-size: .85rem; }
+.row .error { color: var(--danger); font-size: .85rem; }
+
+/* ==========
+   Ações
+   ========== */
+.actions {
+  margin-top: .75rem;
+  display: flex;
+  gap: .5rem;
+}
+
+.actions button {
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+  padding: .65rem .9rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform .05s ease, filter .15s ease;
+}
+
+.actions button:hover { filter: brightness(1.02); }
+.actions button:active { transform: translateY(1px); }
+.actions button[disabled] {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ==========
+   Anexo
+   ========== */
+small {
+  color: var(--muted);
+  display: inline-block;
+  margin-top: .25rem;
+}
+div a[target="_blank"] {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+div a[target="_blank"]:hover {
+  text-decoration: underline;
+}
+
+/* ==========
+   Aside: lista de relatórios enviados
+   ========== */
+.lista-relatorios {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1rem;
+  min-height: 180px;
+}
+
+.lista-relatorios h4 {
+  margin: 0 0 .75rem 0;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.lista-relatorios ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .5rem;
+}
+
+.lista-relatorios li {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.lista-relatorios li i {
+  width: 18px;
+  text-align: center;
+  color: var(--accent);
+}
+
+.lista-relatorios li strong {
+  margin-right: .25rem;
+}
+
+.lista-relatorios li a {
+  margin-left: auto;
+  font-size: .9rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+.lista-relatorios li a:hover { text-decoration: underline; }
+
+/* Estado vazio */
+.lista-relatorios p {
+  color: var(--muted);
+  margin: .25rem 0 0 0;
+}
+
+/* ==========
+   Utilitários
+   ========== */
+.text-right { text-align: right; }
+.muted { color: var(--muted); }
+
+/* ==========
+   Impressão básica (opcional)
+   ========== */
+@media print {
+  .painel {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+  .actions, input[type="file"] { display: none !important; }
+  body { background: #fff; }
+}

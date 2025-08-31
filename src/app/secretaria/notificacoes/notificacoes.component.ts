@@ -21,80 +21,111 @@ interface Notificacao {
 export class NotificacoesComponent implements OnInit {
   private readonly destinatario = 'secretaria';
 
+  // lista atual (página corrente)
   notificacoes: Notificacao[] = [];
-  paginaAtual: Notificacao[] = [];
 
-  // paginação client-side
+  // paginação (servidor ou fallback client-side)
   page = 1;
   size = 10;
+  total = 0;
   totalPages = 1;
+
+  carregando = false;
+  erro: string | null = null;
 
   notificacaoAberta: Notificacao | null = null;
 
   constructor(private projetoService: ProjetoService) {}
 
   ngOnInit(): void {
-    this.carregarNotificacoes();
+    this.carregar(1);
   }
 
-  carregarNotificacoes(): void {
-    this.projetoService.getNotificacoes(this.destinatario).subscribe({
-      next: (lista) => {
-        this.notificacoes = (lista || []).map((n: any) => {
-          const dataHora = new Date(n.data_criacao);
-          return {
-            tipo: n.tipo,
-            mensagem: n.mensagem,
-            data: dataHora.toLocaleDateString(),
-            hora: dataHora.toLocaleTimeString(),
-            lida: !!n.lida,
-            id: n.id
-          };
-        });
-        this.recalcularPaginacao(1);
-      },
-      error: (err) => console.error('❌ Erro ao buscar notificações:', err)
-    });
+  /** Mapeia um item bruto vindo da API para a interface Notificacao */
+  private mapItem(n: any): Notificacao {
+    const rawDate = n.data_criacao || n.created_at || n.data || n.timestamp;
+    const d = rawDate ? new Date(rawDate) : new Date();
+    return {
+      tipo: n.titulo || n.tipo || 'Notificação',
+      mensagem: n.mensagem || n.message || '',
+      data: d.toLocaleDateString(),
+      hora: d.toLocaleTimeString(),
+      lida: !!n.lida,
+      id: n.id
+    };
   }
 
-  // ===== Paginação client-side =====
-  private fatiar(p: number): void {
-    const start = (p - 1) * this.size;
-    const end = start + this.size;
-    this.paginaAtual = this.notificacoes.slice(start, end);
-  }
+  /** Carrega a página p; usa o endpoint paginado se existir, senão faz fallback para client-side */
+  carregar(p = 1): void {
+    this.carregando = true;
+    this.erro = null;
 
-  private recalcularPaginacao(p: number): void {
-    this.totalPages = Math.max(1, Math.ceil(this.notificacoes.length / this.size));
-    this.page = Math.min(Math.max(1, p), this.totalPages);
-    this.fatiar(this.page);
+    if ((this.projetoService as any).getNotificacoesPaginado) {
+      // ✅ paginação no servidor
+      this.projetoService.getNotificacoesPaginado(this.destinatario, p, this.size).subscribe({
+        next: (res: any) => {
+          const items = res?.items ?? [];
+          this.notificacoes = items.map((x: any) => this.mapItem(x));
+          this.page = res?.page ?? p;
+          this.size = res?.size ?? this.size;
+          this.total = res?.total ?? items.length;
+          this.totalPages = Math.max(1, Math.ceil(this.total / this.size));
+          this.carregando = false;
+        },
+        error: (err) => {
+          console.error('❌ Erro (paginado):', err);
+          this.erro = 'Falha ao carregar notificações';
+          this.carregando = false;
+        }
+      });
+    } else {
+      // 🔁 fallback: carrega tudo e fatia localmente
+      this.projetoService.getNotificacoes(this.destinatario).subscribe({
+        next: (lista: any[]) => {
+          const items = lista || [];
+          this.total = items.length;
+          this.totalPages = Math.max(1, Math.ceil(this.total / this.size));
+          const start = (p - 1) * this.size;
+          const end = start + this.size;
+          this.notificacoes = items.slice(start, end).map((x: any) => this.mapItem(x));
+          this.page = p;
+          this.carregando = false;
+        },
+        error: (err) => {
+          console.error('❌ Erro (fallback):', err);
+          this.erro = 'Falha ao carregar notificações';
+          this.carregando = false;
+        }
+      });
+    }
   }
 
   anterior(): void {
-    if (this.page > 1) this.recalcularPaginacao(this.page - 1);
+    if (this.page > 1) this.carregar(this.page - 1);
   }
 
   proxima(): void {
-    if (this.page < this.totalPages) this.recalcularPaginacao(this.page + 1);
+    if (this.page < this.totalPages) this.carregar(this.page + 1);
   }
 
   marcarTodasComoLidas(): void {
     if (!confirm('Marcar todas como lidas?')) return;
 
+    // marca visualmente
     this.notificacoes = this.notificacoes.map(n => ({ ...n, lida: true }));
-    this.fatiar(this.page);
 
     if ((this.projetoService as any).marcarTodasComoLidas) {
       this.projetoService.marcarTodasComoLidas(this.destinatario).subscribe({
-        error: (err) => console.warn('Falha ao persistir "lidas":', err)
+        next: () => this.carregar(this.page), // recarrega para refletir do servidor
+        error: (err) => console.warn('⚠️ Falha ao persistir "lidas":', err)
       });
     }
   }
 
   abrirNotificacao(notificacao: Notificacao): void {
     this.notificacaoAberta = notificacao;
-    // marca visualmente como lida
     notificacao.lida = true;
+    // Se no futuro você expor um endpoint para "marcar lida (id)", chame aqui.
   }
 
   fecharModal(): void {

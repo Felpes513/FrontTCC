@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-
 import { Projeto } from '@interfaces/projeto';
 import { ProjetoService } from '@services/projeto.service';
+import { AuthService } from '@services/auth.service';
 
 @Component({
   selector: 'app-listagem-projetos',
@@ -21,71 +21,71 @@ export class ListagemProjetosComponent implements OnInit {
   erro: string | null = null;
   filtroStatus: string = '';
 
+  // 👉 papel atual
+  isOrientador = false;
+
   constructor(
     private projetoService: ProjetoService,
+    private authService: AuthService,
     private router: Router,
     private snackBar: MatSnackBar
   ) {}
 
-  trackByFn(index: number, item: Projeto): any {
-    return item.id || index;
-  }
-
   ngOnInit(): void {
+    this.isOrientador = this.authService.hasRole('ORIENTADOR');
     this.carregarProjetos();
   }
 
-  // ✅ Carregar projetos
+  trackByFn(index: number, item: Projeto): any {
+    return item?.id ?? index;
+  }
+
+  // ✅ Carregar projetos (decide pelo papel)
   carregarProjetos(): void {
     this.carregando = true;
     this.erro = null;
 
-    console.log('🔄 Iniciando carregamento dos projetos via API FastAPI...');
+    if (this.isOrientador) {
+      // lista só do orientador
+      this.projetoService.listarProjetosDoOrientador().subscribe({
+        next: (projetos) => {
+          this.projetos = projetos ?? [];
+          this.carregando = false;
+          // debug enxuto
+          console.log('[ORIENTADOR] projetos:', this.projetos);
+        },
+        error: (error) => this.handleLoadError(error),
+      });
+      return;
+    }
 
+    // secretaria (sua lógica atual)
     this.projetoService.listarProjetos().subscribe({
       next: (projetos) => {
-        console.log('✅ Projetos processados e normalizados:', projetos);
-
-        const projetosComIdInvalido = projetos.filter((p) => !p.id || p.id <= 0);
-        if (projetosComIdInvalido.length > 0) {
-          console.warn('⚠️ Projetos com ID inválido encontrados:', projetosComIdInvalido);
+        // avisos de id inválido (mantive da sua versão)
+        const invalidos = projetos.filter((p) => !p.id || p.id <= 0);
+        if (invalidos.length) {
+          console.warn('⚠️ Projetos com ID inválido:', invalidos);
         }
-
         this.projetos = projetos;
         this.carregando = false;
-
-        console.log('📊 RESUMO FINAL DOS PROJETOS:', {
-          totalProjetos: this.projetos.length,
-          projetosComIdValido: this.projetos.filter((p) => p.id && p.id > 0).length,
-          projetosComOrientador: this.projetos.filter(
-            (p) => p.nomeOrientador !== 'Orientador não informado'
-          ).length,
-          projetosComAlunos: this.projetos.filter((p) => p.nomesAlunos.length > 0).length,
-          detalhePorProjeto: this.projetos.map((p) => ({
-            id: p.id,
-            nome: p.nomeProjeto,
-            orientador: p.nomeOrientador,
-            qtdAlunos: p.nomesAlunos.length,
-            idValido: this.temIdValido(p),
-          })),
-        });
       },
-      error: (error) => {
-        console.error('❌ Erro ao carregar projetos:', error);
-
-        if (error.status === 0) {
-          this.erro = 'Erro de conexão: verifique se a API FastAPI está rodando.';
-        } else if (error.status === 404) {
-          this.erro = 'Endpoint não encontrado: verifique se a rota /projetos está correta.';
-        } else if (error.status >= 500) {
-          this.erro = 'Erro interno do servidor: verifique os logs da API FastAPI.';
-        } else {
-          this.erro = error.message || 'Erro desconhecido ao carregar projetos';
-        }
-
-        this.carregando = false;
-      },
+      error: (error) => this.handleLoadError(error),
     });
+  }
+
+  private handleLoadError(error: any) {
+    console.error('❌ Erro ao carregar projetos:', error);
+    if (error.status === 0) {
+      this.erro = 'Erro de conexão: verifique se a API FastAPI está rodando.';
+    } else if (error.status === 404) {
+      this.erro = 'Endpoint não encontrado: verifique se a rota /projetos está correta.';
+    } else if (error.status >= 500) {
+      this.erro = 'Erro interno do servidor: verifique os logs da API FastAPI.';
+    } else {
+      this.erro = error.message || 'Erro desconhecido ao carregar projetos';
+    }
+    this.carregando = false;
   }
 
   // ✅ Filtro de projetos
@@ -98,7 +98,8 @@ export class ListagemProjetosComponent implements OnInit {
         (projeto.nomeOrientador || '').toLowerCase().includes(filtroLower) ||
         (projeto.campus || '').toLowerCase().includes(filtroLower);
 
-      const combinaStatus = !this.filtroStatus || projeto.status === this.filtroStatus;
+      // em orientador não usamos filtro de status (botões somem no HTML)
+      const combinaStatus = !this.filtroStatus || (projeto as any).status === this.filtroStatus;
 
       return combinaTexto && combinaStatus;
     });
@@ -122,8 +123,7 @@ export class ListagemProjetosComponent implements OnInit {
   }
 
   simularProgresso(index: number): number {
-    return 30 + (index % 3) * 20;
-    // apenas visual; substitua quando houver progresso real
+    return 30 + (index % 3) * 20; // apenas visual
   }
 
   getCor(index: number): string {
@@ -131,8 +131,13 @@ export class ListagemProjetosComponent implements OnInit {
     return cores[index % cores.length];
   }
 
-  // ✅ Excluir projeto
+  // ✅ Excluir/Editar (somente secretaria)
   excluirProjeto(projeto: Projeto | number): void {
+    if (this.isOrientador) {
+      this.snackBar.open('Somente a Secretaria pode excluir projetos.', 'Fechar', { duration: 3000 });
+      return;
+    }
+
     let id: number;
     let projetoObj: Projeto | null = null;
 
@@ -144,19 +149,10 @@ export class ListagemProjetosComponent implements OnInit {
       projetoObj = projeto;
     }
 
-    // Debug
-    console.log('🔍 DEBUG EXCLUSÃO:', {
-      recebido: projeto,
-      idExtraido: id,
-      projetoEncontrado: projetoObj ? { id: projetoObj.id, nome: projetoObj.nomeProjeto } : null,
-    });
-
-    // Validações
     if (!this.isIdValido(id)) {
       alert('Erro: ID do projeto não foi encontrado ou é inválido. Recarregue a página e tente novamente.');
       return;
     }
-
     if (!projetoObj) {
       alert('Erro: Projeto não encontrado. Recarregue a página e tente novamente.');
       return;
@@ -165,8 +161,6 @@ export class ListagemProjetosComponent implements OnInit {
     const nomeExibicao = projetoObj.nomeProjeto || 'Desconhecido';
     const confirmacao = confirm(`Tem certeza que deseja excluir o projeto "${nomeExibicao}"?\n\nID: ${id}`);
     if (!confirmacao) return;
-
-    console.log('🗑️ Iniciando exclusão do projeto:', { id, nome: nomeExibicao });
 
     this.projetoService.excluirProjeto(id).subscribe({
       next: (response) => {
@@ -178,121 +172,81 @@ export class ListagemProjetosComponent implements OnInit {
         this.carregarProjetos();
       },
       error: (error) => {
-        console.error('❌ ERRO DETALHADO NA EXCLUSÃO:', error);
-
         let mensagemErro = '';
-        if (error.status === 0) {
-          mensagemErro = 'Erro de conexão: verifique se a API está rodando';
-        } else if (error.status === 404) {
-          mensagemErro = 'Projeto não encontrado no servidor';
-        } else if (error.status === 422) {
-          mensagemErro = 'ID do projeto é inválido';
-        } else if (error.status >= 500) {
-          mensagemErro = 'Erro interno do servidor';
-        } else {
-          mensagemErro = error.message || `Erro HTTP ${error.status}`;
-        }
+        if (error.status === 0) mensagemErro = 'Erro de conexão: verifique se a API está rodando';
+        else if (error.status === 404) mensagemErro = 'Projeto não encontrado no servidor';
+        else if (error.status === 422) mensagemErro = 'ID do projeto é inválido';
+        else if (error.status >= 500) mensagemErro = 'Erro interno do servidor';
+        else mensagemErro = error.message || `Erro HTTP ${error.status}`;
 
-        this.snackBar.open(`Erro ao excluir projeto: ${mensagemErro}`, 'Fechar', {
-          duration: 4000,
-        });
+        this.snackBar.open(`Erro ao excluir projeto: ${mensagemErro}`, 'Fechar', { duration: 4000 });
       },
     });
   }
 
-  // ✅ Editar projeto
   editarProjeto(id: number): void {
+    if (this.isOrientador) {
+      this.snackBar.open('Somente a Secretaria pode editar projetos.', 'Fechar', { duration: 3000 });
+      return;
+    }
     if (!this.isIdValido(id)) {
       alert('Erro: ID do projeto é inválido');
       return;
     }
-    console.log('📝 Navegando para editar projeto ID:', id);
     this.router.navigate(['/secretaria/projetos/editar', id]);
   }
 
-  // ✅ Visualizar detalhes do projeto
-  verDetalhes(id: number): void {
+  // 👉 Orientador: ir para relatórios do projeto
+  irParaRelatorio(projeto: Projeto): void {
+    const id = projeto?.id;
     if (!this.isIdValido(id)) {
-      alert('Erro: ID do projeto é inválido');
+      alert('Projeto sem ID válido.');
       return;
     }
-    console.log('👁️ Navegando para visualizar projeto ID:', id);
-    this.router.navigate(['/secretaria/projetos/detalhes', id]);
-  }
-
-  // ✅ Ver inscrições do projeto
-  verInscricoes(id: number): void {
-    if (!this.isIdValido(id)) {
-      alert('Erro: ID do projeto é inválido');
-      return;
-    }
-    console.log('📋 Navegando para inscrições do projeto ID:', id);
-    this.router.navigate(['/secretaria/projetos/inscricoes', id]);
+    this.router.navigate(['/orientador/relatorios', id]);
   }
 
   // ✅ Recarregar lista
   recarregar(): void {
-    console.log('🔄 Recarregando lista de projetos...');
     this.carregarProjetos();
   }
 
-  // ✅ Método para verificar se o projeto tem ID válido
+  // ✅ Helpers de ID/status
   temIdValido(projeto: Projeto): boolean {
     return this.isIdValido(projeto.id);
   }
 
-  // ✅ Validador de ID centralizado
-  private isIdValido(id: any): boolean {
+  private isIdValido(id: any): id is number {
     return id !== undefined && id !== null && typeof id === 'number' && !isNaN(id) && id > 0;
   }
 
-  // ✅ Status do projeto com base nos dados
   getStatusProjeto(projeto: Projeto): string {
-    if (!this.temIdValido(projeto)) {
-      return 'erro';
-    }
-    if (projeto.nomesAlunos.length >= (projeto.quantidadeMaximaAlunos || 0)) {
-      return 'lotado';
-    }
-    if (projeto.nomesAlunos.length > 0) {
-      return 'em-andamento';
-    }
+    if (!this.temIdValido(projeto)) return 'erro';
+    if (projeto.nomesAlunos.length >= (projeto.quantidadeMaximaAlunos || 0)) return 'lotado';
+    if (projeto.nomesAlunos.length > 0) return 'em-andamento';
     return 'disponivel';
   }
 
-  // ✅ Cor do status
   getCorStatus(status: string): string {
     switch (status) {
-      case 'disponivel':
-        return '#28a745'; // Verde
-      case 'em-andamento':
-        return '#ffc107'; // Amarelo
-      case 'lotado':
-        return '#dc3545'; // Vermelho
-      case 'erro':
-        return '#6c757d'; // Cinza
-      default:
-        return '#007bff'; // Azul padrão
+      case 'disponivel': return '#28a745';
+      case 'em-andamento': return '#ffc107';
+      case 'lotado': return '#dc3545';
+      case 'erro': return '#6c757d';
+      default: return '#007bff';
     }
   }
 
-  // ✅ Texto do status
   getTextoStatus(status: string): string {
     switch (status) {
-      case 'disponivel':
-        return 'Disponível';
-      case 'em-andamento':
-        return 'Em andamento';
-      case 'lotado':
-        return 'Lotado';
-      case 'erro':
-        return 'Erro';
-      default:
-        return 'Desconhecido';
+      case 'disponivel': return 'Disponível';
+      case 'em-andamento': return 'Em andamento';
+      case 'lotado': return 'Lotado';
+      case 'erro': return 'Erro';
+      default: return 'Desconhecido';
     }
   }
 
-  // ✅ Progresso das inscrições
   calcularProgresso(projeto: Projeto): number {
     const max = projeto.quantidadeMaximaAlunos || 0;
     if (max === 0) return 0;
@@ -300,7 +254,7 @@ export class ListagemProjetosComponent implements OnInit {
     return Math.min(progresso, 100);
   }
 
-  // ✅ Debug helpers
+  // DEBUG (mantidos)
   debugProjeto(projeto: Projeto): void {
     console.log('🔍 Debug do projeto:', {
       id: projeto.id,
@@ -322,16 +276,13 @@ export class ListagemProjetosComponent implements OnInit {
       totalProjetos: this.projetos.length,
       projetosComIdValido: this.projetos.filter((p) => this.temIdValido(p)).length,
       projetos: this.projetos.map((p) => ({
-        id: p.id,
-        tipoId: typeof p.id,
-        nome: p.nomeProjeto,
-        temIdValido: this.temIdValido(p),
-        status: this.getStatusProjeto(p),
+        id: p.id, tipoId: typeof p.id, nome: p.nomeProjeto,
+        temIdValido: this.temIdValido(p), status: this.getStatusProjeto(p),
       })),
     });
   }
 
-  // ✅ Exportar (placeholder)
+  // Export placeholder
   exportarProjetos(): void {
     const dadosExportacao = this.projetos.map((p) => ({
       ID: p.id,
@@ -343,8 +294,6 @@ export class ListagemProjetosComponent implements OnInit {
       Status: this.getTextoStatus(this.getStatusProjeto(p)),
       'Progresso (%)': this.calcularProgresso(p).toFixed(1),
     }));
-
     console.log('📊 Dados para exportação:', dadosExportacao);
-    // implementar CSV/Excel se necessário
   }
 }

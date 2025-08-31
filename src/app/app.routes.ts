@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { orientadorGuard } from '@core/guards/orientador.guard';
 
 export const routes: Routes = [
   {
@@ -9,81 +10,123 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./shared/login/login.component').then(m => m.LoginComponent),
+      import('@shared/login/login.component').then(m => m.LoginComponent),
   },
   {
     path: 'cadastro',
     loadComponent: () =>
-      import('./shared/cadastro/cadastro.component').then(m => m.RegisterComponent),
+      import('@shared/cadastro/cadastro.component').then(m => m.RegisterComponent),
   },
+
+  // ===== SECRETARIA (usa o mesmo sidenav) =====
   {
     path: 'secretaria',
     loadComponent: () =>
-      import('./shared/sidenav/sidenav-secretaria.component')
-        .then(m => m.SidenavSecretariaComponent),
+      import('./shared/sidenav/sidenav-secretaria.component').then(
+        m => m.SidenavSecretariaComponent
+      ),
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./secretaria/dashboard/dashboard.component')
-            .then(m => m.DashboardComponent),
+          import('./secretaria/dashboard/dashboard.component').then(
+            m => m.DashboardComponent
+          ),
       },
       {
         path: 'avaliadores',
         loadComponent: () =>
-          import('./secretaria/listagem-avaliadores/listagem-avaliadores.component')
-            .then(m => m.ListagemAvaliadoresComponent),
+          import('./secretaria/listagem-avaliadores/listagem-avaliadores.component').then(
+            m => m.ListagemAvaliadoresComponent
+          ),
       },
       {
         path: 'avaliadores/novo',
         loadComponent: () =>
-          import('./secretaria/formulario-avaliador/formulario-avaliador.component')
-            .then(m => m.FormularioAvaliadorComponent),
+          import('./secretaria/formulario-avaliador/formulario-avaliador.component').then(
+            m => m.FormularioAvaliadorComponent
+          ),
       },
       {
         path: 'notificacoes',
         loadComponent: () =>
-          import('./secretaria/notificacoes/notificacoes.component')
-            .then(m => m.NotificacoesComponent),
+          import('./secretaria/notificacoes/notificacoes.component').then(
+            m => m.NotificacoesComponent
+          ),
       },
       {
         path: 'projetos',
         loadComponent: () =>
-          import('./secretaria/listagem-projetos/listagem-projetos.component')
-            .then(m => m.ListagemProjetosComponent),
+          import('./secretaria/listagem-projetos/listagem-projetos.component').then(
+            m => m.ListagemProjetosComponent
+          ),
       },
       {
         path: 'projetos/novo',
         loadComponent: () =>
-          import('./secretaria/formulario-projeto/formulario-projeto.component')
-            .then(m => m.FormularioProjetoComponent),
+          import('./secretaria/formulario-projeto/formulario-projeto.component').then(
+            m => m.FormularioProjetoComponent
+          ),
       },
       {
         path: 'projetos/editar/:id',
         loadComponent: () =>
-          import('./secretaria/formulario-projeto/formulario-projeto.component')
-            .then(m => m.FormularioProjetoComponent),
+          import('./secretaria/formulario-projeto/formulario-projeto.component').then(
+            m => m.FormularioProjetoComponent
+          ),
       },
       {
         path: 'email',
         loadComponent: () =>
-          import('./secretaria/envio-de-email/envio-de-email.component')
-            .then(m => m.EnvioDeEmailComponent),   // <- só se você corrigir o arquivo (Opção A)
+          import('./secretaria/envio-de-email/envio-de-email.component').then(
+            m => m.EnvioDeEmailComponent
+          ),
       },
       {
         path: 'relatorios',
         loadComponent: () =>
-          import('./secretaria/relatorios/relatorios.component')
-            .then(m => m.RelatoriosComponent),
+          import('./secretaria/relatorios/relatorios.component').then(
+            m => m.RelatoriosComponent
+          ),
       },
     ],
   },
+
+  // ===== ORIENTADOR (mesmo sidenav + guard) =====
   {
-    path: 'orientador/projetos',
+    path: 'orientador',
+    canActivate: [orientadorGuard],
     loadComponent: () =>
-      import('./orientador/listagem-projetos/listagem-projetos.component')
-        .then(m => m.ListagemProjetosComponent),
+      import('./shared/sidenav/sidenav-secretaria.component').then(
+        m => m.SidenavSecretariaComponent
+      ),
+    children: [
+      {
+        path: 'projetos',
+        // usa a MESMA listagem da secretaria
+        loadComponent: () =>
+          import('./secretaria/listagem-projetos/listagem-projetos.component').then(
+            m => m.ListagemProjetosComponent
+          ),
+        data: { modo: 'ORIENTADOR' }, // opcional (fallback ao AuthService)
+      },
+      {
+        path: 'relatorios',
+        redirectTo: 'projetos',
+        pathMatch: 'full',
+      },
+      {
+        path: 'relatorios/:projetoId',
+        loadComponent: () =>
+          import('./orientador/relatorio-form/relatorio-form.component').then(
+            m => m.RelatorioFormComponent
+          ),
+      },
+      { path: '', redirectTo: 'projetos', pathMatch: 'full' },
+    ],
   },
+
+  // Fallback
   { path: '**', redirectTo: '' },
 ];

@@ -2,33 +2,44 @@
   <h2><i class="fas fa-bell"></i> Notificações</h2>
 
   <div class="toolbar">
-    <button class="btn-marcar" (click)="marcarTodasComoLidas()">
+    <button class="btn-marcar" (click)="marcarTodasComoLidas()" [disabled]="!notificacoes.length">
       <i class="fas fa-check-circle"></i> Ler todas as notificações
     </button>
 
     <div class="paginacao">
-      <button (click)="anterior()" [disabled]="page<=1">‹</button>
+      <button (click)="anterior()" [disabled]="page <= 1">‹</button>
       <span>Página {{ page }} / {{ totalPages }}</span>
-      <button (click)="proxima()" [disabled]="page>=totalPages">›</button>
+      <button (click)="proxima()" [disabled]="page >= totalPages">›</button>
     </div>
   </div>
 
-  <div *ngFor="let notificacao of paginaAtual"
-       class="notificacao"
-       [class.lida]="notificacao.lida"
-       (click)="abrirNotificacao(notificacao)">
-    <p class="tipo">{{ notificacao.tipo }}</p>
-    <p class="mensagem"><strong>{{ notificacao.mensagem }}</strong></p>
-    <p class="data">{{ notificacao.data }} às {{ notificacao.hora }}</p>
-  </div>
+  <!-- estados -->
+  <div *ngIf="carregando" class="loading">Carregando…</div>
+  <div *ngIf="erro" class="error">⚠️ {{ erro }}</div>
 
-  <!-- Modal (opcional) -->
+  <!-- lista da página corrente -->
+  <ng-container *ngIf="!carregando && !erro">
+    <div
+      *ngFor="let notificacao of notificacoes"
+      class="notificacao"
+      [class.lida]="notificacao.lida"
+      (click)="abrirNotificacao(notificacao)"
+    >
+      <p class="tipo">{{ notificacao.tipo }}</p>
+      <p class="mensagem"><strong>{{ notificacao.mensagem }}</strong></p>
+      <p class="data">{{ notificacao.data }} às {{ notificacao.hora }}</p>
+    </div>
+
+    <p *ngIf="!notificacoes?.length" class="vazio">Sem notificações.</p>
+  </ng-container>
+
+  <!-- Modal -->
   <div class="modal" *ngIf="notificacaoAberta">
     <div class="modal-conteudo">
       <button class="fechar" (click)="fecharModal()">&times;</button>
       <h3>{{ notificacaoAberta.tipo }}</h3>
-      <p>{{ notificacaoAberta.mensagem }}</p>
-      <small>{{ notificacaoAberta.data }} às {{ notificacaoAberta.hora }}</small>
+      <p class="mensagem"><strong>{{ notificacaoAberta.mensagem }}</strong></p>
+      <small class="data">{{ notificacaoAberta.data }} às {{ notificacaoAberta.hora }}</small>
     </div>
   </div>
 </div>

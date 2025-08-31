@@ -1,6 +1,7 @@
+// src/app/services/login.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs'; // ⬅️ importe tap
 
 interface LoginResponse {
   access_token: string;
@@ -20,38 +21,50 @@ export class LoginService {
     const body = new URLSearchParams();
     body.set('username', email);
     body.set('password', senha);
-    return this.http.post<LoginResponse>(
-      `${this.baseUrl}/login`,
-      body.toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
+    return this.http
+      .post<LoginResponse>(`${this.baseUrl}/login`, body.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      })
+      .pipe(
+        tap((res) => this.persistTokensFromResponse(res)) // ⬅️ salva aqui
+      );
   }
 
   loginOrientador(email: string, senha: string): Observable<LoginResponse> {
     const body = new URLSearchParams();
     body.set('username', email);
     body.set('password', senha);
-    return this.http.post<LoginResponse>(
-      `${this.baseUrl}/login-orientador`,
-      body.toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
+    return this.http
+      .post<LoginResponse>(
+        `${this.baseUrl}/login-orientador`,
+        body.toString(),
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      )
+      .pipe(
+        tap((res) => this.persistTokensFromResponse(res)) // ⬅️ salva aqui
+      );
   }
 
   loginSecretaria(email: string, senha: string): Observable<LoginResponse> {
-    const body = new URLSearchParams();
-    body.set('username', email);
-    body.set('password', senha);
-    return this.http.post<LoginResponse>(
-      `${this.baseUrl}/login-secretaria`,
-      body.toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
+    return this.http
+      .post<LoginResponse>(
+        `${this.baseUrl}/secretarias/login`,
+        { email, senha } // ← JSON
+      )
+      .pipe(tap((res) => this.persistTokensFromResponse(res)));
+  }
+
+  /** Centraliza a persistência e valida campos do backend */
+  private persistTokensFromResponse(res: Partial<LoginResponse>) {
+    const access = (res as any)?.access_token || (res as any)?.token;
+    const refresh = (res as any)?.refresh_token;
+    if (!access) throw new Error('Resposta de login sem access_token');
+    this.setTokens(access, refresh || '');
   }
 
   setTokens(accessToken: string, refreshToken: string): void {
     localStorage.setItem('access_token', accessToken);
-    localStorage.setItem('refresh_token', refreshToken);
+    if (refreshToken) localStorage.setItem('refresh_token', refreshToken);
 
     const role = this.decodeRoleFromJwt(accessToken);
     if (role) localStorage.setItem('role', role);
@@ -59,16 +72,26 @@ export class LoginService {
 
   getRole(): Role | null {
     const r = localStorage.getItem('role');
-    return r === 'SECRETARIA' || r === 'ORIENTADOR' || r === 'ALUNO' ? (r as Role) : null;
+    return r === 'SECRETARIA' || r === 'ORIENTADOR' || r === 'ALUNO'
+      ? (r as Role)
+      : null;
   }
 
   private decodeRoleFromJwt(token: string): Role | null {
     try {
-      const payload = JSON.parse(this.base64UrlDecode(token.split('.')[1] || ''));
-      const raw = (payload.role || payload.roles?.[0] || payload.authorities?.[0]) as string | undefined;
+      const payload = JSON.parse(
+        this.base64UrlDecode(token.split('.')[1] || '')
+      );
+      const raw =
+        payload.perfil || // ⬅️ inclua 'perfil' se o back usa isso
+        payload.role ||
+        payload.roles?.[0] ||
+        payload.authorities?.[0];
       if (!raw) return null;
-      const upper = raw.toUpperCase();
-      return ['SECRETARIA', 'ORIENTADOR', 'ALUNO'].includes(upper) ? (upper as Role) : null;
+      const upper = String(raw).toUpperCase();
+      return ['SECRETARIA', 'ORIENTADOR', 'ALUNO'].includes(upper)
+        ? (upper as Role)
+        : null;
     } catch {
       return null;
     }

@@ -21,6 +21,12 @@
       "@interfaces/*": ["app/shared/interfaces/*"],
       "@services/*": ["app/services/*"],
       "@core/*": ["app/core/*"],
+      "@guards/*": ["app/core/guards/*"],
+      "@auth/*": ["app/auth/*"],
+      "@aluno/*": ["app/aluno/*"],
+      "@orientador/*": ["app/orientador/*"],
+      "@secretaria/*": ["app/secretaria/*"],
+      "@shared/*": ["app/shared/*"]
     }
   },
   "angularCompilerOptions": {

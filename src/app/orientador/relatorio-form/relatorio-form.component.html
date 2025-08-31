@@ -1,0 +1,72 @@
+<section class="painel">
+  <header class="head">
+    <h3>Relatório mensal — Projeto #{{ projetoId }}</h3>
+    <p class="muted">Preencha o resumo do mês e confirme o envio.</p>
+  </header>
+
+  <div class="grid">
+    <form [formGroup]="form" (ngSubmit)="salvar()">
+      <div class="row">
+        <label>Mês de Referência</label>
+        <input type="month" formControlName="referenciaMes" />
+      </div>
+
+      <div class="row" *ngIf="relatorioEnviadoDoMes()">
+        <div class="hint">
+          ✅ Já existe relatório enviado para <strong>{{ relatorioEnviadoDoMes()!.mes }}</strong>.
+        </div>
+      </div>
+
+      <div class="row">
+        <label>Resumo do Progresso</label>
+        <textarea rows="4" formControlName="resumo" placeholder="Principais avanços do mês"></textarea>
+      </div>
+
+      <div class="row">
+        <label>Atividades Realizadas</label>
+        <textarea rows="3" formControlName="atividades"></textarea>
+      </div>
+
+      <div class="row">
+        <label>Bloqueios/Impedimentos</label>
+        <textarea rows="3" formControlName="bloqueios"></textarea>
+      </div>
+
+      <div class="row">
+        <label>Próximos Passos</label>
+        <textarea rows="3" formControlName="proximosPassos"></textarea>
+      </div>
+
+      <div class="row">
+        <label>Horas no Mês</label>
+        <input type="number" min="0" step="1" formControlName="horas" />
+      </div>
+
+      <div class="row">
+        <label>
+          <input type="checkbox" formControlName="ok" />
+          Declaro que revisei os dados e confirmo o relatório do mês.
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="submit" [disabled]="salvando()">
+          <i class="fas fa-save"></i> Confirmar relatório
+        </button>
+      </div>
+    </form>
+
+    <aside class="lista-relatorios">
+      <h4>Status do mês selecionado</h4>
+      <ng-container *ngIf="relatorioEnviadoDoMes(); else pendente">
+        <p>Relatório <strong>enviado</strong> em {{ relatorioEnviadoDoMes()!.data_envio || 'data não informada' }}.</p>
+        <p><small>Observação salva:</small></p>
+        <pre style="white-space: pre-wrap; font-size: .9rem; margin: .25rem 0 0 0;">
+{{ relatorioEnviadoDoMes()!.observacao || '—' }}</pre>
+      </ng-container>
+      <ng-template #pendente>
+        <p class="muted">Nenhum relatório enviado para o mês selecionado.</p>
+      </ng-template>
+    </aside>
+  </div>
+</section>

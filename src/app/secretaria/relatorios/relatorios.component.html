@@ -1,38 +1,16 @@
-<div class="relatorios-container">
-  <h2><i class="fas fa-chart-line"></i> Relatórios</h2>
+<section class="relatorios">
+  <header>
+    <h2>Relatórios</h2>
+    <p class="muted">Gere e baixe relatórios administrativos.</p>
+  </header>
 
-  <div class="filtro-box">
-    <label for="tipoRelatorio"><i class="fas fa-filter"></i> Selecione o tipo de relatório:</label>
-    <select id="tipoRelatorio" [(ngModel)]="tipoSelecionado" (change)="onTipoRelatorioChange()">
-      <option value="">-- Escolha --</option>
-      <option value="projetosResumo">Resumo dos Projetos</option>
-      <option value="alunosProjetos">Alunos e Projetos</option>
-      <option value="orientadoresProjetos">Orientadores e Projetos</option>
-      <option value="projetosConcluidos">Projetos Concluídos</option>
-    </select>
+  <div class="cards">
+    <div class="card">
+      <h3>Relatório de Alunos</h3>
+      <p>Gera uma planilha (.xlsx) com Nome e CPF dos alunos cadastrados.</p>
+      <button (click)="baixarAlunosXlsx()" [disabled]="baixando">
+        {{ baixando ? 'Gerando...' : 'Baixar XLSX' }}
+      </button>
+    </div>
   </div>
-
-  <div class="tabela-box" *ngIf="dados.length > 0">
-    <table>
-      <thead>
-        <tr>
-            <th *ngFor="let coluna of colunas">
-                {{ formatarNomeColuna(coluna) }}
-            </th>
-        </tr>
-    </thead>
-
-      <tbody>
-        <tr *ngFor="let item of dados">
-          <td *ngFor="let coluna of colunas">{{ item[coluna] }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="botoes">
-    <button (click)="gerarRelatorioExcel()" [disabled]="!tipoSelecionado">
-      <i class="fas fa-file-excel"></i> Gerar Excel
-    </button>
-  </div>
-</div>
+</section>
