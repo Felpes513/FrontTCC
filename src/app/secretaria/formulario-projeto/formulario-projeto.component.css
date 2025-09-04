@@ -92,9 +92,13 @@ button:hover {
   background-color: #dc2626;
 }
 
-/* ============================== */
-/* 🔧 Ações do formulário */
-/* ============================== */
+form fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: auto;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-start;
@@ -104,9 +108,6 @@ button:hover {
   flex-wrap: wrap;
 }
 
-/* ============================== */
-/* 👨‍🎓 Cartões de alunos inscritos */
-/* ============================== */
 .aluno-card {
   background: #f9f9f9;
   padding: 1rem;
@@ -119,9 +120,6 @@ button:hover {
   margin-top: 0.5rem;
 }
 
-/* ============================== */
-/* 📱 Responsividade: tablets */
-/* ============================== */
 @media (max-width: 768px) {
   .form-container {
     padding: 1.5rem;
@@ -155,9 +153,6 @@ button:hover {
   }
 }
 
-/* ============================== */
-/* 📱 Responsividade: celulares */
-/* ============================== */
 @media (max-width: 480px) {
   .form-container {
     padding: 1rem;
@@ -183,7 +178,6 @@ button:hover {
 }
 
 
-/* Layout lado a lado: form (maior) + painel inscritos (menor) */
 .editor-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -191,13 +185,11 @@ button:hover {
   align-items: start;
 }
 
-/* Faz o painel acompanhar a rolagem, mas sem “grudar” no topo quando mobile */
 .col-inscritos {
   position: sticky;
   top: 24px;
 }
 
-/* Responsivo: empilha abaixo do form */
 @media (max-width: 1024px) {
   .editor-grid {
     grid-template-columns: 1fr;

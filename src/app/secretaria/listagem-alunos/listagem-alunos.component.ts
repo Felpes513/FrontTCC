@@ -18,13 +18,10 @@ export class ListagemAlunosComponent implements OnInit {
   @Input({ required: true }) projetoId!: number;
   @Input() modo: Modo = 'SECRETARIA';
 
-  // dados “crus” vindos da API de inscrições
   private _inscricoes: any[] = [];
 
-  // secretaria usa esta lista direto
   alunosSecretaria: any[] = [];
 
-  // orientador usa estes separadores
   aprovadas: any[] = [];
   pendentesOuReprovadas: any[] = [];
   selecionados = new Set<number>();
@@ -45,12 +42,11 @@ export class ListagemAlunosComponent implements OnInit {
   private carregar() {
     this.loadingFlag = true;
 
-    // Para o orientador precisamos do detalhe do projeto (p/ limite + pré-seleção)
     const reqs =
       this.modo === 'ORIENTADOR'
         ? forkJoin({
             inscricoes: this.projetoService.listarInscricoesPorProjeto(this.projetoId),
-            projeto: this.projetoService.getProjetoDetalhado(this.projetoId),
+            projeto: this.projetoService.getProjetoPorId(this.projetoId), // ✅ usa getById (sem /detalhado)
           })
         : forkJoin({
             inscricoes: this.projetoService.listarInscricoesPorProjeto(this.projetoId),
@@ -61,8 +57,7 @@ export class ListagemAlunosComponent implements OnInit {
         this._inscricoes = Array.isArray(res.inscricoes) ? res.inscricoes : [];
 
         if (this.modo === 'SECRETARIA') {
-          // Mantém o shape que seu HTML atual já espera
-          this.alunosSecretaria = this._inscricoes.map(i => ({
+          this.alunosSecretaria = this._inscricoes.map((i) => ({
             nome: i?.aluno?.nome || i?.nome_aluno || i?.nome || '—',
             matricula: i?.aluno?.matricula || i?.matricula || '—',
             email: i?.aluno?.email || i?.email || '—',
@@ -70,13 +65,13 @@ export class ListagemAlunosComponent implements OnInit {
             documentoNotasUrl: i?.documentoNotasUrl,
           }));
         } else {
-          // ORIENTADOR: separa aprovados x outros
-          this.aprovadas = this._inscricoes.filter(i => this.isAprovada(i));
-          this.pendentesOuReprovadas = this._inscricoes.filter(i => !this.isAprovada(i));
+          this.aprovadas = this._inscricoes.filter((i) => this.isAprovada(i));
+          this.pendentesOuReprovadas = this._inscricoes.filter((i) => !this.isAprovada(i));
 
-          // limite + pré-seleção dos já participantes
           this.limite = Number(res?.projeto?.quantidadeMaximaAlunos || 0);
-          const jaNoProjetoIds = this.extractIdsFromAlunos(res?.projeto?.alunos || res?.projeto?.nomesAlunos || []);
+          const jaNoProjetoIds = this.extractIdsFromAlunos(
+            res?.projeto?.alunos || res?.projeto?.nomesAlunos || []
+          );
           this.selecionados = new Set<number>(jaNoProjetoIds);
         }
 
@@ -91,12 +86,16 @@ export class ListagemAlunosComponent implements OnInit {
     });
   }
 
-  // ==== API compatível com o HTML original (SECRETARIA) ====
-  loading() { return this.loadingFlag; }
-  lista() { return this.alunosSecretaria; }
-  total() { return this.modo === 'SECRETARIA'
-    ? this.alunosSecretaria.length
-    : (this.aprovadas.length + this.pendentesOuReprovadas.length);
+  loading() {
+    return this.loadingFlag;
+  }
+  lista() {
+    return this.alunosSecretaria;
+  }
+  total() {
+    return this.modo === 'SECRETARIA'
+      ? this.alunosSecretaria.length
+      : this.aprovadas.length + this.pendentesOuReprovadas.length;
   }
 
   // ==== Utilitários do ORIENTADOR ====
@@ -146,6 +145,8 @@ export class ListagemAlunosComponent implements OnInit {
 
   private extractIdsFromAlunos(arr: any[]): number[] {
     if (!Array.isArray(arr)) return [];
-    return arr.map((a: any) => a?.id ?? a?.id_aluno ?? a).filter((v: any) => typeof v === 'number');
+    return arr
+      .map((a: any) => a?.id ?? a?.id_aluno ?? a)
+      .filter((v: any) => typeof v === 'number');
   }
 }

@@ -1,6 +1,6 @@
 <div class="projects-container">
   <div class="header">
-    <h2>{{ isOrientador ? 'Projetos' : 'Meus Projetos' }}</h2>
+    <h2>{{ isOrientador ? "Projetos" : "Meus Projetos" }}</h2>
 
     <!-- Filtros e Adicionar: SOMENTE Secretaria -->
     <div class="filters" *ngIf="!isOrientador">
@@ -40,7 +40,11 @@
   <!-- GRID -->
   <div *ngIf="!carregando && !erro" class="card-grid">
     <div
-      *ngFor="let projeto of projetosFiltrados(); let i = index; trackBy: trackByFn"
+      *ngFor="
+        let projeto of projetosFiltrados();
+        let i = index;
+        trackBy: trackByFn
+      "
       class="card"
     >
       <div
@@ -95,7 +99,17 @@
 
         <!-- Orientador -->
         <ng-template #orientadorAcoes>
-          <ng-container *ngIf="temIdValido(projeto); else relatorioDisabled">
+          <ng-container *ngIf="temIdValido(projeto); else acaoDisabled">
+            <!-- ✅ NOVO: Formulário (reaproveita o mesmo componente) -->
+            <a
+              class="btn-form"
+              [routerLink]="['/orientador/projetos', projeto.id]"
+              title="Formulário do Projeto"
+            >
+              📋 Formulário
+            </a>
+
+            <!-- Já existia: Relatórios -->
             <a
               class="btn-report"
               [routerLink]="['/orientador/relatorios', projeto.id]"
@@ -104,10 +118,9 @@
               📝 Relatórios
             </a>
           </ng-container>
-          <ng-template #relatorioDisabled>
-            <button class="btn-report" disabled title="Projeto sem ID">
-              📝 Relatórios
-            </button>
+          <ng-template #acaoDisabled>
+            <button class="btn-form" disabled>📋 Formulário</button>
+            <button class="btn-report" disabled>📝 Relatórios</button>
           </ng-template>
         </ng-template>
       </div>
@@ -115,23 +128,39 @@
   </div>
 
   <!-- Nenhum projeto -->
-  <div *ngIf="!carregando && !erro && projetos.length === 0" class="no-projects">
+  <div
+    *ngIf="!carregando && !erro && projetos.length === 0"
+    class="no-projects"
+  >
     <h3>📁 Nenhum projeto encontrado</h3>
     <p *ngIf="!isOrientador">Comece criando seu primeiro projeto!</p>
     <p *ngIf="isOrientador">Você ainda não está vinculado a um projeto.</p>
-    <button class="btn-add" *ngIf="!isOrientador" [routerLink]="['/secretaria/projetos/novo']">
+    <button
+      class="btn-add"
+      *ngIf="!isOrientador"
+      [routerLink]="['/secretaria/projetos/novo']"
+    >
       + Criar primeiro projeto
     </button>
   </div>
 
   <!-- Nenhum resultado -->
   <div
-    *ngIf="!carregando && !erro && projetos.length > 0 && projetosFiltrados().length === 0"
+    *ngIf="
+      !carregando &&
+      !erro &&
+      projetos.length > 0 &&
+      projetosFiltrados().length === 0
+    "
     class="no-results"
   >
     <h3>🔍 Nenhum resultado encontrado</h3>
     <p>Tente ajustar os termos da sua busca.</p>
-    <button class="btn-clear-filter" (click)="filtro = ''" *ngIf="!isOrientador">
+    <button
+      class="btn-clear-filter"
+      (click)="filtro = ''"
+      *ngIf="!isOrientador"
+    >
       ❌ Limpar filtro
     </button>
   </div>

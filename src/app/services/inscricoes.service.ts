@@ -1,9 +1,20 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { ListagemResponse } from '@interfaces/listagem';
-import { Inscricao } from '@interfaces/inscricao';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+
+export interface InscricaoDTO {
+  id?: number;
+  id_inscricao?: number;
+  id_projeto?: number;
+  projeto_id?: number;
+  status?: string;
+  aluno?: {
+    id?: number;
+    nome?: string;
+    email?: string;
+    matricula?: string;
+  };
+}
 
 @Injectable({ providedIn: 'root' })
 export class InscricoesService {
@@ -12,46 +23,54 @@ export class InscricoesService {
 
   listarPorProjeto(
     projetoId: number,
-    status?: string,
     pagina: number = 1,
-    limite: number = 20,
-    ordenarPor: string = 'nome',
-    ordem: 'asc' | 'desc' = 'asc'
-  ): Observable<Inscricao[]> {
+    limite: number = 50
+  ): Observable<InscricaoDTO[]> {
     let params = new HttpParams()
-      .set('pagina', pagina)
-      .set('limite', limite)
-      .set('ordenarPor', ordenarPor)
-      .set('ordem', ordem);
-
-    if (status) {
-      params = params.set('status', status);
-    }
+      .set('projeto_id', String(projetoId))
+      .set('pagina', String(pagina))
+      .set('limite', String(limite));
 
     return this.http
-      .get<ListagemResponse>(`${this.baseUrl}/projetos/${projetoId}/inscricoes`, { params })
-      .pipe(map(resp => resp.itens));
+      .get<InscricaoDTO[]>(`${this.baseUrl}/inscricoes`, { params })
+      .pipe(
+        map((data: any) => {
+          if (Array.isArray(data)) return data;
+          if (Array.isArray(data?.itens)) return data.itens;
+          if (Array.isArray(data?.items)) return data.items;
+          return [];
+        })
+      );
   }
 
-  aprovar(inscricaoId: number): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/inscricoes/${inscricaoId}/aprovar`, {});
+  inscreverNoProjeto(projetoId: number): Observable<{
+    success: boolean;
+    message: string;
+    data?: { id_inscricao: number };
+  }> {
+    const body = { id_projeto: projetoId };
+
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      data?: { id_inscricao: number };
+    }>(`${this.baseUrl}/inscricoes/inscrever`, body);
   }
 
-  finalizar(inscricaoId: number): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/inscricoes/${inscricaoId}/finalizar`, {});
+  obterPorId(inscricaoId: number): Observable<InscricaoDTO> {
+    return this.http.get<InscricaoDTO>(
+      `${this.baseUrl}/inscricoes/${inscricaoId}`
+    );
   }
 
-  rejeitar(inscricaoId: number): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/inscricoes/${inscricaoId}/rejeitar`, {});
+  excluir(inscricaoId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/inscricoes/${inscricaoId}`);
   }
 
-  excluir(inscricaoId: number): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/inscricoes/${inscricaoId}`);
-  }
-
-  uploadDocumento(inscricaoId: number, arquivo: File): Observable<any> {
+  /*uploadDocumento(inscricaoId: number, arquivo: File): Observable<any> {
     const formData = new FormData();
     formData.append('arquivo', arquivo);
+    // Verifique se esse endpoint existe no back. Se não existir ainda, deixe comentado.
     return this.http.put(`${this.baseUrl}/inscricoes/${inscricaoId}/documento-notas`, formData);
-  }
+  }*/
 }

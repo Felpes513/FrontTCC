@@ -3,16 +3,20 @@
 <div class="editor-grid">
   <div class="col-form">
     <form class="form-container" (ngSubmit)="salvarProjeto()" *ngIf="projeto">
-      <!-- Nome do Projeto -->
-      <label for="titulo"><i class="fas fa-book"></i> Título do Projeto</label>
-      <input
-        id="titulo"
-        type="text"
-        [(ngModel)]="projeto.titulo_projeto"
-        name="titulo_projeto"
-        required
-        [disabled]="isOrientadorMode"
-      />
+      <fieldset [disabled]="isOrientadorMode">
+        <label for="titulo"
+          ><i class="fas fa-book"></i> Título do Projeto</label
+        >
+        <input
+          id="titulo"
+          type="text"
+          [(ngModel)]="projeto.titulo_projeto"
+          name="titulo_projeto"
+          required
+          [disabled]="isOrientadorMode"
+        />
+      </fieldset>
+      "
 
       <!-- Resumo do Projeto -->
       <label for="resumo"

@@ -21,7 +21,6 @@ export class ListagemProjetosComponent implements OnInit {
   erro: string | null = null;
   filtroStatus: string = '';
 
-  // 👉 papel atual
   isOrientador = false;
 
   constructor(
@@ -40,18 +39,15 @@ export class ListagemProjetosComponent implements OnInit {
     return item?.id ?? index;
   }
 
-  // ✅ Carregar projetos (decide pelo papel)
   carregarProjetos(): void {
     this.carregando = true;
     this.erro = null;
 
     if (this.isOrientador) {
-      // lista só do orientador
       this.projetoService.listarProjetosDoOrientador().subscribe({
         next: (projetos) => {
           this.projetos = projetos ?? [];
           this.carregando = false;
-          // debug enxuto
           console.log('[ORIENTADOR] projetos:', this.projetos);
         },
         error: (error) => this.handleLoadError(error),
@@ -59,10 +55,8 @@ export class ListagemProjetosComponent implements OnInit {
       return;
     }
 
-    // secretaria (sua lógica atual)
     this.projetoService.listarProjetos().subscribe({
       next: (projetos) => {
-        // avisos de id inválido (mantive da sua versão)
         const invalidos = projetos.filter((p) => !p.id || p.id <= 0);
         if (invalidos.length) {
           console.warn('⚠️ Projetos com ID inválido:', invalidos);
@@ -88,7 +82,6 @@ export class ListagemProjetosComponent implements OnInit {
     this.carregando = false;
   }
 
-  // ✅ Filtro de projetos
   projetosFiltrados(): Projeto[] {
     const filtroLower = this.filtro.toLowerCase().trim();
 
@@ -98,14 +91,12 @@ export class ListagemProjetosComponent implements OnInit {
         (projeto.nomeOrientador || '').toLowerCase().includes(filtroLower) ||
         (projeto.campus || '').toLowerCase().includes(filtroLower);
 
-      // em orientador não usamos filtro de status (botões somem no HTML)
       const combinaStatus = !this.filtroStatus || (projeto as any).status === this.filtroStatus;
 
       return combinaTexto && combinaStatus;
     });
   }
 
-  // ✅ Métodos auxiliares para o template
   getOrientadorNome(projeto: Projeto): string {
     return projeto.nomeOrientador;
   }
@@ -123,7 +114,7 @@ export class ListagemProjetosComponent implements OnInit {
   }
 
   simularProgresso(index: number): number {
-    return 30 + (index % 3) * 20; // apenas visual
+    return 30 + (index % 3) * 20;
   }
 
   getCor(index: number): string {
@@ -131,7 +122,6 @@ export class ListagemProjetosComponent implements OnInit {
     return cores[index % cores.length];
   }
 
-  // ✅ Excluir/Editar (somente secretaria)
   excluirProjeto(projeto: Projeto | number): void {
     if (this.isOrientador) {
       this.snackBar.open('Somente a Secretaria pode excluir projetos.', 'Fechar', { duration: 3000 });
@@ -196,7 +186,6 @@ export class ListagemProjetosComponent implements OnInit {
     this.router.navigate(['/secretaria/projetos/editar', id]);
   }
 
-  // 👉 Orientador: ir para relatórios do projeto
   irParaRelatorio(projeto: Projeto): void {
     const id = projeto?.id;
     if (!this.isIdValido(id)) {
@@ -206,12 +195,10 @@ export class ListagemProjetosComponent implements OnInit {
     this.router.navigate(['/orientador/relatorios', id]);
   }
 
-  // ✅ Recarregar lista
   recarregar(): void {
     this.carregarProjetos();
   }
 
-  // ✅ Helpers de ID/status
   temIdValido(projeto: Projeto): boolean {
     return this.isIdValido(projeto.id);
   }
@@ -254,7 +241,6 @@ export class ListagemProjetosComponent implements OnInit {
     return Math.min(progresso, 100);
   }
 
-  // DEBUG (mantidos)
   debugProjeto(projeto: Projeto): void {
     console.log('🔍 Debug do projeto:', {
       id: projeto.id,
@@ -282,7 +268,6 @@ export class ListagemProjetosComponent implements OnInit {
     });
   }
 
-  // Export placeholder
   exportarProjetos(): void {
     const dadosExportacao = this.projetos.map((p) => ({
       ID: p.id,

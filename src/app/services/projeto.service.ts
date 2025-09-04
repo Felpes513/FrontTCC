@@ -1,6 +1,7 @@
+import { Notificacao, NotificacoesService } from './notificacoes.service';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { tap, map, catchError, switchMap } from 'rxjs/operators';
 import {
   ProjetoRequest,
@@ -9,7 +10,6 @@ import {
   ProjetoCadastro,
   ProjetoFormulario,
 } from '@interfaces/projeto';
-import { Aluno } from '@interfaces/aluno';
 import { Orientador } from '@interfaces/orientador';
 import { Campus } from '@interfaces/campus';
 import { AvaliadorExterno } from '@interfaces/avaliador_externo';
@@ -25,7 +25,10 @@ export class ProjetoService {
   private readonly apiUrlNotificacoes = `${this.apiBase}/notificacoes`;
   private readonly apiUrlAvaliadoresExternos = `${this.apiBase}/avaliadores-externos/`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private notificacoes: NotificacoesService
+  ) {}
 
   cadastrarProjetoCompleto(
     projeto: ProjetoCadastro,
@@ -50,51 +53,49 @@ export class ProjetoService {
     );
   }
 
-  private processarDadosECadastrar(
-    formulario: ProjetoFormulario
-  ): Observable<any> {
-    return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
-      switchMap((orientador: Orientador) => {
-        const payload: ProjetoRequest = {
-          titulo_projeto: formulario.titulo_projeto,
-          resumo: formulario.resumo || '',
-          id_orientador: orientador.id,
-          id_campus: formulario.id_campus,
-        };
-
-        return this.http.post(this.apiUrlProjetos, payload).pipe(
-          tap((response) => console.log('✅ Projeto cadastrado:', response)),
-          catchError(this.handleError)
-        );
-      })
-    );
-  }
-
   listarProjetos(): Observable<Projeto[]> {
-    // não precisa colocar outra barra
     return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
       map((res) => (res.projetos || []).map((p) => this.normalizarProjeto(p))),
       catchError(this.handleError)
     );
   }
 
-  getProjetoPorId(id: number) {
-    return this.http
-      .get<any>(`${this.apiUrlProjetos}${id}`)
-      .pipe(catchError(this.handleError));
-  }
 
-  getProjetoDetalhado(id: number) {
-    return this.http.get<any>(`${this.apiUrlProjetos}${id}/detalhado`).pipe(
-      map((p) => this.normalizarProjetoDetalhado(p)),
-      catchError(() =>
-        this.getProjetoPorId(id).pipe(
-          map((p) => this.normalizarProjetoDetalhado(p))
-        )
-      )
+  getProjetoPorId(id: number): Observable<ProjetoDetalhado> {
+    return this.http.get<any>(`${this.apiUrlProjetos}${id}`).pipe(
+      map((p) => this.normalizarProjetoCompleto(p)),
+      catchError((err) => {
+        if ([404, 405, 501].includes(err?.status)) {
+          return this.listarProjetos().pipe(
+            map((lista) => lista.find((x) => x.id === id)),
+            switchMap((pMin) => {
+              if (!pMin) {
+                return throwError(() => ({
+                  message: 'Projeto não encontrado',
+                  status: 404,
+                }));
+              }
+              const minimo = this.normalizarProjetoCompleto({
+                id_projeto: pMin.id,
+                titulo_projeto: pMin.nomeProjeto,
+                resumo: '',
+                campus: pMin.campus,
+                quantidade_alunos: pMin.quantidadeMaximaAlunos ?? 0,
+                nomeOrientador: pMin.nomeOrientador,
+                alunos: [],
+                id_orientador: 0,
+                id_campus: 0,
+              });
+              return of(minimo);
+            })
+          );
+        }
+        return this.handleError(err);
+      })
     );
   }
 
+  /*
   atualizarProjeto(id: number, formulario: ProjetoFormulario) {
     return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
       switchMap((orientador: Orientador) => {
@@ -110,6 +111,7 @@ export class ProjetoService {
       })
     );
   }
+  */
 
   excluirProjeto(id: number): Observable<ApiMensagem> {
     return this.http
@@ -153,14 +155,63 @@ export class ProjetoService {
   }
 
   listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
-    return this.http
-      .get<any[]>(`${this.apiUrlInscricoes}/projetos/${idProjeto}/inscricoes`)
-      .pipe(catchError(this.handleError));
+    const todas$ = this.http.get<any[]>(this.apiUrlInscricoes).pipe(
+      map((res: any) =>
+        Array.isArray(res) ? res : res?.itens ?? res?.items ?? []
+      ),
+      map((inscricoes: any[]) =>
+        (inscricoes || []).filter(
+          (i) => (i?.id_projeto ?? i?.projeto_id) === idProjeto
+        )
+      ),
+      catchError(this.handleError)
+    );
+    return todas$.pipe(
+      switchMap((inscricoes) =>
+        this.getProjetoPorId(idProjeto).pipe(
+          map((detalhe) => {
+            const alunosArr: any[] = detalhe?.alunos || [];
+            const porId = new Map<number, any>(
+              alunosArr.map((a) => [a.id ?? a.id_aluno, a])
+            );
+
+            return inscricoes.map((i) => {
+              const idAluno = i?.id_aluno ?? i?.aluno_id ?? i?.aluno?.id;
+              const alunoDet = porId.get(idAluno) || {};
+              return {
+                ...i,
+                aluno: {
+                  id: idAluno,
+                  nome:
+                    i?.aluno?.nome ||
+                    i?.aluno_nome ||
+                    alunoDet?.nome ||
+                    `Aluno #${idAluno ?? '—'}`,
+                  email: i?.aluno?.email || alunoDet?.email || '—',
+                  matricula: i?.aluno?.matricula || alunoDet?.matricula || '—',
+                },
+                status: i?.status || i?.situacao || 'PENDENTE',
+              };
+            });
+          }),
+          catchError(() => of(inscricoes))
+        )
+      )
+    );
   }
 
-  aprovarAluno(id: number): Observable<any> {
+  inscreverAlunoNoProjeto(idProjeto: number): Observable<{
+    success: boolean;
+    message: string;
+    data?: { id_inscricao: number };
+  }> {
+    const body = { id_projeto: idProjeto };
     return this.http
-      .post(`${this.apiUrlInscricoes}/${id}/aprovar`, {})
+      .post<{
+        success: boolean;
+        message: string;
+        data?: { id_inscricao: number };
+      }>(`${this.apiUrlInscricoes}/inscrever`, body)
       .pipe(catchError(this.handleError));
   }
 
@@ -170,6 +221,9 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
+  // =========================
+  // Notificações locais (frontend)
+  // =========================
   getNotificacoes(destinatario: string): Observable<any[]> {
     return this.http.get<any[]>(
       `${this.apiUrlNotificacoes}?destinatario=${encodeURIComponent(
@@ -229,7 +283,13 @@ export class ProjetoService {
   updateAlunosProjeto(id_projeto: number, id_alunos: number[]) {
     const body = { id_projeto, id_alunos };
     return this.http.post(`${this.apiUrlProjetos}update-alunos`, body).pipe(
-      tap((res) => console.log('✅ Alunos atualizados com sucesso:', res)),
+      tap((res) => {
+        console.log('✅ Alunos atualizados com sucesso:', res);
+        this.notificacoes.add('secretaria', {
+          tipo: 'Seleção de alunos finalizada',
+          mensagem: `A seleção de alunos do projeto #${id_projeto} foi finalizada/atualizada.`,
+        });
+      }),
       catchError(this.handleError)
     );
   }
@@ -240,6 +300,26 @@ export class ProjetoService {
       .pipe(
         map((res) => (res.projetos || []).map((p) => this.normalizarProjeto(p)))
       );
+  }
+
+  listarAlunosDoProjeto(idProjeto: number, status?: string) {
+    const q = status ? `?status=${encodeURIComponent(status)}` : '';
+    return this.http
+      .get<{ alunos: any[] }>(`${this.apiUrlProjetos}${idProjeto}/alunos${q}`)
+      .pipe(map((res) => res.alunos));
+  }
+
+  removerAlunoDoProjeto(idProjeto: number, idAluno: number) {
+    return this.http.delete<ApiMensagem>(
+      `${this.apiUrlProjetos}${idProjeto}/alunos/${idAluno}`
+    );
+  }
+
+  finalizarSelecao(idProjeto: number) {
+    return this.http.post<ApiMensagem>(
+      `${this.apiUrlProjetos}${idProjeto}/finalizar-selecao`,
+      {}
+    );
   }
 
   private normalizarProjeto(dados: any): Projeto {
@@ -254,7 +334,7 @@ export class ProjetoService {
     };
   }
 
-  private normalizarProjetoDetalhado(dados: any): ProjetoDetalhado {
+  private normalizarProjetoCompleto(dados: any): ProjetoDetalhado {
     return {
       id: dados.id || dados.id_projeto,
       nomeProjeto: dados.nomeProjeto || dados.titulo_projeto || '',
@@ -263,7 +343,7 @@ export class ProjetoService {
       campus: dados.campus || '',
       quantidadeMaximaAlunos:
         dados.quantidadeMaximaAlunos ?? dados.quantidade_alunos ?? 0,
-      nomeOrientador: dados.nomeOrientador || '',
+      nomeOrientador: dados.nomeOrientador || dados.orientador || '',
       orientador_email: dados.orientador_email || '',
       nomesAlunos: dados.nomesAlunos || [],
       alunos: dados.alunos || [],
@@ -275,16 +355,17 @@ export class ProjetoService {
     };
   }
 
+  // =========================
+  // Erros
+  // =========================
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     console.error('❌ Erro HTTP:', error);
 
     let message = 'Erro inesperado';
 
     if (error.error instanceof ErrorEvent) {
-      // Falha de rede / CORS etc.
       message = `Erro de rede: ${error.error.message}`;
     } else if (error.status === 422 && Array.isArray(error.error?.detail)) {
-      // FastAPI validation error — mostra o que faltou
       message = error.error.detail
         .map((d: any) => `${(d.loc || []).join('.')}: ${d.msg}`)
         .join(' | ');
