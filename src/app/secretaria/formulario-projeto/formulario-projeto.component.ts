@@ -306,7 +306,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   excluirAluno(alunoId: number | undefined): void {
-    if (this.isOrientadorMode) return; // orientador não exclui
+    if (this.isOrientadorMode) return;
     if (!alunoId || alunoId <= 0) return;
     if (!confirm('Tem certeza que deseja excluir este aluno?')) return;
     this.projetoService.excluirAluno(alunoId).subscribe({
@@ -327,7 +327,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   limparFormulario(): void {
-    if (this.isOrientadorMode) return; // sem limpar no modo orientador
+    if (this.isOrientadorMode) return;
     this.projeto = {
       titulo_projeto: '',
       resumo: '',
@@ -355,7 +355,6 @@ export class FormularioProjetoComponent implements OnInit {
     return this.modoEdicao ? 'Atualizar Projeto' : 'Cadastrar Projeto';
   }
 
-  // utilitários do modo orientador
   isAprovada(i: any): boolean {
     const s = String(i?.status || i?.situacao || '').toUpperCase();
     return s === 'APROVADO' || s === 'APROVADA' || i?.aprovado === true;

@@ -95,7 +95,7 @@ export class ProjetoService {
     );
   }
 
-  /*
+
   atualizarProjeto(id: number, formulario: ProjetoFormulario) {
     return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
       switchMap((orientador: Orientador) => {
@@ -111,7 +111,6 @@ export class ProjetoService {
       })
     );
   }
-  */
 
   excluirProjeto(id: number): Observable<ApiMensagem> {
     return this.http
