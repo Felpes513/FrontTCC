@@ -1,0 +1,90 @@
+<div class="config-page">
+  <h2>Configurações do Sistema</h2>
+  <p class="muted">Gerencie campus, cursos, bolsas e redefina senhas</p>
+
+  <mat-tab-group>
+    <!-- Aba Campus -->
+    <mat-tab label="Campus">
+      <div class="form-section">
+        <h3>Cadastrar Campus</h3>
+        <form (ngSubmit)="cadastrarCampus()">
+          <input
+            type="text"
+            [(ngModel)]="novoCampus"
+            name="nomeCampus"
+            placeholder="Nome do Campus"
+            required
+          />
+          <button type="submit">Salvar</button>
+        </form>
+
+        <h4>Campus cadastrados</h4>
+        <ul>
+          <li *ngFor="let c of campus">{{ c.nome }}</li>
+        </ul>
+      </div>
+    </mat-tab>
+
+    <!-- Aba Cursos -->
+    <mat-tab label="Cursos">
+      <div class="form-section">
+        <h3>Cadastrar Curso</h3>
+        <form (ngSubmit)="cadastrarCurso()">
+          <input
+            type="text"
+            [(ngModel)]="novoCurso"
+            name="nomeCurso"
+            placeholder="Nome do Curso"
+            required
+          />
+          <button type="submit">Salvar</button>
+        </form>
+
+        <h4>Cursos cadastrados</h4>
+        <ul>
+          <li *ngFor="let c of cursos">{{ c.nome }}</li>
+        </ul>
+      </div>
+    </mat-tab>
+
+    <!-- Aba Bolsas -->
+    <mat-tab label="Bolsas">
+      <div class="form-section">
+        <h3>Cadastrar Bolsa</h3>
+        <form (ngSubmit)="cadastrarBolsa()">
+          <input
+            type="text"
+            [(ngModel)]="novaBolsa"
+            name="nomeBolsa"
+            placeholder="Nome da Bolsa"
+            required
+          />
+          <button type="submit">Salvar</button>
+        </form>
+
+        <h4>Bolsas cadastradas</h4>
+        <ul>
+          <li *ngFor="let b of bolsas">{{ b.nome }}</li>
+        </ul>
+      </div>
+    </mat-tab>
+
+    <!-- Aba Reset de Senha -->
+    <mat-tab label="Reset de Senha">
+      <div class="form-section">
+        <h3>Redefinir Senha</h3>
+        <form (ngSubmit)="resetarSenha()">
+          <input
+            type="email"
+            [(ngModel)]="emailReset"
+            name="emailReset"
+            placeholder="E-mail do usuário"
+            required
+          />
+          <button type="submit">Enviar link de redefinição</button>
+        </form>
+        <p *ngIf="mensagemReset">{{ mensagemReset }}</p>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

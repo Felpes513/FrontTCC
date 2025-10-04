@@ -24,8 +24,8 @@
       "@guards/*": ["app/core/guards/*"],
       "@auth/*": ["app/auth/*"],
       "@aluno/*": ["app/aluno/*"],
-      "@orientador/*": ["app/orientador/*"],
-      "@secretaria/*": ["app/secretaria/*"],
+      "@orientador/*": ["app/features/orientador/*"],
+      "@secretaria/*": ["app/features/secretaria/*"],
       "@shared/*": ["app/shared/*"]
     }
   },
