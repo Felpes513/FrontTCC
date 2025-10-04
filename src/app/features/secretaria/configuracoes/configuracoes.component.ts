@@ -43,7 +43,7 @@ export class ConfiguracoesComponent implements OnInit {
 
   cadastrarCampus() {
     if (!this.novoCampus.trim()) return;
-    this.configService.criarCampus({ nome: this.novoCampus }).subscribe(() => {
+    this.configService.criarCampus({ campus: this.novoCampus }).subscribe(() => {
       this.novoCampus = '';
       this.carregarCampus();
     });
@@ -69,7 +69,7 @@ export class ConfiguracoesComponent implements OnInit {
 
   cadastrarBolsa() {
     if (!this.novaBolsa.trim()) return;
-    this.configService.criarBolsa({ nome: this.novaBolsa }).subscribe(() => {
+    this.configService.criarBolsa({ bolsa: this.novaBolsa }).subscribe(() => {
       this.novaBolsa = '';
       this.carregarBolsas();
     });

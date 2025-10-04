@@ -38,6 +38,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'configuracoes',
+        loadComponent: () =>
+          import(
+            './features/secretaria/configuracoes/configuracoes.component'
+          ).then((m) => m.ConfiguracoesComponent),
+      },
+
+      {
         path: 'avaliadores',
         loadComponent: () =>
           import(
@@ -54,9 +62,9 @@ export const routes: Routes = [
       {
         path: 'notificacoes',
         loadComponent: () =>
-          import('./features/secretaria/notificacoes/notificacoes.component').then(
-            (m) => m.NotificacoesComponent
-          ),
+          import(
+            './features/secretaria/notificacoes/notificacoes.component'
+          ).then((m) => m.NotificacoesComponent),
       },
       {
         path: 'projetos',
@@ -82,9 +90,9 @@ export const routes: Routes = [
       {
         path: 'email',
         loadComponent: () =>
-          import('./features/secretaria/envio-de-email/envio-de-email.component').then(
-            (m) => m.EnvioDeEmailComponent
-          ),
+          import(
+            './features/secretaria/envio-de-email/envio-de-email.component'
+          ).then((m) => m.EnvioDeEmailComponent),
       },
       {
         path: 'relatorios',
@@ -122,9 +130,9 @@ export const routes: Routes = [
       {
         path: 'relatorios/:projetoId',
         loadComponent: () =>
-          import('./features/orientador/relatorio-form/relatorio-form.component').then(
-            (m) => m.RelatorioFormComponent
-          ),
+          import(
+            './features/orientador/relatorio-form/relatorio-form.component'
+          ).then((m) => m.RelatorioFormComponent),
       },
       { path: '', redirectTo: 'projetos', pathMatch: 'full' },
     ],

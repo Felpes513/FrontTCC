@@ -15,9 +15,7 @@
       />
 
       <!-- Resumo do Projeto -->
-      <label for="resumo"
-        ><i class="fas fa-align-left"></i> Resumo do Projeto</label
-      >
+      <label for="resumo"><i class="fas fa-align-left"></i> Resumo do Projeto</label>
       <textarea
         id="resumo"
         [(ngModel)]="projeto.resumo"
@@ -27,9 +25,7 @@
       ></textarea>
 
       <!-- Filtro de Orientador -->
-      <label for="buscaOrientador"
-        ><i class="fas fa-search"></i> Buscar Orientador</label
-      >
+      <label for="buscaOrientador"><i class="fas fa-search"></i> Buscar Orientador</label>
       <input
         id="buscaOrientador"
         type="text"
@@ -41,9 +37,7 @@
       />
 
       <!-- Selecionar Orientador -->
-      <label for="selectOrientador"
-        ><i class="fas fa-user-tie"></i> Selecionar Orientador</label
-      >
+      <label for="selectOrientador"><i class="fas fa-user-tie"></i> Selecionar Orientador</label>
       <select
         id="selectOrientador"
         [(ngModel)]="orientadorSelecionadoId"
@@ -53,25 +47,14 @@
         [disabled]="isOrientadorMode"
       >
         <option value="">-- Selecione --</option>
-        <option
-          *ngFor="let orientador of orientadoresFiltrados"
-          [value]="orientador.id"
-        >
+        <option *ngFor="let orientador of orientadoresFiltrados" [value]="orientador.id">
           {{ orientador.nome_completo }}
         </option>
       </select>
 
       <!-- E-mail do Orientador -->
-      <label for="email_orientador"
-        ><i class="fas fa-envelope"></i> E-mail do Orientador</label
-      >
-      <input
-        id="email_orientador"
-        type="email"
-        [value]="emailOrientador"
-        name="email_orientador"
-        readonly
-      />
+      <label for="email_orientador"><i class="fas fa-envelope"></i> E-mail do Orientador</label>
+      <input id="email_orientador" type="email" [value]="emailOrientador" name="email_orientador" readonly />
 
       <!-- Campus -->
       <label for="selectCampus"><i class="fas fa-building"></i> Campus</label>
@@ -84,13 +67,85 @@
         [disabled]="isOrientadorMode"
       >
         <option value="">-- Selecione --</option>
-        <option
-          *ngFor="let campus of campusFiltrados"
-          [value]="campus.id_campus"
-        >
+        <option *ngFor="let campus of campusFiltrados" [value]="campus.id_campus">
           {{ campus.campus }}
         </option>
       </select>
+
+      <!-- ============================== -->
+      <!-- Uploads dentro do formulário   -->
+      <!-- ============================== -->
+      <div class="upload-section" *ngIf="modoEdicao && !isOrientadorMode">
+        <h3><i class="fas fa-file-upload"></i> Enviar documentos do projeto</h3>
+
+        <!-- DOCX -->
+        <div class="upload-row">
+          <label for="docxFile"><i class="fas fa-file-word"></i> Projeto (.docx)</label>
+          <div class="upload-controls">
+            <input
+              type="file"
+              id="docxFile"
+              accept=".docx"
+              (change)="onFileSelected($event, 'docx')"
+              aria-label="Selecionar arquivo DOCX"
+            />
+            <div class="upload-buttons">
+              <button
+                type="button"
+                class="btn-upload"
+                (click)="enviarArquivo('docx')"
+                [disabled]="!arquivoDocx"
+                title="Enviar DOCX"
+              >
+                <i class="fas fa-upload"></i> Upload
+              </button>
+              <button
+                type="button"
+                class="btn-download"
+                (click)="baixarArquivo('docx')"
+                title="Baixar DOCX"
+              >
+                <i class="fas fa-download"></i> Baixar
+              </button>
+            </div>
+          </div>
+          <small class="hint" *ngIf="!arquivoDocx">Selecione um arquivo .docx para habilitar o upload.</small>
+        </div>
+
+        <!-- PDF -->
+        <div class="upload-row">
+          <label for="pdfFile"><i class="fas fa-file-pdf"></i> Projeto (.pdf)</label>
+          <div class="upload-controls">
+            <input
+              type="file"
+              id="pdfFile"
+              accept=".pdf"
+              (change)="onFileSelected($event, 'pdf')"
+              aria-label="Selecionar arquivo PDF"
+            />
+            <div class="upload-buttons">
+              <button
+                type="button"
+                class="btn-upload"
+                (click)="enviarArquivo('pdf')"
+                [disabled]="!arquivoPdf"
+                title="Enviar PDF"
+              >
+                <i class="fas fa-upload"></i> Salvar
+              </button>
+              <button
+                type="button"
+                class="btn-download"
+                (click)="baixarArquivo('pdf')"
+                title="Baixar PDF"
+              >
+                <i class="fas fa-download"></i> Baixar
+              </button>
+            </div>
+          </div>
+          <small class="hint" *ngIf="!arquivoPdf">Selecione um arquivo .pdf para habilitar o upload.</small>
+        </div>
+      </div>
 
       <!-- Ações -->
       <div class="form-actions" *ngIf="!isOrientadorMode">
@@ -102,7 +157,6 @@
         </button>
       </div>
 
-      <!-- Orientador: apenas Voltar (salvar seleção fica na coluna direita) -->
       <div class="form-actions" *ngIf="isOrientadorMode">
         <button type="button" class="btn-cancel" (click)="voltar()">
           <i class="fas fa-arrow-left"></i> Voltar
@@ -119,80 +173,4 @@
     >
     </app-listagem-alunos>
   </div>
-
-  <!-- Orientador: seleção de alunos aprovados -->
-  <ng-template #blocoOrientador>
-    <section class="painel">
-      <header class="head">
-        <h3>Selecionar alunos aprovados</h3>
-        <div class="mini">
-          Limite: {{ limite || "—" }} | Selecionados: {{ selecionados.size }}
-        </div>
-      </header>
-
-      <!-- Aprovados (selecionáveis) -->
-      <div *ngIf="aprovadas.length; else nenhumAprovado">
-        <ul class="lista" role="list">
-          <li class="item" *ngFor="let i of aprovadas">
-            <label class="linha">
-              <input
-                type="checkbox"
-                [checked]="selecionados.has(alunoId(i))"
-                [disabled]="disabledCheckbox(i)"
-                (change)="toggleSelecionado(i, $any($event.target).checked)"
-              />
-              <div class="dados">
-                <strong class="nome">{{ alunoNome(i) }}</strong>
-                <div class="mini">
-                  <span>ID Aluno: {{ alunoId(i) }}</span>
-                  <span class="sep">•</span>
-                  <span>Status: <b>APROVADO</b></span>
-                </div>
-              </div>
-            </label>
-          </li>
-        </ul>
-      </div>
-      <ng-template #nenhumAprovado>
-        <p class="muted">Nenhum aluno aprovado pela Secretaria ainda.</p>
-      </ng-template>
-
-      <!-- Pendentes / Reprovados (visualização) -->
-      <h4 style="margin-top: 12px">Pendentes / Reprovados</h4>
-      <ul class="lista" *ngIf="pendentesOuReprovadas.length">
-        <li class="item" *ngFor="let i of pendentesOuReprovadas">
-          <div class="dados">
-            <strong class="nome">{{ alunoNome(i) }}</strong>
-            <div class="mini">
-              <span>ID Aluno: {{ alunoId(i) }}</span>
-              <span class="sep">•</span>
-              <span
-                >Status:
-                <b>{{
-                  i?.status || i?.situacao || "PENDENTE" | uppercase
-                }}</b></span
-              >
-            </div>
-          </div>
-        </li>
-      </ul>
-
-      <!-- Ações de salvar seleção -->
-      <div class="form-actions" style="margin-top: 12px">
-        <button
-          type="button"
-          (click)="salvarSelecao()"
-          [disabled]="
-            salvandoSelecao || (limite > 0 && selecionados.size > limite)
-          "
-        >
-          {{ salvandoSelecao ? "Salvando..." : "Salvar seleção" }}
-        </button>
-        <span class="ok" *ngIf="sucessoSelecao">{{ sucessoSelecao }}</span>
-        <span class="erro" *ngIf="erroSalvarSelecao">{{
-          erroSalvarSelecao
-        }}</span>
-      </div>
-    </section>
-  </ng-template>
 </div>

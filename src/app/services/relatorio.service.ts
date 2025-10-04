@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-
-// Contratos alinhados com o back
+// ---------- Contratos (me/orientador) ----------
 export interface RelatorioMensalOut {
   id_relatorio: number;
   projeto_id: number;
@@ -25,13 +24,32 @@ export interface ConfirmarRelatorioMensalDTO {
   observacao?: string;
 }
 
+// ---------- Contratos (secretaria) ----------
+export interface RelatorioMensalSecretaria {
+  id_relatorio: number;
+  id_projeto: number;
+  titulo_projeto: string;
+  orientador_nome?: string;
+  mes: string;                  // 'YYYY-MM'
+  ok: boolean;
+  observacao?: string | null;
+  confirmado_em: string;        // ISO
+}
+
+export interface PendenciaSecretaria {
+  id_projeto: number;
+  titulo_projeto: string;
+  orientador_nome?: string;
+  mes?: string;                 // 'YYYY-MM' (opcional)
+}
+
 @Injectable({ providedIn: 'root' })
 export class RelatorioService {
   private readonly apiBase = '/api';
 
   constructor(private http: HttpClient) {}
 
-  /** GET /me/relatorios-mensais?mes=YYYY-MM  */
+  /** GET /me/relatorios-mensais?mes=YYYY-MM  (orientador logado) */
   listarDoMes(mes?: string): Observable<RelatorioMensalOut[]> {
     const params = mes ? new HttpParams().set('mes', mes) : undefined;
     return this.http.get<RelatorioMensalOut[]>(
@@ -40,7 +58,7 @@ export class RelatorioService {
     );
   }
 
-  /** GET /me/relatorios-mensais/pendentes?mes=YYYY-MM */
+  /** GET /me/relatorios-mensais/pendentes?mes=YYYY-MM (orientador logado) */
   listarPendentesDoMes(mes?: string): Observable<PendenciaOut[]> {
     const params = mes ? new HttpParams().set('mes', mes) : undefined;
     return this.http.get<PendenciaOut[]>(
@@ -49,19 +67,44 @@ export class RelatorioService {
     );
   }
 
-  /** POST /{id_projeto}/relatorios-mensais/confirmar */
-  confirmar(projetoId: number, dto: ConfirmarRelatorioMensalDTO):
-    Observable<{ id_relatorio: number; mensagem: string }> {
+  /** POST /{id_projeto}/relatorios-mensais/confirmar (orientador) */
+  confirmar(
+    projetoId: number,
+    dto: ConfirmarRelatorioMensalDTO
+  ): Observable<{ id_relatorio: number; mensagem: string }> {
     return this.http.post<{ id_relatorio: number; mensagem: string }>(
       `${this.apiBase}/${projetoId}/relatorios-mensais/confirmar`,
       dto
     );
   }
 
-   baixarRelatorioAlunos() {
+  /** (já existia) XLSX de alunos */
+  baixarRelatorioAlunos() {
     return this.http.get(`${this.apiBase}/relatorio-alunos`, {
       responseType: 'blob',
       observe: 'response'
     });
+  }
+
+  // ===========================
+  // SECRETARIA – Listagens do mês
+  // (Se o back ainda não tiver, o componente lida com erro)
+  // ===========================
+  /** GET /relatorios-mensais?mes=YYYY-MM  */
+  listarRecebidosSecretaria(mes?: string): Observable<RelatorioMensalSecretaria[]> {
+    const params = mes ? new HttpParams().set('mes', mes) : undefined;
+    return this.http.get<RelatorioMensalSecretaria[]>(
+      `${this.apiBase}/relatorios-mensais`,
+      { params }
+    );
+  }
+
+  /** GET /relatorios-mensais/pendentes?mes=YYYY-MM */
+  listarPendentesSecretaria(mes?: string): Observable<PendenciaSecretaria[]> {
+    const params = mes ? new HttpParams().set('mes', mes) : undefined;
+    return this.http.get<PendenciaSecretaria[]>(
+      `${this.apiBase}/relatorios-mensais/pendentes`,
+      { params }
+    );
   }
 }

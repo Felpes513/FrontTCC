@@ -275,6 +275,37 @@ export class ProjetoService {
     };
   }
 
+  // Upload de projetos
+  uploadDocx(idProjeto: number, arquivo: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', arquivo);
+    return this.http.put(
+      `${this.apiUrlProjetos}${idProjeto}/docx/upload`,
+      formData
+    );
+  }
+
+  downloadDocx(idProjeto: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrlProjetos}${idProjeto}/docx`, {
+      responseType: 'blob',
+    });
+  }
+
+  uploadPdf(idProjeto: number, arquivo: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', arquivo);
+    return this.http.put(
+      `${this.apiUrlProjetos}${idProjeto}/pdf/upload`,
+      formData
+    );
+  }
+
+  downloadPdf(idProjeto: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrlProjetos}${idProjeto}/pdf`, {
+      responseType: 'blob',
+    });
+  }
+
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     console.error('❌ Erro HTTP:', error);
 

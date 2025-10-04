@@ -8,11 +8,12 @@ import type { Orientador } from '@interfaces/orientador';
 import type { Aluno } from '@interfaces/aluno';
 import type { Campus } from '@interfaces/campus';
 import { ListagemAlunosComponent } from '../listagem-alunos/listagem-alunos.component';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-formulario-projeto',
   standalone: true,
-  imports: [ CommonModule, FormsModule, RouterModule, ListagemAlunosComponent ],
+  imports: [CommonModule, FormsModule, RouterModule, ListagemAlunosComponent],
   templateUrl: './formulario-projeto.component.html',
   styleUrls: ['./formulario-projeto.component.css'],
 })
@@ -64,7 +65,8 @@ export class FormularioProjetoComponent implements OnInit {
 
   ngOnInit(): void {
     // 🆕 detectar modo via data da rota
-    this.isOrientadorMode = (this.route.snapshot.data['modo'] || '').toUpperCase() === 'ORIENTADOR';
+    this.isOrientadorMode =
+      (this.route.snapshot.data['modo'] || '').toUpperCase() === 'ORIENTADOR';
 
     this.carregarOrientadores();
     this.verificarModoEdicao();
@@ -81,7 +83,11 @@ export class FormularioProjetoComponent implements OnInit {
         this.carregarProjeto(projetoId);
       } else {
         console.error('ID do projeto inválido:', id);
-        this.router.navigate([ this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos' ]);
+        this.router.navigate([
+          this.isOrientadorMode
+            ? '/orientador/projetos'
+            : '/secretaria/projetos',
+        ]);
       }
     }
   }
@@ -136,14 +142,21 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   // 🆕 (orientador) buscar inscrições e separar por status
-  private carregarInscricoesOrientador(idProjeto: number, projeto?: ProjetoDetalhado) {
+  private carregarInscricoesOrientador(
+    idProjeto: number,
+    projeto?: ProjetoDetalhado
+  ) {
     this.projetoService.listarInscricoesPorProjeto(idProjeto).subscribe({
       next: (inscricoes) => {
         this.inscricoes = Array.isArray(inscricoes) ? inscricoes : [];
         this.aprovadas = this.inscricoes.filter((i) => this.isAprovada(i));
-        this.pendentesOuReprovadas = this.inscricoes.filter((i) => !this.isAprovada(i));
+        this.pendentesOuReprovadas = this.inscricoes.filter(
+          (i) => !this.isAprovada(i)
+        );
 
-        const jaNoProjetoIds = this.extractIdsFromAlunos(projeto?.alunos || projeto?.nomesAlunos || []);
+        const jaNoProjetoIds = this.extractIdsFromAlunos(
+          projeto?.alunos || projeto?.nomesAlunos || []
+        );
         jaNoProjetoIds.forEach((id) => this.selecionados.add(id));
       },
       error: () => {
@@ -258,7 +271,10 @@ export class FormularioProjetoComponent implements OnInit {
       alert('Por favor, preencha o resumo do projeto');
       return false;
     }
-    if (!this.projeto.orientador_nome?.trim() || !this.orientadorSelecionadoId) {
+    if (
+      !this.projeto.orientador_nome?.trim() ||
+      !this.orientadorSelecionadoId
+    ) {
       alert('Por favor, selecione um orientador');
       return false;
     }
@@ -299,7 +315,9 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   voltar(): void {
-    this.router.navigate([ this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos' ]);
+    this.router.navigate([
+      this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos',
+    ]);
   }
 
   limparFormulario(): void {
@@ -336,26 +354,40 @@ export class FormularioProjetoComponent implements OnInit {
     const s = String(i?.status || i?.situacao || '').toUpperCase();
     return s === 'APROVADO' || s === 'APROVADA' || i?.aprovado === true;
   }
+
   isPendente(i: any): boolean {
     const s = String(i?.status || i?.situacao || 'PENDENTE').toUpperCase();
     return s.includes('PENDENTE');
   }
+
   isReprovada(i: any): boolean {
     const s = String(i?.status || i?.situacao || '').toUpperCase();
     return s.startsWith('REPROV');
   }
+
   alunoId(i: any): number {
-    return i?.id_aluno ?? i?.aluno_id ?? i?.idAluno ?? i?.aluno?.id ?? i?.id ?? 0;
+    return (
+      i?.id_aluno ?? i?.aluno_id ?? i?.idAluno ?? i?.aluno?.id ?? i?.id ?? 0
+    );
   }
+
   alunoNome(i: any): string {
-    return i?.aluno?.nome || i?.nome_aluno || i?.nome || i?.aluno_nome || `Aluno #${this.alunoId(i)}`;
+    return (
+      i?.aluno?.nome ||
+      i?.nome_aluno ||
+      i?.nome ||
+      i?.aluno_nome ||
+      `Aluno #${this.alunoId(i)}`
+    );
   }
+
   disabledCheckbox(i: any): boolean {
     const id = this.alunoId(i);
     if (this.selecionados.has(id)) return false;
     if (!this.limite) return false;
     return this.selecionados.size >= this.limite;
   }
+
   toggleSelecionado(i: any, checked: boolean) {
     const id = this.alunoId(i);
     if (!id) return;
@@ -366,9 +398,11 @@ export class FormularioProjetoComponent implements OnInit {
       this.selecionados.delete(id);
     }
   }
+
   salvarSelecao(): void {
     if (!this.isOrientadorMode || !this.projetoId) return;
-    this.sucessoSelecao = ''; this.erroSalvarSelecao = '';
+    this.sucessoSelecao = '';
+    this.erroSalvarSelecao = '';
     this.salvandoSelecao = true;
     const ids = Array.from(this.selecionados);
     this.projetoService.updateAlunosProjeto(this.projetoId, ids).subscribe({
@@ -379,12 +413,74 @@ export class FormularioProjetoComponent implements OnInit {
       error: (e) => {
         this.salvandoSelecao = false;
         this.erroSalvarSelecao = e?.message || 'Falha ao salvar seleção.';
-      }
+      },
     });
   }
 
   private extractIdsFromAlunos(arr: any[]): number[] {
     if (!Array.isArray(arr)) return [];
-    return arr.map((a: any) => a?.id ?? a?.id_aluno ?? a).filter((v: any) => typeof v === 'number');
+    return arr
+      .map((a: any) => a?.id ?? a?.id_aluno ?? a)
+      .filter((v: any) => typeof v === 'number');
+  }
+
+  // ==== UPLOAD / DOWNLOAD ====
+  arquivoDocx?: File;
+  arquivoPdf?: File;
+
+  onFileSelected(event: Event, tipo: 'docx' | 'pdf') {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+
+    const file = input.files[0];
+    if (tipo === 'docx' && file.name.toLowerCase().endsWith('.docx')) {
+      this.arquivoDocx = file;
+    } else if (tipo === 'pdf' && file.name.toLowerCase().endsWith('.pdf')) {
+      this.arquivoPdf = file;
+    } else {
+      alert(`Formato inválido. Envie um arquivo ${tipo.toUpperCase()}.`);
+    }
+  }
+
+  enviarArquivo(tipo: 'docx' | 'pdf') {
+    if (!this.projetoId)
+      return alert('Salve o projeto antes de enviar arquivos.');
+
+    const arquivo = tipo === 'docx' ? this.arquivoDocx : this.arquivoPdf;
+    if (!arquivo)
+      return alert(`Selecione um arquivo ${tipo.toUpperCase()} primeiro.`);
+
+    const metodo =
+      tipo === 'docx'
+        ? this.projetoService.uploadDocx(this.projetoId, arquivo)
+        : this.projetoService.uploadPdf(this.projetoId, arquivo);
+
+    metodo.subscribe({
+      next: () => alert(`${tipo.toUpperCase()} enviado com sucesso!`),
+      error: (err) =>
+        alert(`Erro ao enviar ${tipo.toUpperCase()}: ${err.message}`),
+    });
+  }
+
+  baixarArquivo(tipo: 'docx' | 'pdf') {
+    if (!this.projetoId) return alert('Projeto não identificado.');
+
+    const metodo =
+      tipo === 'docx'
+        ? this.projetoService.downloadDocx(this.projetoId)
+        : this.projetoService.downloadPdf(this.projetoId);
+
+    metodo.subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `projeto_${this.projetoId}.${tipo}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) =>
+        alert(`Erro ao baixar ${tipo.toUpperCase()}: ${err.message}`),
+    });
   }
 }
