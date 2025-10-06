@@ -63,9 +63,9 @@ export class LoginComponent {
         console.log('[LOGIN OK] role extraída do JWT:', role);
 
         const redirects: Record<string, string> = {
-          ALUNO: '/aluno/dashboard',
+          ALUNO: '/aluno/projetos',
           ORIENTADOR: '/orientador/projetos',
-          SECRETARIA: '/secretaria/projetos',
+          SECRETARIA: '/secretaria/dashboard',
         };
         const destino = (role && redirects[role]) || '/';
 

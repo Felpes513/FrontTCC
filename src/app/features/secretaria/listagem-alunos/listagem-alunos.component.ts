@@ -18,18 +18,23 @@ export class ListagemAlunosComponent implements OnInit {
   @Input({ required: true }) projetoId!: number;
   @Input() modo: Modo = 'SECRETARIA';
 
-  // dados “crus” vindos da API de inscrições
+  // dados crus vindos da API
   private _inscricoes: any[] = [];
 
-  // secretaria usa esta lista direto
+  // Secretaria
   alunosSecretaria: any[] = [];
 
-  // orientador usa estes separadores
+  // Orientador
   aprovadas: any[] = [];
   pendentesOuReprovadas: any[] = [];
   selecionados = new Set<number>();
-  limite = 0;
+  limite = 0; // máximo permitido (respeita menor entre back e 4)
 
+  // Lock para orientador
+  bloqueado = false;
+  bloqueadoEm?: string;
+
+  // UI
   loadingFlag = false;
   salvandoSelecao = false;
   sucessoSelecao = '';
@@ -42,10 +47,35 @@ export class ListagemAlunosComponent implements OnInit {
     this.carregar();
   }
 
+  // ===== Lock helpers (front-only) =====
+  private lockKey(): string {
+    return `proj-lock:${this.projetoId}`;
+  }
+
+  private carregarLock() {
+    try {
+      const raw = localStorage.getItem(this.lockKey());
+      if (!raw) return;
+      const v = JSON.parse(raw);
+      this.bloqueado = !!v?.lock;
+      this.bloqueadoEm = v?.ts || undefined;
+    } catch {
+      // retrocompatibilidade caso estivesse salvo como "1"
+      this.bloqueado = localStorage.getItem(this.lockKey()) === '1';
+    }
+  }
+
+  private salvarLock() {
+    const payload = { lock: true, ts: new Date().toISOString() };
+    localStorage.setItem(this.lockKey(), JSON.stringify(payload));
+    this.bloqueado = true;
+    this.bloqueadoEm = payload.ts;
+  }
+
+  // ===== Carregamento =====
   private carregar() {
     this.loadingFlag = true;
 
-    // Para o orientador precisamos do detalhe do projeto (p/ limite + pré-seleção)
     const reqs =
       this.modo === 'ORIENTADOR'
         ? forkJoin({
@@ -61,8 +91,8 @@ export class ListagemAlunosComponent implements OnInit {
         this._inscricoes = Array.isArray(res.inscricoes) ? res.inscricoes : [];
 
         if (this.modo === 'SECRETARIA') {
-          // Mantém o shape que seu HTML atual já espera
-          this.alunosSecretaria = this._inscricoes.map(i => ({
+          // Mantém o shape esperado pelo HTML antigo
+          this.alunosSecretaria = this._inscricoes.map((i) => ({
             nome: i?.aluno?.nome || i?.nome_aluno || i?.nome || '—',
             matricula: i?.aluno?.matricula || i?.matricula || '—',
             email: i?.aluno?.email || i?.email || '—',
@@ -70,14 +100,22 @@ export class ListagemAlunosComponent implements OnInit {
             documentoNotasUrl: i?.documentoNotasUrl,
           }));
         } else {
-          // ORIENTADOR: separa aprovados x outros
-          this.aprovadas = this._inscricoes.filter(i => this.isAprovada(i));
-          this.pendentesOuReprovadas = this._inscricoes.filter(i => !this.isAprovada(i));
+          // ORIENTADOR
+          this.aprovadas = this._inscricoes.filter((i) => this.isAprovada(i));
+          this.pendentesOuReprovadas = this._inscricoes.filter((i) => !this.isAprovada(i));
 
-          // limite + pré-seleção dos já participantes
-          this.limite = Number(res?.projeto?.quantidadeMaximaAlunos || 0);
-          const jaNoProjetoIds = this.extractIdsFromAlunos(res?.projeto?.alunos || res?.projeto?.nomesAlunos || []);
+          // Limite = menor entre o valor do back e 4 (máx. 4 no front)
+          const limBack = Number(res?.projeto?.quantidadeMaximaAlunos ?? 0);
+          this.limite = limBack > 0 ? Math.min(limBack, 4) : 4;
+
+          // Pré-seleção: alunos já vinculados ao projeto
+          const jaNoProjetoIds = this.extractIdsFromAlunos(
+            res?.projeto?.alunos || res?.projeto?.nomesAlunos || []
+          );
           this.selecionados = new Set<number>(jaNoProjetoIds);
+
+          // Lê estado de bloqueio (se já finalizado antes)
+          this.carregarLock();
         }
 
         this.loadingFlag = false;
@@ -91,34 +129,46 @@ export class ListagemAlunosComponent implements OnInit {
     });
   }
 
-  // ==== API compatível com o HTML original (SECRETARIA) ====
-  loading() { return this.loadingFlag; }
-  lista() { return this.alunosSecretaria; }
-  total() { return this.modo === 'SECRETARIA'
-    ? this.alunosSecretaria.length
-    : (this.aprovadas.length + this.pendentesOuReprovadas.length);
+  // ===== API p/ template =====
+  loading() {
+    return this.loadingFlag;
+  }
+  lista() {
+    return this.alunosSecretaria;
+  }
+  total() {
+    return this.modo === 'SECRETARIA'
+      ? this.alunosSecretaria.length
+      : this.aprovadas.length + this.pendentesOuReprovadas.length;
   }
 
-  // ==== Utilitários do ORIENTADOR ====
+  // ===== Utilitários ORIENTADOR =====
   alunoId(i: any): number {
     return i?.id_aluno ?? i?.aluno_id ?? i?.idAluno ?? i?.aluno?.id ?? i?.id ?? 0;
   }
+
   alunoNome(i: any): string {
     return i?.aluno?.nome || i?.nome_aluno || i?.nome || i?.aluno_nome || `Aluno #${this.alunoId(i)}`;
   }
+
   isAprovada(i: any): boolean {
     const s = String(i?.status || i?.situacao || '').toUpperCase();
     return s === 'APROVADO' || s === 'APROVADA' || i?.aprovado === true;
   }
+
   disabledCheckbox(i: any): boolean {
+    if (this.bloqueado) return true; // travado após salvar
     const id = this.alunoId(i);
     if (this.selecionados.has(id)) return false;
     if (!this.limite) return false;
     return this.selecionados.size >= this.limite;
   }
+
   toggleSelecionado(i: any, checked: boolean) {
+    if (this.bloqueado) return;
     const id = this.alunoId(i);
     if (!id) return;
+
     if (checked) {
       if (this.limite && this.selecionados.size >= this.limite) return;
       this.selecionados.add(id);
@@ -126,16 +176,20 @@ export class ListagemAlunosComponent implements OnInit {
       this.selecionados.delete(id);
     }
   }
+
   salvarSelecao() {
+    if (this.bloqueado) return; // segurança extra
     this.sucessoSelecao = '';
     this.erroSalvarSelecao = '';
     this.salvandoSelecao = true;
+
     const ids = Array.from(this.selecionados);
 
     this.projetoService.updateAlunosProjeto(this.projetoId, ids).subscribe({
       next: () => {
         this.salvandoSelecao = false;
         this.sucessoSelecao = 'Alunos atualizados com sucesso!';
+        this.salvarLock(); // trava no front, impedindo novas alterações pelo orientador
       },
       error: (e) => {
         this.salvandoSelecao = false;

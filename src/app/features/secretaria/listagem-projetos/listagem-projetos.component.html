@@ -1,9 +1,9 @@
 <div class="projects-container">
   <div class="header">
-    <h2>{{ isOrientador ? 'Projetos' : 'Meus Projetos' }}</h2>
+    <h2>{{ isOrientador ? "Meus Projetos" : "Projetos" }}</h2>
 
-    <!-- Filtros e Adicionar: SOMENTE Secretaria -->
-    <div class="filters" *ngIf="!isOrientador">
+    <!-- Somente SECRETARIA -->
+    <div class="filters" *ngIf="isSecretaria">
       <input
         type="text"
         placeholder="Buscar por projeto, orientador ou campus"
@@ -20,7 +20,7 @@
   </div>
 
   <!-- Filtros de status: SOMENTE Secretaria -->
-  <div class="filter-buttons" *ngIf="!isOrientador">
+  <div class="filter-buttons" *ngIf="isSecretaria">
     <button (click)="filtroStatus = ''">📄 Todos</button>
     <button (click)="filtroStatus = 'EM_EXECUCAO'">🚀 Em Execução</button>
     <button (click)="filtroStatus = 'CONCLUIDO'">✅ Concluídos</button>
@@ -83,33 +83,57 @@
       </div>
 
       <div class="card-actions">
-        <!-- Secretaria -->
-        <ng-container *ngIf="!isOrientador; else orientadorAcoes">
-          <button (click)="editarProjeto(projeto.id)" class="btn-edit">
-            ✏️ Editar
-          </button>
-          <button (click)="excluirProjeto(projeto.id)" class="btn-delete">
-            🗑️ Excluir
-          </button>
+        <!-- Ações da SECRETARIA -->
+        <ng-container *ngIf="isSecretaria">
+          <button (click)="editarProjeto(projeto.id)" class="btn-edit">✏️ Editar</button>
+          <button (click)="excluirProjeto(projeto.id)" class="btn-delete">🗑️ Excluir</button>
         </ng-container>
 
-        <!-- Orientador -->
-        <ng-template #orientadorAcoes>
-          <ng-container *ngIf="temIdValido(projeto); else relatorioDisabled">
+        <!-- Ações do ORIENTADOR -->
+        <ng-container *ngIf="!isSecretaria && isOrientador">
+          <ng-container *ngIf="temIdValido(projeto); else orientadorDisabled">
             <a
               class="btn-report"
               [routerLink]="['/orientador/relatorios', projeto.id]"
               title="Relatórios do Projeto"
-            >
-              📝 Relatórios
-            </a>
+            >📝 Relatórios</a>
+
+            <a
+              class="btn-edit"
+              [routerLink]="['/orientador/projetos', projeto.id]"
+              title="Selecionar alunos do projeto"
+              style="margin-left: 8px"
+            >👥 Selecionar Alunos</a>
           </ng-container>
-          <ng-template #relatorioDisabled>
-            <button class="btn-report" disabled title="Projeto sem ID">
-              📝 Relatórios
+          <ng-template #orientadorDisabled>
+            <button class="btn-report" disabled title="Projeto sem ID">📝 Relatórios</button>
+            <button class="btn-edit" disabled title="Projeto sem ID" style="margin-left: 8px">
+              👥 Selecionar Alunos
             </button>
           </ng-template>
-        </ng-template>
+        </ng-container>
+
+        <!-- Ações do ALUNO -->
+        <ng-container *ngIf="!isSecretaria && !isOrientador">
+          <ng-container *ngIf="temIdValido(projeto); else alunoDisabled">
+            <button
+              class="btn-add"
+              (click)="inscrever(projeto)"
+              [disabled]="getStatusProjeto(projeto) === 'lotado'"
+              [title]="getStatusProjeto(projeto) === 'lotado' ? 'Projeto lotado' : 'Inscrever-se no projeto'"
+            >✅ Inscrever-se</button>
+
+            <a
+              class="btn-report"
+              (click)="irParaRelatorioAluno(projeto)"
+              style="margin-left: 8px"
+            >📝 Meu Relatório</a>
+          </ng-container>
+          <ng-template #alunoDisabled>
+            <button class="btn-add" disabled>✅ Inscrever-se</button>
+            <button class="btn-report" disabled style="margin-left: 8px">📝 Meu Relatório</button>
+          </ng-template>
+        </ng-container>
       </div>
     </div>
   </div>
@@ -117,9 +141,10 @@
   <!-- Nenhum projeto -->
   <div *ngIf="!carregando && !erro && projetos.length === 0" class="no-projects">
     <h3>📁 Nenhum projeto encontrado</h3>
-    <p *ngIf="!isOrientador">Comece criando seu primeiro projeto!</p>
-    <p *ngIf="isOrientador">Você ainda não está vinculado a um projeto.</p>
-    <button class="btn-add" *ngIf="!isOrientador" [routerLink]="['/secretaria/projetos/novo']">
+    <p *ngIf="isSecretaria">Comece criando seu primeiro projeto!</p>
+    <p *ngIf="!isSecretaria && isOrientador">Você ainda não está vinculado a um projeto.</p>
+    <p *ngIf="!isSecretaria && !isOrientador">Não há projetos disponíveis no momento.</p>
+    <button class="btn-add" *ngIf="isSecretaria" [routerLink]="['/secretaria/projetos/novo']">
       + Criar primeiro projeto
     </button>
   </div>
@@ -131,7 +156,7 @@
   >
     <h3>🔍 Nenhum resultado encontrado</h3>
     <p>Tente ajustar os termos da sua busca.</p>
-    <button class="btn-clear-filter" (click)="filtro = ''" *ngIf="!isOrientador">
+    <button class="btn-clear-filter" (click)="filtro = ''" *ngIf="isSecretaria">
       ❌ Limpar filtro
     </button>
   </div>

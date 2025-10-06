@@ -79,9 +79,18 @@ export class ProjetoService {
   }
 
   getProjetoPorId(id: number) {
-    return this.http
-      .get<any>(`${this.apiUrlProjetos}${id}`)
-      .pipe(catchError(this.handleError));
+    return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
+      map((res) => {
+        const raw = (res.projetos || []).find(
+          (p) => Number(p.id_projeto ?? p.id) === Number(id)
+        );
+        if (!raw) {
+          throw { message: 'Projeto não encontrado', status: 404 };
+        }
+        return this.normalizarProjetoDetalhado(raw);
+      }),
+      catchError(this.handleError)
+    );
   }
 
   getProjetoDetalhado(id: number) {
@@ -109,6 +118,12 @@ export class ProjetoService {
           .pipe(catchError(this.handleError));
       })
     );
+  }
+
+  listarProjetosRaw() {
+    return this.http
+      .get<{ projetos: any[] }>(this.apiUrlProjetos)
+      .pipe(map((res) => res.projetos ?? []));
   }
 
   excluirProjeto(id: number): Observable<ApiMensagem> {
@@ -152,10 +167,34 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
+  // src/app/services/projeto.service.ts
   listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
     return this.http
-      .get<any[]>(`${this.apiUrlInscricoes}/projetos/${idProjeto}/inscricoes`)
-      .pipe(catchError(this.handleError));
+      .get<{ id_projeto: number; alunos: any[] }>(
+        `${this.apiUrlProjetos}${idProjeto}/alunos`
+      )
+      .pipe(
+        map((res) => {
+          const alunos = res?.alunos ?? [];
+          // adaptamos para o formato usado nos componentes
+          return alunos.map((a: any) => ({
+            id_aluno: a.id ?? a.id_aluno ?? 0,
+            aluno: {
+              id: a.id ?? a.id_aluno ?? 0,
+              nome: a.nome_completo ?? a.nome ?? '—',
+              email: a.email ?? '—',
+              matricula: a.matricula ?? a.cpf ?? '—',
+            },
+            // como a query do back já filtra aprovados, marcamos como APROVADO
+            status: 'APROVADO',
+            nome_aluno: a.nome_completo ?? a.nome ?? '—',
+            email: a.email ?? '—',
+            matricula: a.matricula ?? a.cpf ?? '—',
+            documentoNotasUrl: a.documentoNotasUrl ?? null,
+          }));
+        }),
+        catchError(this.handleError)
+      );
   }
 
   aprovarAluno(id: number): Observable<any> {

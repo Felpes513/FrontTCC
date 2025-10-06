@@ -1,13 +1,18 @@
 import { Routes } from '@angular/router';
 import { orientadorGuard } from '@core/guards/orientador.guard';
-import { ConfiguracoesComponent } from './features/secretaria/configuracoes/configuracoes.component';
+import { alunoGuard } from '@core/guards/aluno.guard';
+import { LandingRedirectGuard } from '@core/guards/landing-redirect.guard';
 
 export const routes: Routes = [
+  // Home pública: se logado, redireciona conforme papel
   {
     path: '',
+    canActivate: [LandingRedirectGuard],
     loadComponent: () =>
       import('./components/home/home.component').then((m) => m.HomeComponent),
   },
+
+  // Auth
   {
     path: 'login',
     loadComponent: () =>
@@ -21,7 +26,7 @@ export const routes: Routes = [
       ),
   },
 
-  // ===== SECRETARIA (usa o mesmo sidenav) =====
+  // ===== SECRETARIA (mesmo sidenav) =====
   {
     path: 'secretaria',
     loadComponent: () =>
@@ -44,7 +49,6 @@ export const routes: Routes = [
             './features/secretaria/configuracoes/configuracoes.component'
           ).then((m) => m.ConfiguracoesComponent),
       },
-
       {
         path: 'avaliadores',
         loadComponent: () =>
@@ -104,7 +108,7 @@ export const routes: Routes = [
     ],
   },
 
-  // ===== ORIENTADOR (mesmo sidenav + guard) =====
+  // ===== ORIENTADOR =====
   {
     path: 'orientador',
     canActivate: [orientadorGuard],
@@ -115,18 +119,21 @@ export const routes: Routes = [
     children: [
       {
         path: 'projetos',
-        // usa a MESMA listagem da secretaria
         loadComponent: () =>
           import(
             './features/secretaria/listagem-projetos/listagem-projetos.component'
           ).then((m) => m.ListagemProjetosComponent),
-        data: { modo: 'ORIENTADOR' }, // opcional (fallback ao AuthService)
+        data: { modo: 'ORIENTADOR' },
       },
       {
-        path: 'relatorios',
-        redirectTo: 'projetos',
-        pathMatch: 'full',
+        path: 'projetos/:id',
+        loadComponent: () =>
+          import(
+            './features/secretaria/formulario-projeto/formulario-projeto.component'
+          ).then((m) => m.FormularioProjetoComponent),
+        data: { modo: 'ORIENTADOR' },
       },
+      { path: 'relatorios', redirectTo: 'projetos', pathMatch: 'full' },
       {
         path: 'relatorios/:projetoId',
         loadComponent: () =>
@@ -135,6 +142,38 @@ export const routes: Routes = [
           ).then((m) => m.RelatorioFormComponent),
       },
       { path: '', redirectTo: 'projetos', pathMatch: 'full' },
+    ],
+  },
+
+  // ===== ALUNO =====
+  {
+    path: 'aluno',
+    canActivate: [alunoGuard],
+    loadComponent: () =>
+      import('./shared/sidenav/sidenav-secretaria.component').then(
+        (m) => m.SidenavSecretariaComponent
+      ),
+    children: [
+      { path: '', redirectTo: 'projetos', pathMatch: 'full' },
+
+      {
+        path: 'projetos',
+        loadComponent: () =>
+          import(
+            './features/secretaria/listagem-projetos/listagem-projetos.component'
+          ).then((m) => m.ListagemProjetosComponent),
+      },
+
+      // Conveniência: caso algum link aponte para /aluno/relatorios
+      { path: 'relatorios', redirectTo: 'projetos', pathMatch: 'full' },
+
+      {
+        path: 'relatorios/:projetoId',
+        loadComponent: () =>
+          import(
+            './features/orientador/relatorio-form/relatorio-form.component'
+          ).then((m) => m.RelatorioFormComponent),
+      },
     ],
   },
 
