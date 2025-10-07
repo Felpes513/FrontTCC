@@ -1,3 +1,4 @@
+import { InscricoesService } from '@services/inscricoes.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +7,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Projeto } from '@interfaces/projeto';
 import { ProjetoService } from '@services/projeto.service';
 import { AuthService } from '@services/auth.service';
-import { InscricaoAlunoService } from '@services/inscricoes-aluno.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-listagem-projetos',
@@ -35,7 +37,7 @@ export class ListagemProjetosComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private inscricaoService: InscricaoAlunoService
+    private inscricoesService: InscricoesService
   ) {}
 
   ngOnInit(): void {
@@ -75,6 +77,30 @@ export class ListagemProjetosComponent implements OnInit {
       },
       error: (error) => this.handleLoadError(error),
     });
+  }
+
+  private hidratarSelecionados() {
+    const calls = this.projetos
+      .filter((p) => this.isIdValido(p.id))
+      .map((p) =>
+        this.inscricoesService.listarAprovadosDoProjeto(p.id).pipe(
+          tap((alunos: any[]) => {
+            // normaliza nome e preenche o card
+            p.nomesAlunos = (alunos || []).map(
+              (a) =>
+                a?.nome_completo ||
+                a?.nome ||
+                a?.aluno?.nome ||
+                `Aluno #${a?.id_aluno || a?.id || ''}`
+            );
+          }),
+          catchError(() => of(null)) // não quebra a página se algum projeto falhar
+        )
+      );
+
+    if (calls.length) {
+      forkJoin(calls).subscribe(); // fogo e esquece – só preenche UI
+    }
   }
 
   private handleLoadError(error: any) {
@@ -291,7 +317,7 @@ export class ListagemProjetosComponent implements OnInit {
       return;
 
     this.inscrevendoId = id;
-    this.inscricaoService.inscrever(id).subscribe({
+    this.inscricoesService.inscrever(id).subscribe({
       next: (res) => {
         this.inscrevendoId = null;
         this.snackBar.open(
