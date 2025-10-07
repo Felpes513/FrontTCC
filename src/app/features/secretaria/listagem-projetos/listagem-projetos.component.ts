@@ -7,6 +7,7 @@ import { Projeto } from '@interfaces/projeto';
 import { ProjetoService } from '@services/projeto.service';
 import { AuthService } from '@services/auth.service';
 import { InscricaoAlunoService } from '@services/inscricoes-aluno.service';
+
 @Component({
   selector: 'app-listagem-projetos',
   standalone: true,
@@ -15,11 +16,14 @@ import { InscricaoAlunoService } from '@services/inscricoes-aluno.service';
   styleUrls: ['./listagem-projetos.component.css'],
 })
 export class ListagemProjetosComponent implements OnInit {
+  readonly MAX_ESCOLHIDOS = 4; // 👈 regra do orientador: escolhe até 4
+
   projetos: Projeto[] = [];
-  filtro: string = '';
-  carregando: boolean = false;
+  filtro = '';
+  carregando = false;
   erro: string | null = null;
-  filtroStatus: string = '';
+  filtroStatus = '';
+  inscrevendoId: number | null = null;
 
   // papeis
   isOrientador = false;
@@ -107,28 +111,81 @@ export class ListagemProjetosComponent implements OnInit {
     });
   }
 
-  // auxiliares template
-  getOrientadorNome(projeto: Projeto): string {
-    return projeto.nomeOrientador;
-  }
+  // ===== Helpers de UI com a nova regra =====
+
+  // Agora "quantidade" exibe quantos JÁ FORAM ESCOLHIDOS pelo orientador (chips)
   getQuantidadeAlunos(projeto: Projeto): number {
-    return projeto.quantidadeMaximaAlunos || 0;
+    return projeto.nomesAlunos?.length ?? 0;
   }
+
+  // Tem selecionados pelo orientador?
   temAlunos(projeto: Projeto): boolean {
-    return (projeto.quantidadeMaximaAlunos || 0) > 0;
+    return (projeto.nomesAlunos?.length ?? 0) > 0;
   }
+
+  getOrientadorNome(projeto: Projeto): string {
+    const nome = (projeto?.nomeOrientador ?? '').trim();
+    return nome ? nome : 'Orientador não informado';
+  }
+
   temOrientador(projeto: Projeto): boolean {
-    return projeto.nomeOrientador !== 'Orientador não informado';
+    // mantém a lógica de “vazio” consistente com o método acima
+    return this.getOrientadorNome(projeto) !== 'Orientador não informado';
   }
+
+  // Lotado = orientador já escolheu o limite (4)
+  isLotado(projeto: Projeto): boolean {
+    return (projeto.nomesAlunos?.length ?? 0) >= this.MAX_ESCOLHIDOS;
+  }
+
+  getStatusProjeto(projeto: Projeto): string {
+    if (!this.temIdValido(projeto)) return 'erro';
+    const escolhidos = this.getQuantidadeAlunos(projeto);
+    if (escolhidos >= this.MAX_ESCOLHIDOS) return 'lotado'; // seleção finalizada
+    if (escolhidos > 0) return 'em-andamento'; // já tem escolhidos, mas não fechou
+    return 'disponivel'; // ninguém escolhido ainda
+  }
+
+  getCorStatus(status: string): string {
+    switch (status) {
+      case 'disponivel':
+        return '#28a745';
+      case 'em-andamento':
+        return '#ffc107';
+      case 'lotado':
+        return '#dc3545';
+      case 'erro':
+        return '#6c757d';
+      default:
+        return '#007bff';
+    }
+  }
+
+  getTextoStatus(status: string): string {
+    switch (status) {
+      case 'disponivel':
+        return 'Candidaturas abertas';
+      case 'em-andamento':
+        return 'Parcialmente selecionado';
+      case 'lotado':
+        return 'Seleção finalizada';
+      case 'erro':
+        return 'Erro';
+      default:
+        return 'Desconhecido';
+    }
+  }
+
   simularProgresso(index: number): number {
-    return 30 + (index % 3) * 20;
+    return 30 + (index % 3) * 20; // apenas visual
   }
+
   getCor(index: number): string {
     const cores = ['#007bff', '#28a745', '#ffc107'];
     return cores[index % cores.length];
   }
 
-  // Secretaria
+  // ===== Ações Secretaria =====
   excluirProjeto(projeto: Projeto | number): void {
     if (!this.isSecretaria) {
       this.snackBar.open('Ação não permitida.', 'Fechar', { duration: 3000 });
@@ -195,7 +252,7 @@ export class ListagemProjetosComponent implements OnInit {
     this.router.navigate(['/secretaria/projetos/editar', id]);
   }
 
-  // Orientador
+  // ===== Ações Orientador =====
   irParaRelatorio(projeto: Projeto): void {
     const id = projeto?.id;
     if (!this.isIdValido(id)) {
@@ -205,26 +262,51 @@ export class ListagemProjetosComponent implements OnInit {
     this.router.navigate(['/orientador/relatorios', id]);
   }
 
-  // Aluno
+  // ===== Ações Aluno =====
   inscrever(projeto: Projeto) {
-    if (!this.isAluno) return;
     const id = projeto?.id;
-    if (!this.isIdValido(id)) {
-      alert('Projeto sem ID válido.');
+
+    if (!this.isAluno) {
+      this.snackBar.open(
+        'Somente alunos podem se inscrever em projetos.',
+        'Fechar',
+        { duration: 3000 }
+      );
       return;
     }
+    if (!this.isIdValido(id)) {
+      this.snackBar.open('Projeto sem ID válido.', 'Fechar', {
+        duration: 3000,
+      });
+      return;
+    }
+    if (this.isLotado(projeto)) {
+      this.snackBar.open('Seleção finalizada para este projeto.', 'Fechar', {
+        duration: 3000,
+      });
+      return;
+    }
+
     if (!confirm(`Confirmar inscrição no projeto "${projeto.nomeProjeto}"?`))
       return;
 
+    this.inscrevendoId = id;
     this.inscricaoService.inscrever(id).subscribe({
       next: (res) => {
-        alert(res?.message || 'Inscrição realizada com sucesso!');
-        // opcional: ir direto para relatório do aluno
-        this.router.navigate(['/aluno/relatorios', id]);
+        this.inscrevendoId = null;
+        this.snackBar.open(
+          res?.message || 'Inscrição realizada com sucesso!',
+          'Fechar',
+          { duration: 3000 }
+        );
+        // O aluno pode se inscrever em vários; não vamos redirecionar automaticamente.
+        // Se quiser redirecionar para relatórios, descomente:
+        // this.router.navigate(['/aluno/relatorios', id]);
       },
       error: (e) => {
+        this.inscrevendoId = null;
         const msg = e?.error?.detail || e?.message || 'Erro ao inscrever.';
-        alert(msg);
+        this.snackBar.open(msg, 'Fechar', { duration: 4000 });
       },
     });
   }
@@ -245,6 +327,7 @@ export class ListagemProjetosComponent implements OnInit {
   temIdValido(projeto: Projeto): boolean {
     return this.isIdValido(projeto.id);
   }
+
   private isIdValido(id: any): id is number {
     return (
       id !== undefined &&
@@ -255,49 +338,11 @@ export class ListagemProjetosComponent implements OnInit {
     );
   }
 
-  getStatusProjeto(projeto: Projeto): string {
-    if (!this.temIdValido(projeto)) return 'erro';
-    if (projeto.nomesAlunos.length >= (projeto.quantidadeMaximaAlunos || 0))
-      return 'lotado';
-    if (projeto.nomesAlunos.length > 0) return 'em-andamento';
-    return 'disponivel';
-  }
-
-  getCorStatus(status: string): string {
-    switch (status) {
-      case 'disponivel':
-        return '#28a745';
-      case 'em-andamento':
-        return '#ffc107';
-      case 'lotado':
-        return '#dc3545';
-      case 'erro':
-        return '#6c757d';
-      default:
-        return '#007bff';
-    }
-  }
-
-  getTextoStatus(status: string): string {
-    switch (status) {
-      case 'disponivel':
-        return 'Disponível';
-      case 'em-andamento':
-        return 'Em andamento';
-      case 'lotado':
-        return 'Lotado';
-      case 'erro':
-        return 'Erro';
-      default:
-        return 'Desconhecido';
-    }
-  }
-
+  // Progresso visual agora reflete seleção (0..4)
   calcularProgresso(projeto: Projeto): number {
-    const max = projeto.quantidadeMaximaAlunos || 0;
-    if (max === 0) return 0;
-    const progresso = (projeto.nomesAlunos.length / max) * 100;
-    return Math.min(progresso, 100);
+    const escolhidos = this.getQuantidadeAlunos(projeto);
+    const progresso = (escolhidos / this.MAX_ESCOLHIDOS) * 100;
+    return Math.max(0, Math.min(progresso, 100));
   }
 
   // DEBUG (mantidos)
@@ -309,9 +354,8 @@ export class ListagemProjetosComponent implements OnInit {
       nome: projeto.nomeProjeto,
       campus: projeto.campus,
       orientador: projeto.nomeOrientador,
-      maxAlunos: projeto.quantidadeMaximaAlunos,
-      alunos: projeto.nomesAlunos,
-      qtdAlunosAtual: projeto.nomesAlunos.length,
+      escolhidos: this.getQuantidadeAlunos(projeto),
+      maxEscolhidos: this.MAX_ESCOLHIDOS,
       status: this.getStatusProjeto(projeto),
       progresso: this.calcularProgresso(projeto),
     });
@@ -328,6 +372,7 @@ export class ListagemProjetosComponent implements OnInit {
         nome: p.nomeProjeto,
         temIdValido: this.temIdValido(p),
         status: this.getStatusProjeto(p),
+        escolhidos: this.getQuantidadeAlunos(p),
       })),
     });
   }
@@ -339,8 +384,8 @@ export class ListagemProjetosComponent implements OnInit {
       'Nome do Projeto': p.nomeProjeto,
       Campus: p.campus,
       Orientador: p.nomeOrientador,
-      'Máximo de Alunos': p.quantidadeMaximaAlunos,
-      'Alunos Inscritos': p.nomesAlunos.length,
+      Selecionados: this.getQuantidadeAlunos(p),
+      'Limite Seleção': this.MAX_ESCOLHIDOS,
       Status: this.getTextoStatus(this.getStatusProjeto(p)),
       'Progresso (%)': this.calcularProgresso(p).toFixed(1),
     }));

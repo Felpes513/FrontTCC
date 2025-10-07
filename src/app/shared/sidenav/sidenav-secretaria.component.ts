@@ -64,7 +64,7 @@ export class SidenavSecretariaComponent implements OnInit, OnDestroy {
     e.preventDefault();
     if (!window.confirm('Tem certeza que deseja sair?')) return;
     this.auth.clearSession();
-    this.router.navigate(['/login'], { replaceUrl: true });
+    this.router.navigate(['/'], { replaceUrl: true });
   }
 
   marcarNotificacoesComoLidas() {
