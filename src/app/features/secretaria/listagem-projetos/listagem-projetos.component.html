@@ -10,8 +10,12 @@
         [(ngModel)]="filtro"
         class="search-input"
       />
-      <button class="btn-reload" (click)="recarregar()" [disabled]="carregando">📱 Recarregar</button>
-      <button class="btn-add" [routerLink]="['/secretaria/projetos/novo']">+ Adicionar Projeto</button>
+      <button class="btn-reload" (click)="recarregar()" [disabled]="carregando">
+        📱 Recarregar
+      </button>
+      <button class="btn-add" [routerLink]="['/secretaria/projetos/novo']">
+        + Adicionar Projeto
+      </button>
     </div>
   </div>
 
@@ -35,15 +39,30 @@
 
   <!-- GRID -->
   <div *ngIf="!carregando && !erro" class="card-grid">
-    <div *ngFor="let projeto of projetosFiltrados(); let i = index; trackBy: trackByFn" class="card">
-      <div class="progress-bar" [ngStyle]="{ width: calcularProgresso(projeto) + '%', background: getCor(i) }"></div>
+    <div
+      *ngFor="
+        let projeto of projetosFiltrados();
+        let i = index;
+        trackBy: trackByFn
+      "
+      class="card"
+    >
+      <div
+        class="progress-bar"
+        [ngStyle]="{
+          width: calcularProgresso(projeto) + '%',
+          background: getCor(i)
+        }"
+      ></div>
 
       <div class="card-body">
         <h3>{{ projeto.nomeProjeto }}</h3>
 
         <div class="orientador-info">
           <strong>Orientador:</strong>
-          <span [class.orientador-vazio]="!temOrientador(projeto)">{{ getOrientadorNome(projeto) }}</span>
+          <span [class.orientador-vazio]="!temOrientador(projeto)">{{
+            getOrientadorNome(projeto)
+          }}</span>
         </div>
 
         <div class="campus-info">
@@ -53,16 +72,19 @@
         <!-- Agora mostra selecionados (0..4) -->
         <div class="alunos-info">
           <strong>Selecionados:</strong>
-          <span [class.sem-alunos]="!temAlunos(projeto)">
-            {{ getQuantidadeAlunos(projeto) }}/{{ MAX_ESCOLHIDOS }}
-          </span>
-          <span *ngIf="!temAlunos(projeto)" class="aviso">(nenhum selecionado ainda)</span>
+          <strong>Inscritos:</strong>
+          <span>{{ getQuantidadeAlunos(projeto) }}</span>
+          <span *ngIf="!temAlunos(projeto)" class="aviso"
+            >(nenhum selecionado ainda)</span
+          >
         </div>
 
         <div class="alunos-lista" *ngIf="temAlunos(projeto)">
           <strong>Alunos:</strong>
           <div class="chips">
-            <span class="chip" *ngFor="let aluno of projeto.nomesAlunos">👨‍🎓 {{ aluno }}</span>
+            <span class="chip" *ngFor="let aluno of projeto.nomesAlunos"
+              >👨‍🎓 {{ aluno }}</span
+            >
           </div>
         </div>
       </div>
@@ -70,19 +92,43 @@
       <div class="card-actions">
         <!-- Ações da SECRETARIA -->
         <ng-container *ngIf="isSecretaria">
-          <button (click)="editarProjeto(projeto.id)" class="btn-edit">✏️ Editar</button>
-          <button (click)="excluirProjeto(projeto.id)" class="btn-delete">🗑️ Excluir</button>
+          <button (click)="editarProjeto(projeto.id)" class="btn-edit">
+            ✏️ Editar
+          </button>
+          <button (click)="excluirProjeto(projeto.id)" class="btn-delete">
+            🗑️ Excluir
+          </button>
         </ng-container>
 
         <!-- Ações do ORIENTADOR -->
         <ng-container *ngIf="!isSecretaria && isOrientador">
           <ng-container *ngIf="temIdValido(projeto); else orientadorDisabled">
-            <a class="btn-report" [routerLink]="['/orientador/relatorios', projeto.id]" title="Relatórios do Projeto">📝 Relatórios</a>
-            <a class="btn-edit" [routerLink]="['/orientador/projetos', projeto.id]" title="Selecionar alunos do projeto" style="margin-left: 8px">👥 Selecionar Alunos</a>
+            <a
+              class="btn-report"
+              [routerLink]="['/orientador/relatorios', projeto.id]"
+              title="Relatórios do Projeto"
+              >📝 Relatórios</a
+            >
+            <a
+              class="btn-edit"
+              [routerLink]="['/orientador/projetos', projeto.id]"
+              title="Selecionar alunos do projeto"
+              style="margin-left: 8px"
+              >👥 Selecionar Alunos</a
+            >
           </ng-container>
           <ng-template #orientadorDisabled>
-            <button class="btn-report" disabled title="Projeto sem ID">📝 Relatórios</button>
-            <button class="btn-edit" disabled title="Projeto sem ID" style="margin-left: 8px">👥 Selecionar Alunos</button>
+            <button class="btn-report" disabled title="Projeto sem ID">
+              📝 Relatórios
+            </button>
+            <button
+              class="btn-edit"
+              disabled
+              title="Projeto sem ID"
+              style="margin-left: 8px"
+            >
+              👥 Selecionar Alunos
+            </button>
           </ng-template>
         </ng-container>
 
@@ -94,17 +140,38 @@
               class="btn-add"
               (click)="inscrever(projeto)"
               [disabled]="isLotado(projeto) || inscrevendoId === projeto.id"
-              [title]="isLotado(projeto) ? 'Seleção finalizada' : 'Inscrever-se no projeto'"
+              [title]="
+                isLotado(projeto)
+                  ? 'Seleção finalizada'
+                  : 'Inscrever-se no projeto'
+              "
             >
-              ✅ {{ inscrevendoId === projeto.id ? 'Inscrevendo...' : 'Inscrever-se' }}
+              ✅
+              {{
+                inscrevendoId === projeto.id ? "Inscrevendo..." : "Inscrever-se"
+              }}
             </button>
 
-            <a class="btn-report" [routerLink]="['/aluno/relatorios', projeto.id]" style="margin-left: 8px">📝 Meu Relatório</a>
+            <a
+              class="btn-report"
+              [routerLink]="['/aluno/relatorios', projeto.id]"
+              style="margin-left: 8px"
+              >📝 Meu Relatório</a
+            >
           </ng-container>
 
           <ng-template #alunoDisabled>
-            <button type="button" class="btn-add" disabled>✅ Inscrever-se</button>
-            <button type="button" class="btn-report" disabled style="margin-left: 8px">📝 Meu Relatório</button>
+            <button type="button" class="btn-add" disabled>
+              ✅ Inscrever-se
+            </button>
+            <button
+              type="button"
+              class="btn-report"
+              disabled
+              style="margin-left: 8px"
+            >
+              📝 Meu Relatório
+            </button>
           </ng-template>
         </ng-container>
       </div>
@@ -112,18 +179,41 @@
   </div>
 
   <!-- Nenhum projeto -->
-  <div *ngIf="!carregando && !erro && projetos.length === 0" class="no-projects">
+  <div
+    *ngIf="!carregando && !erro && projetos.length === 0"
+    class="no-projects"
+  >
     <h3>📁 Nenhum projeto encontrado</h3>
     <p *ngIf="isSecretaria">Comece criando seu primeiro projeto!</p>
-    <p *ngIf="!isSecretaria && isOrientador">Você ainda não está vinculado a um projeto.</p>
-    <p *ngIf="!isSecretaria && !isOrientador">Não há projetos disponíveis no momento.</p>
-    <button class="btn-add" *ngIf="isSecretaria" [routerLink]="['/secretaria/projetos/novo']">+ Criar primeiro projeto</button>
+    <p *ngIf="!isSecretaria && isOrientador">
+      Você ainda não está vinculado a um projeto.
+    </p>
+    <p *ngIf="!isSecretaria && !isOrientador">
+      Não há projetos disponíveis no momento.
+    </p>
+    <button
+      class="btn-add"
+      *ngIf="isSecretaria"
+      [routerLink]="['/secretaria/projetos/novo']"
+    >
+      + Criar primeiro projeto
+    </button>
   </div>
 
   <!-- Nenhum resultado -->
-  <div *ngIf="!carregando && !erro && projetos.length > 0 && projetosFiltrados().length === 0" class="no-results">
+  <div
+    *ngIf="
+      !carregando &&
+      !erro &&
+      projetos.length > 0 &&
+      projetosFiltrados().length === 0
+    "
+    class="no-results"
+  >
     <h3>🔍 Nenhum resultado encontrado</h3>
     <p>Tente ajustar os termos da sua busca.</p>
-    <button class="btn-clear-filter" (click)="filtro = ''" *ngIf="isSecretaria">❌ Limpar filtro</button>
+    <button class="btn-clear-filter" (click)="filtro = ''" *ngIf="isSecretaria">
+      ❌ Limpar filtro
+    </button>
   </div>
 </div>

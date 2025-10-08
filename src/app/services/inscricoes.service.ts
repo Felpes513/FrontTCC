@@ -1,45 +1,57 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { ListagemResponse } from '@interfaces/listagem';
+import { Inscricao } from '@interfaces/inscricao';
 
 @Injectable({ providedIn: 'root' })
 export class InscricoesService {
-  private readonly api = '/api';
+  private http = inject(HttpClient);
+  private baseUrl = '/api';
 
-  constructor(private http: HttpClient) {}
-
-  /** Aluno se inscreve em um projeto (usa token do aluno via interceptor). */
+  // Aluno se inscreve em um projeto
   inscrever(projetoId: number) {
     return this.http.post<{ success: boolean; message: string; data?: { id_inscricao: number } }>(
-      `${this.api}/inscricao/inscrever`,
+      `${this.baseUrl}/inscricao/inscrever`,
       { id_projeto: projetoId }
     );
   }
 
-  /**
-   * Lista os ALUNOS vinculados ao projeto (aprovados/válidos para o orientador).
-   * Rota: GET /projetos/{id}/alunos  -> { id_projeto, alunos: [...] }
-   * (Se o back devolver outro shape, ajuste o map abaixo sem dor.)
-   */
-  listarAprovadosDoProjeto(projetoId: number): Observable<any[]> {
+  // Lista genérica de inscrições (se você usar)
+  listarPorProjeto(
+    projetoId: number,
+    status?: string,
+    pagina = 1,
+    limite = 20,
+    ordenarPor = 'nome',
+    ordem: 'asc' | 'desc' = 'asc'
+  ): Observable<Inscricao[]> {
+    let params = new HttpParams()
+      .set('pagina', pagina)
+      .set('limite', limite)
+      .set('ordenarPor', ordenarPor)
+      .set('ordem', ordem);
+    if (status) params = params.set('status', status);
+
     return this.http
-      .get<{ id_projeto: number; alunos: any[] }>(`${this.api}/projetos/${projetoId}/alunos`)
-      .pipe(map(r => Array.isArray(r?.alunos) ? r.alunos : []));
+      .get<ListagemResponse>(`${this.baseUrl}/projetos/${projetoId}/inscricoes`, { params })
+      .pipe(map(resp => resp.itens));
   }
 
-  /**
-   * (Opcional – fallback) Lista TODAS as inscrições do sistema
-   * e filtra por projeto no front caso precise.
-   */
-  listarInscricoesSistema(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.api}/inscricao/`);
+  // Orientador – aprovados do projeto (usa o endpoint existente do back)
+  listarAprovadosDoProjeto(projetoId: number) {
+    return this.http.get<{ id_projeto:number; alunos:any[] }>(
+      `${this.baseUrl}/projetos/${projetoId}/alunos`
+    ).pipe(map(r => r.alunos || []));
   }
 
-  /** Atualiza a seleção final do orientador para o projeto. */
-  atualizarSelecao(projetoId: number, idsAlunosSelecionados: number[]) {
-    return this.http.post<{ mensagem: string }>(`${this.api}/projetos/update-alunos`, {
-      id_projeto: projetoId,
-      id_alunos: idsAlunosSelecionados,
-    });
+  // (se você ainda usa)
+  aprovar(inscricaoId: number) { return this.http.patch(`${this.baseUrl}/inscricoes/${inscricaoId}/aprovar`, {}); }
+  finalizar(inscricaoId: number) { return this.http.patch(`${this.baseUrl}/inscricoes/${inscricaoId}/finalizar`, {}); }
+  rejeitar(inscricaoId: number) { return this.http.patch(`${this.baseUrl}/inscricoes/${inscricaoId}/rejeitar`, {}); }
+  excluir(inscricaoId: number) { return this.http.delete(`${this.baseUrl}/inscricoes/${inscricaoId}`); }
+  uploadDocumento(inscricaoId: number, arquivo: File) {
+    const formData = new FormData(); formData.append('arquivo', arquivo);
+    return this.http.put(`${this.baseUrl}/inscricoes/${inscricaoId}/documento-notas`, formData);
   }
 }

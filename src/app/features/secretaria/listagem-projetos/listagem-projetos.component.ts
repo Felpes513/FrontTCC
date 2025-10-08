@@ -139,9 +139,8 @@ export class ListagemProjetosComponent implements OnInit {
 
   // ===== Helpers de UI com a nova regra =====
 
-  // Agora "quantidade" exibe quantos JÁ FORAM ESCOLHIDOS pelo orientador (chips)
-  getQuantidadeAlunos(projeto: Projeto): number {
-    return projeto.nomesAlunos?.length ?? 0;
+  getQuantidadeAlunos(p: Projeto): number {
+    return p.inscritosTotal ?? p.nomesAlunos?.length ?? 0;
   }
 
   // Tem selecionados pelo orientador?
@@ -364,9 +363,9 @@ export class ListagemProjetosComponent implements OnInit {
     );
   }
 
-  // Progresso visual agora reflete seleção (0..4)
   calcularProgresso(projeto: Projeto): number {
     const escolhidos = this.getQuantidadeAlunos(projeto);
+    const cap = this.MAX_ESCOLHIDOS;
     const progresso = (escolhidos / this.MAX_ESCOLHIDOS) * 100;
     return Math.max(0, Math.min(progresso, 100));
   }

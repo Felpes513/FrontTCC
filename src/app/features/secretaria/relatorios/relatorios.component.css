@@ -22,6 +22,19 @@ h2 {
   border-radius: 6px;
 }
 
+tbody td {
+  transition: background 0.15s ease;
+}
+tbody tr.row-link {
+  cursor: pointer;
+}
+tbody tr.row-link:hover td {
+  background: #f9fafb;
+}
+tbody tr.row-link:active td {
+  background: #f3f4f6;
+}
+
 /* Botão XLSX */
 .btn {
   background: #2563eb;
@@ -36,7 +49,7 @@ h2 {
   align-items: center;
 }
 .btn:disabled {
-  opacity: .7;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
@@ -47,7 +60,9 @@ h2 {
   gap: 16px;
 }
 @media (max-width: 1024px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Card */
@@ -56,7 +71,7 @@ h2 {
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 14px;
-  box-shadow: 0 1px 6px rgba(0,0,0,.04);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
 }
 .card header {
   display: flex;
@@ -73,9 +88,11 @@ h2 {
   color: #fff;
   border-radius: 999px;
   padding: 2px 10px;
-  font-size: .85rem;
+  font-size: 0.85rem;
 }
-.badge.warn { background: #ef4444; }
+.badge.warn {
+  background: #ef4444;
+}
 
 /* Tabela */
 table {
@@ -95,8 +112,14 @@ tbody td {
 }
 
 /* Estados */
-.loading { color: #2563eb; margin: 8px 0; }
-.erro { color: #b91c1c; margin: 8px 0; }
+.loading {
+  color: #2563eb;
+  margin: 8px 0;
+}
+.erro {
+  color: #b91c1c;
+  margin: 8px 0;
+}
 .empty {
   color: #6b7280;
   font-style: italic;
@@ -108,8 +131,18 @@ tbody td {
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: .85rem;
+  font-size: 0.85rem;
 }
-.status.ok  { background: #ecfdf5; color: #065f46; }
-.status.nok { background: #fff7ed; color: #9a3412; }
-.obs { color: #6b7280; margin-left: 6px; font-weight: 400; }
+.status.ok {
+  background: #ecfdf5;
+  color: #065f46;
+}
+.status.nok {
+  background: #fff7ed;
+  color: #9a3412;
+}
+.obs {
+  color: #6b7280;
+  margin-left: 6px;
+  font-weight: 400;
+}

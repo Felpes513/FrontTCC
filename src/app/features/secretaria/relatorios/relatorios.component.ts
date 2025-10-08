@@ -1,33 +1,28 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  RelatorioService,
-  RelatorioMensalSecretaria,
-  PendenciaSecretaria
-} from '@services/relatorio.service';
+import { RelatorioService } from '@services/relatorio.service';
+import { RelatorioMensal, PendenciaMensal } from '@interfaces/relatorio';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 @Component({
   standalone: true,
   selector: 'app-relatorios',
   imports: [CommonModule, FormsModule],
   templateUrl: './relatorios.component.html',
-  styleUrls: ['./relatorios.component.css']
+  styleUrls: ['./relatorios.component.css'],
 })
 export class RelatoriosComponent implements OnInit {
   private relatorioService = inject(RelatorioService);
+  private router = inject(Router);
 
-  // XLSX
   baixando = false;
-
-  // Mês selecionado (YYYY-MM)
   mes = this.toYYYYMM(new Date());
 
-  // Mensal – secretaria
-  recebidos: RelatorioMensalSecretaria[] = [];
-  pendentes: PendenciaSecretaria[] = [];
+  recebidos: RelatorioMensal[] = [];
+  pendentes: PendenciaMensal[] = [];
 
   carregandoMensal = false;
   erroMensal: string | null = null;
@@ -42,7 +37,6 @@ export class RelatoriosComponent implements OnInit {
     return `${y}-${m}`;
   }
 
-  // ============ Ações ============
   atualizarMes(): void {
     this.carregarMensal();
   }
@@ -55,13 +49,13 @@ export class RelatoriosComponent implements OnInit {
       recebidos: this.relatorioService.listarRecebidosSecretaria(this.mes).pipe(
         catchError((e) => {
           console.warn('Recebidos (secretaria) indisponível:', e);
-          return of<RelatorioMensalSecretaria[]>([]);
+          return of<RelatorioMensal[]>([]);
         })
       ),
       pendentes: this.relatorioService.listarPendentesSecretaria(this.mes).pipe(
         catchError((e) => {
           console.warn('Pendentes (secretaria) indisponível:', e);
-          return of<PendenciaSecretaria[]>([]);
+          return of<PendenciaMensal[]>([]);
         })
       ),
     }).subscribe({
@@ -79,7 +73,7 @@ export class RelatoriosComponent implements OnInit {
         this.erroMensal = 'Falha ao carregar relatórios do mês.';
         this.carregandoMensal = false;
         console.error(err);
-      }
+      },
     });
   }
 
@@ -90,7 +84,9 @@ export class RelatoriosComponent implements OnInit {
         const blob = res.body as Blob;
         const cd = res.headers.get('Content-Disposition') || '';
         const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
-        const filename = decodeURIComponent(m?.[1] || m?.[2] || 'relatorio_alunos.xlsx');
+        const filename = decodeURIComponent(
+          m?.[1] || m?.[2] || 'relatorio_alunos.xlsx'
+        );
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -103,11 +99,20 @@ export class RelatoriosComponent implements OnInit {
         console.error('Erro ao baixar XLSX:', err);
         alert('Não foi possível gerar o relatório de alunos.');
         this.baixando = false;
-      }
+      },
     });
   }
 
-  // Helpers de exibição
+  // ✅ usar a propriedade correta (projetoId)
+  abrirDetalhe(r: RelatorioMensal) {
+    const id = r?.projetoId ?? (r as any)?.id_projeto; // fallback defensivo
+    if (!id) return;
+
+    this.router.navigate(['/orientador/relatorios', id], {
+      queryParams: { mes: r.referenciaMes, readonly: 1 }, // somente leitura
+    });
+  }
+
   dataBr(iso?: string): string {
     if (!iso) return '—';
     const d = new Date(iso);

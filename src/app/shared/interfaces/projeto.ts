@@ -37,6 +37,7 @@ export interface Projeto {
   quantidadeMaximaAlunos: number;
   nomeOrientador: string;
   nomesAlunos: string[];
+  inscritosTotal?: number; // 👈 novo
   status?: StatusProjeto;
 }
 

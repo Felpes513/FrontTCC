@@ -3,18 +3,22 @@
 <!-- Barra de ações -->
 <div class="toolbar">
   <div class="mes-picker">
-    <label for="mes"><i class="far fa-calendar-alt"></i> Mês de referência</label>
+    <label for="mes"
+      ><i class="far fa-calendar-alt"></i> Mês de referência</label
+    >
     <input id="mes" type="month" [(ngModel)]="mes" (change)="atualizarMes()" />
   </div>
 
   <button class="btn" [disabled]="baixando" (click)="baixarAlunosXlsx()">
     <i class="fas fa-file-excel"></i>
-    {{ baixando ? 'Gerando...' : 'Baixar Alunos (XLSX)' }}
+    {{ baixando ? "Gerando..." : "Baixar Alunos (XLSX)" }}
   </button>
 </div>
 
 <!-- Estado de carregamento/erro -->
-<div *ngIf="carregandoMensal" class="loading">Carregando relatórios do mês…</div>
+<div *ngIf="carregandoMensal" class="loading">
+  Carregando relatórios do mês…
+</div>
 <div *ngIf="!carregandoMensal && erroMensal" class="erro">{{ erroMensal }}</div>
 
 <!-- Grid -->
@@ -41,17 +45,23 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let r of recebidos">
-          <td>{{ r.titulo_projeto }}</td>
-          <td>{{ r.orientador_nome || '—' }}</td>
-          <td>{{ r.mes }}</td>
+        <tr
+          *ngFor="let r of recebidos"
+          class="row-link"
+          (click)="abrirDetalhe(r)"
+          tabindex="0"
+          (keyup.enter)="abrirDetalhe(r)"
+        >
+          <td>{{ r.tituloProjeto }}</td>
+          <td>{{ r.orientadorNome || "—" }}</td>
+          <td>{{ r.referenciaMes }}</td>
           <td>
             <span class="status" [class.ok]="r.ok" [class.nok]="!r.ok">
-              {{ r.ok ? 'OK' : 'Pendente' }}
+              {{ r.ok ? "OK" : "Pendente" }}
             </span>
             <span class="obs" *ngIf="r.observacao">— {{ r.observacao }}</span>
           </td>
-          <td>{{ dataBr(r.confirmado_em) }}</td>
+          <td>{{ dataBr(r.confirmadoEm) }}</td>
         </tr>
       </tbody>
     </table>
@@ -78,8 +88,8 @@
       </thead>
       <tbody>
         <tr *ngFor="let p of pendentes">
-          <td>{{ p.titulo_projeto }}</td>
-          <td>{{ p.orientador_nome || '—' }}</td>
+          <td>{{ p.tituloProjeto }}</td>
+          <td>{{ p.orientadorNome || "—" }}</td>
           <td>{{ p.mes || mes }}</td>
         </tr>
       </tbody>
