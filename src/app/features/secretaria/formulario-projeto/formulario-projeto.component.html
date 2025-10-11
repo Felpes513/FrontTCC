@@ -15,7 +15,9 @@
       />
 
       <!-- Resumo do Projeto -->
-      <label for="resumo"><i class="fas fa-align-left"></i> Resumo do Projeto</label>
+      <label for="resumo"
+        ><i class="fas fa-align-left"></i> Resumo do Projeto</label
+      >
       <textarea
         id="resumo"
         [(ngModel)]="projeto.resumo"
@@ -25,7 +27,9 @@
       ></textarea>
 
       <!-- Filtro de Orientador -->
-      <label for="buscaOrientador"><i class="fas fa-search"></i> Buscar Orientador</label>
+      <label for="buscaOrientador"
+        ><i class="fas fa-search"></i> Buscar Orientador</label
+      >
       <input
         id="buscaOrientador"
         type="text"
@@ -37,7 +41,9 @@
       />
 
       <!-- Selecionar Orientador -->
-      <label for="selectOrientador"><i class="fas fa-user-tie"></i> Selecionar Orientador</label>
+      <label for="selectOrientador"
+        ><i class="fas fa-user-tie"></i> Selecionar Orientador</label
+      >
       <select
         id="selectOrientador"
         [(ngModel)]="orientadorSelecionadoId"
@@ -47,14 +53,25 @@
         [disabled]="isOrientadorMode"
       >
         <option value="">-- Selecione --</option>
-        <option *ngFor="let orientador of orientadoresFiltrados" [value]="orientador.id">
+        <option
+          *ngFor="let orientador of orientadoresFiltrados"
+          [value]="orientador.id"
+        >
           {{ orientador.nome_completo }}
         </option>
       </select>
 
       <!-- E-mail do Orientador -->
-      <label for="email_orientador"><i class="fas fa-envelope"></i> E-mail do Orientador</label>
-      <input id="email_orientador" type="email" [value]="emailOrientador" name="email_orientador" readonly />
+      <label for="email_orientador"
+        ><i class="fas fa-envelope"></i> E-mail do Orientador</label
+      >
+      <input
+        id="email_orientador"
+        type="email"
+        [value]="emailOrientador"
+        name="email_orientador"
+        readonly
+      />
 
       <!-- Campus -->
       <label for="selectCampus"><i class="fas fa-building"></i> Campus</label>
@@ -67,9 +84,28 @@
         [disabled]="isOrientadorMode"
       >
         <option value="">-- Selecione --</option>
-        <option *ngFor="let campus of campusFiltrados" [value]="campus.id_campus">
+        <option
+          *ngFor="let campus of campusFiltrados"
+          [value]="campus.id_campus"
+        >
           {{ campus.campus }}
         </option>
+      </select>
+
+      <!-- Bolsa do Projeto -->
+      <label for="selectBolsa"><i class="fas fa-coins"></i> Bolsa</label>
+      <select
+        id="selectBolsa"
+        [(ngModel)]="projeto.tipo_bolsa"
+        name="tipo_bolsa"
+        [disabled]="isOrientadorMode"
+      >
+        <option [ngValue]="null">-- Sem bolsa --</option>
+        <option value="PIBIC">PIBIC</option>
+        <option value="PIBITI">PIBITI</option>
+        <option value="FAPESP">FAPESP</option>
+        <option value="CNPq">CNPq</option>
+        <option value="Outra">Outra</option>
       </select>
 
       <!-- ============================== -->
@@ -80,7 +116,9 @@
 
         <!-- DOCX -->
         <div class="upload-row">
-          <label for="docxFile"><i class="fas fa-file-word"></i> Projeto (.docx)</label>
+          <label for="docxFile"
+            ><i class="fas fa-file-word"></i> Projeto (.docx)</label
+          >
           <div class="upload-controls">
             <input
               type="file"
@@ -109,12 +147,16 @@
               </button>
             </div>
           </div>
-          <small class="hint" *ngIf="!arquivoDocx">Selecione um arquivo .docx para habilitar o upload.</small>
+          <small class="hint" *ngIf="!arquivoDocx"
+            >Selecione um arquivo .docx para habilitar o upload.</small
+          >
         </div>
 
         <!-- PDF -->
         <div class="upload-row">
-          <label for="pdfFile"><i class="fas fa-file-pdf"></i> Projeto (.pdf)</label>
+          <label for="pdfFile"
+            ><i class="fas fa-file-pdf"></i> Projeto (.pdf)</label
+          >
           <div class="upload-controls">
             <input
               type="file"
@@ -143,7 +185,9 @@
               </button>
             </div>
           </div>
-          <small class="hint" *ngIf="!arquivoPdf">Selecione um arquivo .pdf para habilitar o upload.</small>
+          <small class="hint" *ngIf="!arquivoPdf"
+            >Selecione um arquivo .pdf para habilitar o upload.</small
+          >
         </div>
       </div>
 

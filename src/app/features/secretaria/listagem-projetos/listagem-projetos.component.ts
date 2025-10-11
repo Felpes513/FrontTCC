@@ -60,13 +60,17 @@ export class ListagemProjetosComponent implements OnInit {
         next: (projetos) => {
           this.projetos = projetos ?? [];
           this.carregando = false;
+          // 👇 hidrata lista de selecionados para cada card
+          this.hidratarSelecionados();
+          // 👇 hidrata também as notas (ver seção 2)
+          this.hidratarNotas();
         },
         error: (error) => this.handleLoadError(error),
       });
       return;
     }
 
-    // Secretaria e Aluno usam a listagem geral
+    // Secretaria e Aluno
     this.projetoService.listarProjetos().subscribe({
       next: (projetos) => {
         const invalidos = projetos.filter((p) => !p.id || p.id <= 0);
@@ -74,6 +78,10 @@ export class ListagemProjetosComponent implements OnInit {
           console.warn('⚠️ Projetos com ID inválido:', invalidos);
         this.projetos = projetos;
         this.carregando = false;
+        // 👇 hidrata lista de selecionados para cada card
+        this.hidratarSelecionados();
+        // 👇 hidrata também as notas (ver seção 2)
+        this.hidratarNotas();
       },
       error: (error) => this.handleLoadError(error),
     });
@@ -85,7 +93,6 @@ export class ListagemProjetosComponent implements OnInit {
       .map((p) =>
         this.inscricoesService.listarAprovadosDoProjeto(p.id).pipe(
           tap((alunos: any[]) => {
-            // normaliza nome e preenche o card
             p.nomesAlunos = (alunos || []).map(
               (a) =>
                 a?.nome_completo ||
@@ -93,14 +100,40 @@ export class ListagemProjetosComponent implements OnInit {
                 a?.aluno?.nome ||
                 `Aluno #${a?.id_aluno || a?.id || ''}`
             );
+            // se o back já devolver quantidade total, pode guardar também:
+            p.inscritosTotal = p.nomesAlunos.length;
           }),
-          catchError(() => of(null)) // não quebra a página se algum projeto falhar
+          catchError(() => of(null))
         )
       );
 
     if (calls.length) {
-      forkJoin(calls).subscribe(); // fogo e esquece – só preenche UI
+      forkJoin(calls).subscribe();
     }
+  }
+
+  private hidratarNotas() {
+    const calls = this.projetos
+      .filter((p) => this.isIdValido(p.id))
+      .map((p) =>
+        this.projetoService.listarNotasDoProjeto(p.id).pipe(
+          tap((notas: number[]) => {
+            p.notas = notas || [];
+            if (p.notas.length) {
+              const soma = p.notas.reduce(
+                (acc, n) => acc + (Number(n) || 0),
+                0
+              );
+              p.mediaNota = Number((soma / p.notas.length).toFixed(2));
+            } else {
+              p.mediaNota = undefined;
+            }
+          }),
+          catchError(() => of(null))
+        )
+      );
+
+    if (calls.length) forkJoin(calls).subscribe();
   }
 
   private handleLoadError(error: any) {

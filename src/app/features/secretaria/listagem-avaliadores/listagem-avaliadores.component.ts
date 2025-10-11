@@ -4,11 +4,12 @@ import { Router, RouterModule } from '@angular/router';
 import { faUsers, faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { AvaliadorExterno } from '@interfaces/avaliador_externo';
 import { ProjetoService } from '@services/projeto.service';
+import { EnviarAvaliacoesModalComponent } from "./enviar-avaliacoes.modal";
 
 @Component({
   selector: 'app-listagem-avaliadores',
   standalone: true,
-  imports: [CommonModule, RouterModule, ],
+  imports: [CommonModule, RouterModule, EnviarAvaliacoesModalComponent],
   templateUrl: './listagem-avaliadores.component.html',
   styleUrls: ['./listagem-avaliadores.component.css']
 })
@@ -16,6 +17,7 @@ export class ListagemAvaliadoresComponent implements OnInit {
   avaliadores: AvaliadorExterno[] = [];
   carregando = false;
   erro = '';
+  showModal = false;
 
   // ícones
   icUsers = faUsers;
@@ -38,7 +40,6 @@ export class ListagemAvaliadoresComponent implements OnInit {
     this.erro = '';
     this.service.listarAvaliadoresExternos().subscribe({
       next: (lista) => {
-        // garante compat com back que pode retornar 'link_lattes'
         this.avaliadores = (lista || []).map(a => ({
           ...a,
           link_lattes: (a as any).link_lattes ?? (a as any).lattes_link ?? ''
@@ -52,8 +53,15 @@ export class ListagemAvaliadoresComponent implements OnInit {
     });
   }
 
+  abrirModal(){
+    this.showModal = true;
+  }
+  onModalClosed(reload: boolean) {
+    this.showModal = false;
+    if (reload) this.carregar();
+  }
+
   editar(a: AvaliadorExterno): void {
-    // Navega para o formulário reutilizando o mesmo componente de "novo"
     this.router.navigate(['/secretaria/avaliadores/novo'], {
       state: { avaliador: a }
     });
@@ -65,7 +73,6 @@ export class ListagemAvaliadoresComponent implements OnInit {
 
     this.service.deleteAvaliador(id).subscribe({
       next: () => {
-        // Remove da lista sem recarregar tudo
         this.avaliadores = this.avaliadores.filter(av => av.id !== id);
       },
       error: (err) => alert(err?.message || 'Erro ao excluir')

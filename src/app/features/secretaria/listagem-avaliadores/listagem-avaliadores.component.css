@@ -1,19 +1,13 @@
-/* ===========================================
-   CONTAINER PRINCIPAL
-   =========================================== */
 .container {
   max-width: none;
   margin: 0;
   padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin-left: 0;
   padding-left: 30px;
   width: 100%;
 }
 
-/* ===========================================
-   CABEÇALHO DA PÁGINA
-   =========================================== */
 .container h2 {
   color: #2c3e50;
   margin-bottom: 30px;
@@ -30,9 +24,6 @@
   font-size: 1.5rem;
 }
 
-/* ===========================================
-   BOTÃO NOVO AVALIADOR
-   =========================================== */
 .mb-3 {
   margin-bottom: 25px !important;
 }
@@ -67,9 +58,6 @@
   box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
 }
 
-/* ===========================================
-   ESTILOS DA TABELA - DESKTOP
-   =========================================== */
 .table {
   width: calc(100% - 30px);
   border-collapse: collapse;
@@ -81,7 +69,6 @@
   margin-right: 30px;
 }
 
-/* Cabeçalho da tabela */
 .table thead {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -95,13 +82,11 @@
   letter-spacing: 0.5px;
 }
 
-/* Corpo da tabela */
 .table tbody tr {
   border-bottom: 1px solid #e9ecef;
   transition: background-color 0.2s ease;
 }
 
-/* Efeito zebra - linhas alternadas */
 .table-striped tbody tr:nth-child(odd) {
   background-color: #f8f9fa;
 }
@@ -118,9 +103,6 @@
   color: #2c3e50;
 }
 
-/* ===========================================
-   COLUNA DE AÇÕES
-   =========================================== */
 .actions {
   text-align: center;
   width: 120px;
@@ -157,9 +139,6 @@
   transform: translateY(-1px);
 }
 
-/* ===========================================
-   LINK LATTES
-   =========================================== */
 .table tbody td a {
   color: #3498db;
   text-decoration: none;
@@ -172,9 +151,6 @@
   text-decoration: underline;
 }
 
-/* ===========================================
-   RESPONSIVIDADE - TABLETS (768px ou menos)
-   =========================================== */
 @media screen and (max-width: 768px) {
   .container {
     padding: 15px;
@@ -197,12 +173,10 @@
     margin-right: 20px;
   }
 
-  /* Esconder cabeçalho da tabela */
   .table thead {
     display: none;
   }
 
-  /* Transformar cada linha em um card */
   .table tbody tr {
     display: block;
     margin-bottom: 15px;
@@ -218,7 +192,6 @@
     background-color: white;
   }
 
-  /* Cada célula vira uma linha no card */
   .table tbody td {
     display: block;
     text-align: left;
@@ -228,7 +201,6 @@
     padding-left: 50%;
   }
 
-  /* Adicionar labels antes de cada dado */
   .table tbody td:before {
     content: attr(data-label);
     position: absolute;
@@ -240,7 +212,6 @@
     color: #667eea;
   }
 
-  /* Coluna de ações centralizada */
   .actions {
     text-align: center;
     width: 100%;
@@ -251,9 +222,6 @@
   }
 }
 
-/* ===========================================
-   RESPONSIVIDADE - CELULARES (480px ou menos)
-   =========================================== */
 @media screen and (max-width: 480px) {
   .container {
     padding: 10px;
@@ -285,16 +253,12 @@
     font-size: 0.85rem;
   }
 
-  /* Botões de ação em linha única */
   .actions .btn {
     margin: 2px;
     padding: 8px 12px;
   }
 }
 
-/* ===========================================
-   ESTADOS DE LOADING E EMPTY
-   =========================================== */
 .table-loading {
   text-align: center;
   padding: 40px;
@@ -308,9 +272,6 @@
   color: #95a5a6;
 }
 
-/* ===========================================
-   ANIMAÇÕES E TRANSIÇÕES
-   =========================================== */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -326,9 +287,18 @@
   animation: fadeIn 0.3s ease forwards;
 }
 
-/* Delay progressivo para cada linha */
-.table tbody tr:nth-child(1) { animation-delay: 0.1s; }
-.table tbody tr:nth-child(2) { animation-delay: 0.2s; }
-.table tbody tr:nth-child(3) { animation-delay: 0.3s; }
-.table tbody tr:nth-child(4) { animation-delay: 0.4s; }
-.table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+.table tbody tr:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.table tbody tr:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.table tbody tr:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.table tbody tr:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.table tbody tr:nth-child(5) {
+  animation-delay: 0.5s;
+}

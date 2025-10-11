@@ -69,14 +69,15 @@
           <strong>Campus:</strong> {{ projeto.campus }}
         </div>
 
-        <!-- Agora mostra selecionados (0..4) -->
-        <div class="alunos-info">
-          <strong>Selecionados:</strong>
-          <strong>Inscritos:</strong>
-          <span>{{ getQuantidadeAlunos(projeto) }}</span>
-          <span *ngIf="!temAlunos(projeto)" class="aviso"
-            >(nenhum selecionado ainda)</span
+        <!-- Notas/Avaliação (DENTRO do card) -->
+        <div class="alunos-info" *ngIf="projeto.notas?.length">
+          <strong>Notas:</strong>
+          <span class="chip" style="margin-left: 6px"
+            >Média: {{ projeto.mediaNota }}</span
           >
+          <div class="chips" style="margin-top: 8px">
+            <span class="chip" *ngFor="let n of projeto.notas">⭐ {{ n }}</span>
+          </div>
         </div>
 
         <div class="alunos-lista" *ngIf="temAlunos(projeto)">

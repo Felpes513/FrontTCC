@@ -11,15 +11,14 @@ export interface ProjetoRequest {
   id_campus: number;
 }
 
-/** Formulário interno usado para montar o ProjetoRequest (uso interno do front) */
 export interface ProjetoFormulario {
   titulo_projeto: string;
   resumo?: string;
   orientador_nome: string;
   id_campus: number;
+  tipo_bolsa?: string | null;
 }
 
-/** Dados do formulário de criação completa de projeto (uso interno do front) */
 export interface ProjetoCadastro {
   titulo_projeto: string;
   resumo: string;
@@ -27,6 +26,7 @@ export interface ProjetoCadastro {
   orientador_email: string;
   id_campus: number;
   quantidadeMaximaAlunos: number;
+  tipo_bolsa?: string | null;
 }
 
 /** Card/listagem simples (view model para listas) */
@@ -39,6 +39,8 @@ export interface Projeto {
   nomesAlunos: string[];
   inscritosTotal?: number; // 👈 novo
   status?: StatusProjeto;
+  notas?: number[];
+  mediaNota?: number;
 }
 
 /** Detalhes completos do projeto (tela de detalhes / response do backend + enriquecimentos) */
@@ -57,5 +59,6 @@ export interface ProjetoDetalhado {
   id_campus: number;
   data_criacao?: string;
   data_atualizacao?: string;
-  status?: string; // ou StatusProjeto se os valores do back forem os mesmos
+  status?: string;
+  tipo_bolsa?: string | null;
 }
