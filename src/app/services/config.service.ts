@@ -49,4 +49,16 @@ export class ConfigService {
       nova_senha: novaSenha,
     });
   }
+
+  resetPasswordDirect(body: {
+    perfil: 'aluno' | 'orientador' | 'secretaria';
+    email: string;
+    cpf: string;
+    nova_senha: string;
+  }) {
+    return this.http.post<{ message: string }>(
+      '/api/reset-password-direct',
+      body
+    );
+  }
 }

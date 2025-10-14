@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfigService } from '@services/config.service';
 import { MatTabsModule } from '@angular/material/tabs';
+import { LoginService } from '@services/login.service';
 
 @Component({
   selector: 'app-configuracoes',
@@ -28,6 +29,11 @@ export class ConfiguracoesComponent implements OnInit {
   emailReset = '';
   mensagemReset = '';
 
+  perfilReset: 'aluno' | 'orientador' | 'secretaria' = 'aluno';
+  cpfReset = '';
+  novaSenhaReset = '';
+  confirmaSenhaReset = '';
+
   constructor(private configService: ConfigService) {}
 
   ngOnInit(): void {
@@ -38,20 +44,26 @@ export class ConfiguracoesComponent implements OnInit {
 
   // ---- Campus ----
   carregarCampus() {
-    this.configService.listarCampus().subscribe((res) => (this.campus = res.campus));
+    this.configService
+      .listarCampus()
+      .subscribe((res) => (this.campus = res.campus));
   }
 
   cadastrarCampus() {
     if (!this.novoCampus.trim()) return;
-    this.configService.criarCampus({ campus: this.novoCampus }).subscribe(() => {
-      this.novoCampus = '';
-      this.carregarCampus();
-    });
+    this.configService
+      .criarCampus({ campus: this.novoCampus })
+      .subscribe(() => {
+        this.novoCampus = '';
+        this.carregarCampus();
+      });
   }
 
   // ---- Cursos ----
   carregarCursos() {
-    this.configService.listarCursos().subscribe((res) => (this.cursos = res.cursos));
+    this.configService
+      .listarCursos()
+      .subscribe((res) => (this.cursos = res.cursos));
   }
 
   cadastrarCurso() {
@@ -64,7 +76,9 @@ export class ConfiguracoesComponent implements OnInit {
 
   // ---- Bolsas ----
   carregarBolsas() {
-    this.configService.listarBolsas().subscribe((res) => (this.bolsas = res.bolsas));
+    this.configService
+      .listarBolsas()
+      .subscribe((res) => (this.bolsas = res.bolsas));
   }
 
   cadastrarBolsa() {
@@ -82,5 +96,34 @@ export class ConfiguracoesComponent implements OnInit {
       this.mensagemReset = res.message;
       this.emailReset = '';
     });
+  }
+
+  resetarSenhaDireto() {
+    this.mensagemReset = '';
+    if (
+      !this.emailReset.trim() ||
+      !this.cpfReset.trim() ||
+      !this.novaSenhaReset
+    )
+      return;
+    if (this.novaSenhaReset !== this.confirmaSenhaReset) {
+      this.mensagemReset = 'As senhas não conferem.';
+      return;
+    }
+    this.configService
+      .resetPasswordDirect({
+        perfil: this.perfilReset,
+        email: this.emailReset.trim(),
+        cpf: this.cpfReset.replace(/\D/g, ''),
+        nova_senha: this.novaSenhaReset,
+      })
+      .subscribe((res) => {
+        this.mensagemReset = res.message || 'Senha redefinida.';
+        this.emailReset =
+          this.cpfReset =
+          this.novaSenhaReset =
+          this.confirmaSenhaReset =
+            '';
+      });
   }
 }

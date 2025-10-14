@@ -72,8 +72,14 @@
     <!-- Aba Reset de Senha -->
     <mat-tab label="Reset de Senha">
       <div class="form-section">
-        <h3>Redefinir Senha</h3>
-        <form (ngSubmit)="resetarSenha()">
+        <h3>Redefinir Senha (direto)</h3>
+        <form (ngSubmit)="resetarSenhaDireto()">
+          <select [(ngModel)]="perfilReset" name="perfilReset" required>
+            <option value="aluno">Aluno</option>
+            <option value="orientador">Orientador</option>
+            <option value="secretaria">Secretaria</option>
+          </select>
+
           <input
             type="email"
             [(ngModel)]="emailReset"
@@ -81,7 +87,31 @@
             placeholder="E-mail do usuário"
             required
           />
-          <button type="submit">Enviar link de redefinição</button>
+          <input
+            type="text"
+            [(ngModel)]="cpfReset"
+            name="cpfReset"
+            placeholder="CPF do usuário"
+            required
+          />
+          <input
+            type="password"
+            [(ngModel)]="novaSenhaReset"
+            name="novaSenhaReset"
+            placeholder="Nova senha"
+            required
+            minlength="6"
+          />
+          <input
+            type="password"
+            [(ngModel)]="confirmaSenhaReset"
+            name="confirmaSenhaReset"
+            placeholder="Confirmar senha"
+            required
+            minlength="6"
+          />
+
+          <button type="submit">Redefinir</button>
         </form>
         <p *ngIf="mensagemReset">{{ mensagemReset }}</p>
       </div>

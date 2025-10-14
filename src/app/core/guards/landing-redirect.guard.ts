@@ -7,7 +7,6 @@ export class LandingRedirectGuard implements CanActivate {
   constructor(private auth: AuthService, private router: Router) {}
 
   canActivate(): true | UrlTree {
-    // Se não estiver logado (sem role), libera a Home
     const role = this.auth.getRole?.();
     if (!role) return true;
 

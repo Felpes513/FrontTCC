@@ -1,4 +1,3 @@
-// src/app/core/interceptor/auth.interceptor.ts
 import { inject } from '@angular/core';
 import {
   HttpClient,
@@ -26,7 +25,6 @@ export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<any>,
   next: HttpHandlerFn
 ) => {
-  // HttpClient que bypassa interceptors (para o refresh)
   const backend = inject(HttpBackend);
   const rawHttp = new HttpClient(backend);
 
@@ -35,8 +33,11 @@ export const authInterceptor: HttpInterceptorFn = (
   const isAuthEndpoint =
     path.startsWith('/api/login') ||
     path.startsWith('/api/login-') ||
-    path.startsWith('/api/secretarias/login') || // ← add
+    path.startsWith('/api/secretarias/login') ||
+    path.startsWith('/api/forgot-password') ||
+    path.startsWith('/api/reset-password') ||
     path === REFRESH_URL;
+
   const access = localStorage.getItem('access_token');
 
   if (access && isApi && !isAuthEndpoint) {
@@ -50,7 +51,6 @@ export const authInterceptor: HttpInterceptorFn = (
 
   return next(authReq).pipe(
     catchError((err: HttpErrorResponse) => {
-      // não tenta refresh se o 401 veio de login/refresh
       if (err.status !== 401 || isAuthEndpoint) {
         return throwError(() => err);
       }
