@@ -411,6 +411,36 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
+  enviarProjetoParaAvaliadores(
+    idProjeto: number,
+    destinatarios: string[],
+    mensagem?: string,
+    assunto?: string
+  ): Observable<{ mensagem: string }> {
+    const body = { destinatarios, mensagem, assunto };
+    return this.http
+      .post<{ mensagem: string }>(
+        `${this.apiUrlProjetos}${idProjeto}/enviar`,
+        body
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  listarProjetosComPdf(): Observable<
+    Array<{ id: number; titulo: string; has_pdf: boolean }>
+  > {
+    return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
+      map((res) =>
+        (res.projetos || []).map((p) => ({
+          id: p.id_projeto,
+          titulo: p.titulo_projeto || p.nome || 'Projeto',
+          has_pdf: !!p.has_pdf,
+        }))
+      ),
+      catchError(this.handleError)
+    );
+  }
+
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     console.error('❌ Erro HTTP:', error);
 

@@ -107,14 +107,13 @@
         <option value="CNPq">CNPq</option>
         <option value="Outra">Outra</option>
       </select>
-
       <!-- ============================== -->
       <!-- Uploads dentro do formulário   -->
       <!-- ============================== -->
-      <div class="upload-section" *ngIf="modoEdicao && !isOrientadorMode">
-        <h3><i class="fas fa-file-upload"></i> Enviar documentos do projeto</h3>
+      <div class="upload-section" *ngIf="modoEdicao">
+        <h3><i class="fas fa-file-upload"></i> Documentos do projeto</h3>
 
-        <!-- DOCX -->
+        <!-- DOCX (Orientador e Secretaria podem enviar) -->
         <div class="upload-row">
           <label for="docxFile"
             ><i class="fas fa-file-word"></i> Projeto (.docx)</label
@@ -152,7 +151,7 @@
           >
         </div>
 
-        <!-- PDF -->
+        <!-- PDF (somente Secretaria envia; todos podem baixar) -->
         <div class="upload-row">
           <label for="pdfFile"
             ><i class="fas fa-file-pdf"></i> Projeto (.pdf)</label
@@ -164,16 +163,17 @@
               accept=".pdf"
               (change)="onFileSelected($event, 'pdf')"
               aria-label="Selecionar arquivo PDF"
+              [disabled]="isOrientadorMode"
             />
             <div class="upload-buttons">
               <button
                 type="button"
                 class="btn-upload"
                 (click)="enviarArquivo('pdf')"
-                [disabled]="!arquivoPdf"
+                [disabled]="isOrientadorMode || !arquivoPdf"
                 title="Enviar PDF"
               >
-                <i class="fas fa-upload"></i> Salvar
+                <i class="fas fa-upload"></i> Upload
               </button>
               <button
                 type="button"
@@ -185,8 +185,11 @@
               </button>
             </div>
           </div>
-          <small class="hint" *ngIf="!arquivoPdf"
+          <small class="hint" *ngIf="!arquivoPdf && !isOrientadorMode"
             >Selecione um arquivo .pdf para habilitar o upload.</small
+          >
+          <small class="hint" *ngIf="isOrientadorMode"
+            >Upload de PDF é realizado pela Secretaria.</small
           >
         </div>
       </div>

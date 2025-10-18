@@ -2,8 +2,9 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjetoService } from '@services/projeto.service';
-import { ProjetoBasico, AvaliacaoEnvio } from '@interfaces/avaliacao';
 import { AvaliadorExterno } from '@interfaces/avaliador_externo';
+
+type ProjetoMin = { id: number; titulo: string; has_pdf: boolean };
 
 @Component({
   selector: 'app-enviar-avaliacoes-modal',
@@ -20,19 +21,24 @@ export class EnviarAvaliacoesModalComponent implements OnInit {
   erro: string | null = null;
   sucesso: string | null = null;
 
-  projetos: ProjetoBasico[] = [];
-  projetoSelecionado: string = ''; // '' → todos
+  projetos: ProjetoMin[] = [];
+  projetoSelecionadoId: number | null = null;
 
-  // multi-select de avaliadores quando "projeto único"
-  avaliadoresSelecionados: number[] = [];
+  // seleção por e-mail (1..5)
+  emailsSelecionados = new Set<string>();
+
+  // texto opcional
+  assunto = '';
+  mensagem = '';
 
   constructor(private projService: ProjetoService) {}
 
   ngOnInit(): void {
     this.carregando = true;
-    this.projService.listarProjetosParaAvaliacao().subscribe({
+    this.projService.listarProjetosComPdf().subscribe({
       next: (rows) => {
-        this.projetos = rows || [];
+        // mostra só os que já têm PDF
+        this.projetos = (rows || []).filter((p) => p.has_pdf);
         this.carregando = false;
       },
       error: (e) => {
@@ -46,65 +52,58 @@ export class EnviarAvaliacoesModalComponent implements OnInit {
     this.closed.emit(ok);
   }
 
-  toggleAvaliador(id: number, checked: boolean) {
-    if (checked) {
-      if (!this.avaliadoresSelecionados.includes(id))
-        this.avaliadoresSelecionados.push(id);
-    } else {
-      this.avaliadoresSelecionados = this.avaliadoresSelecionados.filter(
-        (x) => x !== id
-      );
-    }
+  toggleEmail(email: string, checked: boolean) {
+    if (checked) this.emailsSelecionados.add(email);
+    else this.emailsSelecionados.delete(email);
   }
 
-  onToggle(ev: Event, id: number) {
+  onToggle(ev: Event, email: string) {
     const checked = (ev.target as HTMLInputElement)?.checked ?? false;
-    this.toggleAvaliador(id, checked);
+    this.toggleEmail(email, checked);
   }
 
   get podeEnviar(): boolean {
-    if (!this.projetos.length) return false;
-
-    if (!this.projetoSelecionado) return true;
-
-    return this.avaliadoresSelecionados.length >= 2;
+    return (
+      !!this.projetoSelecionadoId &&
+      this.emailsSelecionados.size >= 1 &&
+      this.emailsSelecionados.size <= 5 &&
+      !this.carregando
+    );
   }
 
   enviar() {
     this.erro = null;
     this.sucesso = null;
 
-    const envios: AvaliacaoEnvio[] = [];
-
-    if (!this.projetoSelecionado) {
-      if (this.avaliadores.length < 2) {
-        this.erro = 'É necessário ao menos dois avaliadores cadastrados.';
-        return;
-      }
-      let idx = 0;
-      for (const p of this.projetos) {
-        const a1 = this.avaliadores[idx % this.avaliadores.length].id!;
-        const a2 = this.avaliadores[(idx + 1) % this.avaliadores.length].id!;
-        envios.push({ projetoId: p.id, avaliadorIds: [a1, a2] });
-        idx += 2;
-      }
-    } else {
-      const projetoId = Number(this.projetoSelecionado);
-      const ids = this.avaliadoresSelecionados.slice(0, 2);
-      envios.push({ projetoId, avaliadorIds: ids });
+    if (!this.projetoSelecionadoId) {
+      this.erro = 'Selecione um projeto com PDF.';
+      return;
+    }
+    const destinatarios = Array.from(this.emailsSelecionados);
+    if (destinatarios.length < 1 || destinatarios.length > 5) {
+      this.erro = 'Escolha entre 1 e 5 avaliadores.';
+      return;
     }
 
     this.carregando = true;
-    this.projService.enviarConvitesDeAvaliacao({ envios }).subscribe({
-      next: (res) => {
-        this.carregando = false;
-        this.sucesso = res?.mensagem || 'Convites enviados.';
-        setTimeout(() => this.fechar(true), 1200);
-      },
-      error: (e) => {
-        this.carregando = false;
-        this.erro = e?.error?.detail || 'Falha ao enviar convites.';
-      },
-    });
+    this.projService
+      .enviarProjetoParaAvaliadores(
+        this.projetoSelecionadoId,
+        destinatarios,
+        this.mensagem?.trim() || undefined,
+        this.assunto?.trim() || undefined
+      )
+      .subscribe({
+        next: (res) => {
+          this.carregando = false;
+          this.sucesso = res?.mensagem || 'Projeto enviado aos avaliadores.';
+          setTimeout(() => this.fechar(true), 1200);
+        },
+        error: (e) => {
+          this.carregando = false;
+          this.erro =
+            e?.message || e?.error?.detail || 'Falha ao enviar e-mail.';
+        },
+      });
   }
 }
