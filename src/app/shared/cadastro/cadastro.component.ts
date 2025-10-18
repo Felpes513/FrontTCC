@@ -46,6 +46,7 @@ export class RegisterComponent implements OnInit {
     confirmar: '',
     idCurso: '' as any,
     idCampus: '' as any,
+    possuiTrabalhoRemunerado: false,
   };
   showPassAlu = false;
   acceptTermsAlu = false;
@@ -86,9 +87,13 @@ export class RegisterComponent implements OnInit {
 
   /** Aplica máscara no CPF quando o campo perde o foco */
   applyCpfMask(kind: 'ori' | 'alu') {
-    const raw = (kind === 'ori' ? this.ori.cpf : this.alu.cpf).replace(/\D/g, '').slice(0, 11);
+    const raw = (kind === 'ori' ? this.ori.cpf : this.alu.cpf)
+      .replace(/\D/g, '')
+      .slice(0, 11);
     const masked =
-      raw.length === 11 ? raw.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : raw;
+      raw.length === 11
+        ? raw.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+        : raw;
     if (kind === 'ori') this.ori.cpf = masked;
     else this.alu.cpf = masked;
   }
@@ -129,7 +134,11 @@ export class RegisterComponent implements OnInit {
 
     const cpfDigits = this.ori.cpf.replace(/\D/g, '');
 
-    if (!this.ori.nomeCompleto.trim() || cpfDigits.length !== 11 || !this.isValidEmail(this.ori.email)) {
+    if (
+      !this.ori.nomeCompleto.trim() ||
+      cpfDigits.length !== 11 ||
+      !this.isValidEmail(this.ori.email)
+    ) {
       this.erro = 'Preencha os campos corretamente.';
       return;
     }
@@ -155,7 +164,10 @@ export class RegisterComponent implements OnInit {
           this.isLoading = false;
           this.sucesso = 'Cadastro realizado com sucesso! Redirecionando...';
           setTimeout(
-            () => this.router.navigate(['/login'], { queryParams: { perfil: 'orientador' } }),
+            () =>
+              this.router.navigate(['/login'], {
+                queryParams: { perfil: 'orientador' },
+              }),
             1500
           );
         },
@@ -190,13 +202,17 @@ export class RegisterComponent implements OnInit {
         senha: this.alu.senha,
         idCurso: Number(this.alu.idCurso),
         pdf: this.pdfFile,
+        possuiTrabalhoRemunerado: this.alu.possuiTrabalhoRemunerado,
       })
       .subscribe({
         next: () => {
           this.isLoading = false;
           this.sucesso = 'Cadastro realizado com sucesso! Redirecionando...';
           setTimeout(
-            () => this.router.navigate(['/login'], { queryParams: { perfil: 'aluno' } }),
+            () =>
+              this.router.navigate(['/login'], {
+                queryParams: { perfil: 'aluno' },
+              }),
             1500
           );
         },

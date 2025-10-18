@@ -1,4 +1,3 @@
-/** Representa um aluno relacionado ao projeto */
 export interface Aluno {
   id?: number;
   nome: string;
@@ -7,4 +6,5 @@ export interface Aluno {
   curso?: string;
   telefone?: string;
   documentoNotasUrl?: string;
+  possuiTrabalhoRemunerado?: boolean;
 }

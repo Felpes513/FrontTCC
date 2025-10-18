@@ -5,6 +5,7 @@ export interface RegisterAlunoData {
   senha: string;
   idCurso: number;
   pdf: File;
+  possuiTrabalhoRemunerado?: boolean;
 }
 
 export interface RegisterOrientadorData {

@@ -104,154 +104,165 @@
       <div class="msg sucesso" *ngIf="sucesso">{{ sucesso }}</div>
     </form>
 
-    <!-- Form ALUNO (multi-step) -->
-    <form
-      *ngIf="perfilSelecionado === 'aluno'"
-      (ngSubmit)="onSubmitAluno()"
-      #formAlu="ngForm"
-      class="form"
-    >
-      <!-- ETAPA 1 -->
-      <ng-container *ngIf="step === 1">
-        <div class="form-row">
+    <!-- ETAPA 1 -->
+    <ng-container *ngIf="step === 1">
+      <div class="form-row">
+        <input
+          type="text"
+          name="alu_nome"
+          [(ngModel)]="alu.nomeCompleto"
+          placeholder="Nome completo"
+          required
+        />
+      </div>
+
+      <div class="form-row">
+        <input
+          type="text"
+          name="alu_cpf"
+          [(ngModel)]="alu.cpf"
+          (blur)="applyCpfMask('alu')"
+          placeholder="CPF"
+          required
+        />
+      </div>
+
+      <div class="form-row">
+        <input
+          type="email"
+          name="alu_email"
+          [(ngModel)]="alu.email"
+          placeholder="E-mail"
+          required
+        />
+      </div>
+
+      <div class="form-row">
+        <input
+          [type]="showPassAlu ? 'text' : 'password'"
+          name="alu_senha"
+          [(ngModel)]="alu.senha"
+          placeholder="Senha"
+          minlength="6"
+          required
+        />
+      </div>
+
+      <div class="form-row">
+        <input
+          [type]="showPassAlu ? 'text' : 'password'"
+          name="alu_confirma"
+          [(ngModel)]="alu.confirmar"
+          placeholder="Confirmar senha"
+          required
+        />
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="cta"
+          (click)="goStep(2)"
+          [disabled]="!validStep1()"
+        >
+          Próximo
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- ETAPA 2 -->
+    <ng-container *ngIf="step === 2">
+      <div class="form-row">
+        <select name="alu_curso" [(ngModel)]="alu.idCurso" required>
+          <option value="" disabled selected>Selecione o curso</option>
+          <option *ngFor="let c of cursos" [value]="c.id_curso">
+            {{ c.nome }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <select name="alu_campus" [(ngModel)]="alu.idCampus">
+          <option value="" disabled selected>Selecione o campus</option>
+          <option *ngFor="let c of campus" [value]="c.id_campus">
+            {{ c.campus }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="ghost" (click)="goStep(1)">Voltar</button>
+        <button
+          type="button"
+          class="cta"
+          (click)="goStep(3)"
+          [disabled]="!alu.idCurso"
+        >
+          Próximo
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- ETAPA 3 -->
+    <ng-container *ngIf="step === 3">
+      <div class="upload">
+        <label class="file">
           <input
-            type="text"
-            name="alu_nome"
-            [(ngModel)]="alu.nomeCompleto"
-            placeholder="Nome completo"
+            type="file"
+            (change)="onPdfChange($event)"
+            accept="application/pdf"
+          />
+          <span>{{ pdfName || "Enviar notas em PDF" }}</span>
+        </label>
+        <small>Somente .pdf</small>
+      </div>
+
+      <!-- NOVO: possui trabalho remunerado -->
+      <div class="form-row inline">
+        <label class="radio">
+          <input
+            type="radio"
+            name="alu_remunerado"
+            [(ngModel)]="alu.possuiTrabalhoRemunerado"
+            [value]="true"
             required
           />
-        </div>
-
-        <div class="form-row">
-          <input
-            type="text"
-            name="alu_cpf"
-            [(ngModel)]="alu.cpf"
-            (blur)="applyCpfMask('alu')"
-            placeholder="CPF"
-            required
-          />
-        </div>
-
-        <div class="form-row">
-          <input
-            type="email"
-            name="alu_email"
-            [(ngModel)]="alu.email"
-            placeholder="E-mail"
-            required
-          />
-        </div>
-
-        <div class="form-row">
-          <input
-            [type]="showPassAlu ? 'text' : 'password'"
-            name="alu_senha"
-            [(ngModel)]="alu.senha"
-            placeholder="Senha"
-            minlength="6"
-            required
-          />
-        </div>
-
-        <div class="form-row">
-          <input
-            [type]="showPassAlu ? 'text' : 'password'"
-            name="alu_confirma"
-            [(ngModel)]="alu.confirmar"
-            placeholder="Confirmar senha"
-            required
-          />
-        </div>
-
-        <div class="form-actions">
-          <button
-            type="button"
-            class="cta"
-            (click)="goStep(2)"
-            [disabled]="!validStep1()"
-          >
-            Próximo
-          </button>
-        </div>
-      </ng-container>
-
-      <!-- ETAPA 2 -->
-      <ng-container *ngIf="step === 2">
-        <div class="form-row">
-          <select name="alu_curso" [(ngModel)]="alu.idCurso" required>
-            <option value="" disabled selected>Selecione o curso</option>
-            <option *ngFor="let c of cursos" [value]="c.id_curso">
-              {{ c.nome }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <select name="alu_campus" [(ngModel)]="alu.idCampus">
-            <option value="" disabled selected>Selecione o campus</option>
-            <option *ngFor="let c of campus" [value]="c.id_campus">
-              {{ c.campus }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="ghost" (click)="goStep(1)">
-            Voltar
-          </button>
-          <button
-            type="button"
-            class="cta"
-            (click)="goStep(3)"
-            [disabled]="!alu.idCurso"
-          >
-            Próximo
-          </button>
-        </div>
-      </ng-container>
-
-      <!-- ETAPA 3 -->
-      <ng-container *ngIf="step === 3">
-        <div class="upload">
-          <label class="file">
-            <input
-              type="file"
-              (change)="onPdfChange($event)"
-              accept="application/pdf"
-            />
-            <span>{{ pdfName || "Enviar notas em PDF" }}</span>
-          </label>
-          <small>Somente .pdf</small>
-        </div>
-
-        <label class="terms">
-          <input
-            type="checkbox"
-            [(ngModel)]="acceptTermsAlu"
-            name="termsAlu"
-            required
-          />
-          <span>Eu concordo com os termos de serviço</span>
+          <span>Possui trabalho remunerado</span>
         </label>
 
-        <div class="form-actions">
-          <button type="button" class="ghost" (click)="goStep(2)">
-            Voltar
-          </button>
-          <button
-            type="submit"
-            class="cta"
-            [disabled]="isLoading || !pdfFile || !acceptTermsAlu"
-          >
-            Finalizar
-          </button>
-        </div>
-      </ng-container>
+        <label class="radio">
+          <input
+            type="radio"
+            name="alu_remunerado"
+            [(ngModel)]="alu.possuiTrabalhoRemunerado"
+            [value]="false"
+            required
+          />
+          <span>Não possui</span>
+        </label>
+      </div>
+      <!-- /NOVO -->
 
-      <div class="msg erro" *ngIf="erro">{{ erro }}</div>
-      <div class="msg sucesso" *ngIf="sucesso">{{ sucesso }}</div>
-    </form>
+      <label class="terms">
+        <input
+          type="checkbox"
+          [(ngModel)]="acceptTermsAlu"
+          name="termsAlu"
+          required
+        />
+        <span>Eu concordo com os termos de serviço</span>
+      </label>
+
+      <div class="form-actions">
+        <button type="button" class="ghost" (click)="goStep(2)">Voltar</button>
+        <button
+          type="submit"
+          class="cta"
+          [disabled]="isLoading || !pdfFile || !acceptTermsAlu"
+        >
+          Finalizar
+        </button>
+      </div>
+    </ng-container>
   </section>
 </div>

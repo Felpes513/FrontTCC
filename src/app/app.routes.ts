@@ -104,6 +104,13 @@ export const routes: Routes = [
             (m) => m.RelatoriosComponent
           ),
       },
+      {
+        path: 'cadastros',
+        loadComponent: () =>
+          import('./features/secretaria/cadastros/cadastros.component').then(
+            (m) => m.CadastrosComponent
+          ),
+      },
     ],
   },
 
