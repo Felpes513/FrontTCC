@@ -24,8 +24,7 @@ export class RegisterService {
     fd.append('cpf', this.cleanCPF(data.cpf));
     fd.append('id_curso', String(data.idCurso));
     fd.append('senha', data.senha);
-    const remunerado = data.possuiTrabalhoRemunerado ?? false;
-    fd.append('possui_trabalho_remunerado', String(remunerado));
+    fd.append('possui_trabalho_remunerado',String(data.possuiTrabalhoRemunerado));
     fd.append('pdf', data.pdf, data.pdf.name);
     return this.http.post<RegisterResponse>(`${this.baseUrl}/alunos/`, fd);
   }

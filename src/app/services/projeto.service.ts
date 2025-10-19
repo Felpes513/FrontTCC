@@ -466,4 +466,10 @@ export class ProjetoService {
       error: error.error,
     }));
   };
+
+  listarOrientadoresAprovados(): Observable<Orientador[]> {
+    return this.http.get<Orientador[]>(
+      `${this.apiBase}/orientadores/aprovados`
+    );
+  }
 }

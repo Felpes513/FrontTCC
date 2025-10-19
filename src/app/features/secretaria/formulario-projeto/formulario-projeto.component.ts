@@ -88,7 +88,9 @@ export class FormularioProjetoComponent implements OnInit {
       } else {
         console.error('ID do projeto inválido:', id);
         this.router.navigate([
-          this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos',
+          this.isOrientadorMode
+            ? '/orientador/projetos'
+            : '/secretaria/projetos',
         ]);
       }
     }
@@ -176,15 +178,13 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   private carregarOrientadores(): void {
-    this.projetoService.listarOrientadores().subscribe({
-      next: (orientadores: Orientador[]) => {
-        this.orientadores = Array.isArray(orientadores) ? orientadores : [];
+    this.projetoService.listarOrientadoresAprovados().subscribe({
+      next: (rows) => {
+        this.orientadores = rows ?? [];
         this.orientadoresFiltrados = [...this.orientadores];
       },
-      error: (error) => {
-        console.error('Erro ao carregar orientadores:', error);
-        this.orientadores = [];
-        this.orientadoresFiltrados = [];
+      error: () => {
+        this.orientadores = this.orientadoresFiltrados = [];
       },
     });
   }
@@ -278,7 +278,10 @@ export class FormularioProjetoComponent implements OnInit {
       alert('Por favor, preencha o resumo do projeto');
       return false;
     }
-    if (!this.projeto.orientador_nome?.trim() || !this.orientadorSelecionadoId) {
+    if (
+      !this.projeto.orientador_nome?.trim() ||
+      !this.orientadorSelecionadoId
+    ) {
       alert('Por favor, selecione um orientador');
       return false;
     }
@@ -295,7 +298,9 @@ export class FormularioProjetoComponent implements OnInit {
     this.projetoService.aprovarAluno(alunoId).subscribe({
       next: () => {
         alert(`Aluno aprovado com sucesso!`);
-        this.alunosInscritos = this.alunosInscritos.filter((a) => a.id !== alunoId);
+        this.alunosInscritos = this.alunosInscritos.filter(
+          (a) => a.id !== alunoId
+        );
       },
       error: () => alert('Erro ao aprovar aluno.'),
     });
@@ -308,7 +313,9 @@ export class FormularioProjetoComponent implements OnInit {
     this.projetoService.excluirAluno(alunoId).subscribe({
       next: () => {
         alert(`Aluno excluído com sucesso!`);
-        this.alunosInscritos = this.alunosInscritos.filter((a) => a.id !== alunoId);
+        this.alunosInscritos = this.alunosInscritos.filter(
+          (a) => a.id !== alunoId
+        );
       },
       error: () => alert('Erro ao excluir aluno.'),
     });
@@ -389,10 +396,12 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   enviarArquivo(tipo: 'docx' | 'pdf') {
-    if (!this.projetoId) return alert('Salve o projeto antes de enviar arquivos.');
+    if (!this.projetoId)
+      return alert('Salve o projeto antes de enviar arquivos.');
 
     const arquivo = tipo === 'docx' ? this.arquivoDocx : this.arquivoPdf;
-    if (!arquivo) return alert(`Selecione um arquivo ${tipo.toUpperCase()} primeiro.`);
+    if (!arquivo)
+      return alert(`Selecione um arquivo ${tipo.toUpperCase()} primeiro.`);
 
     const metodo =
       tipo === 'docx'
@@ -401,7 +410,8 @@ export class FormularioProjetoComponent implements OnInit {
 
     metodo.subscribe({
       next: () => alert(`${tipo.toUpperCase()} enviado com sucesso!`),
-      error: (err) => alert(`Erro ao enviar ${tipo.toUpperCase()}: ${err.message}`),
+      error: (err) =>
+        alert(`Erro ao enviar ${tipo.toUpperCase()}: ${err.message}`),
     });
   }
 
@@ -421,7 +431,8 @@ export class FormularioProjetoComponent implements OnInit {
         a.click();
         window.URL.revokeObjectURL(url);
       },
-      error: (err) => alert(`Erro ao baixar ${tipo.toUpperCase()}: ${err.message}`),
+      error: (err) =>
+        alert(`Erro ao baixar ${tipo.toUpperCase()}: ${err.message}`),
     });
   }
 }
