@@ -1,17 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+
 import {
   RegisterResponse,
   RegisterAlunoData,
   RegisterOrientadorData,
-  RegisterSecretariaData, // se não usar, pode remover
+  RegisterSecretariaData,
 } from '@interfaces/registros';
 import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class RegisterService {
-  private baseUrl = '/api';
+  private baseUrl = environment.apiUrl; // <— trocado
 
   constructor(private http: HttpClient) {}
 
@@ -24,7 +26,7 @@ export class RegisterService {
     fd.append('cpf', this.cleanCPF(data.cpf));
     fd.append('id_curso', String(data.idCurso));
     fd.append('senha', data.senha);
-    fd.append('possui_trabalho_remunerado',String(data.possuiTrabalhoRemunerado));
+    fd.append('possui_trabalho_remunerado', String(data.possuiTrabalhoRemunerado));
     fd.append('pdf', data.pdf, data.pdf.name);
     return this.http.post<RegisterResponse>(`${this.baseUrl}/alunos/`, fd);
   }
@@ -44,14 +46,12 @@ export class RegisterService {
     );
   }
 
-  // ---- Alunos (Secretaria) ----
   listarAlunos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/alunos/`);
   }
   aprovarAluno(id: number) {
     return this.http.put(`${this.baseUrl}/alunos/${id}/aprovar`, {});
   }
-  // estas rotas dependem do back; mantenho a assinatura
   reprovarAluno(id: number) {
     return this.http.put(`${this.baseUrl}/alunos/${id}/reprovar`, {});
   }
@@ -61,7 +61,6 @@ export class RegisterService {
       .pipe(map((r) => r.alunos || []));
   }
 
-  // ---- Orientadores (Secretaria) ----
   listarOrientadores(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/orientadores/`);
   }
@@ -79,7 +78,6 @@ export class RegisterService {
       .pipe(map((r) => r.orientadores || []));
   }
 
-  // === Utilidades (se estiver usando no cadastro) ===
   checkEmailExists(
     email: string,
     perfil: 'orientador' | 'secretaria' | 'aluno'

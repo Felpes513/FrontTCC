@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { tap, map, catchError, switchMap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+
 import {
   ProjetoRequest,
   Projeto,
@@ -24,7 +26,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class ProjetoService {
-  private readonly apiBase = '/api';
+  private readonly apiBase = environment.apiUrl;
   private readonly apiUrlProjetos = `${this.apiBase}/projetos/`;
   private readonly apiUrlOrientadores = `${this.apiBase}/orientadores`;
   private readonly apiUrlCampus = `${this.apiBase}/campus`;
@@ -79,7 +81,6 @@ export class ProjetoService {
   }
 
   listarProjetos(): Observable<Projeto[]> {
-    // não precisa colocar outra barra
     return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
       map((res) => (res.projetos || []).map((p) => this.normalizarProjeto(p))),
       catchError(this.handleError)
@@ -175,7 +176,6 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  // src/app/services/projeto.service.ts
   listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
     return this.http
       .get<{ id_projeto: number; alunos: any[] }>(
@@ -184,7 +184,6 @@ export class ProjetoService {
       .pipe(
         map((res) => {
           const alunos = res?.alunos ?? [];
-          // adaptamos para o formato usado nos componentes
           return alunos.map((a: any) => ({
             id_aluno: a.id ?? a.id_aluno ?? 0,
             aluno: {
@@ -193,7 +192,6 @@ export class ProjetoService {
               email: a.email ?? '—',
               matricula: a.matricula ?? a.cpf ?? '—',
             },
-            // como a query do back já filtra aprovados, marcamos como APROVADO
             status: 'APROVADO',
             nome_aluno: a.nome_completo ?? a.nome ?? '—',
             email: a.email ?? '—',
@@ -322,7 +320,6 @@ export class ProjetoService {
     };
   }
 
-  // Upload de projetos
   uploadDocx(idProjeto: number, arquivo: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', arquivo);
@@ -371,7 +368,6 @@ export class ProjetoService {
       );
   }
 
-  // src/app/services/projeto.service.ts
   listarNotasDoProjeto(idProjeto: number): Observable<number[]> {
     return this.http
       .get<{ notas: number[] }>(
@@ -382,6 +378,7 @@ export class ProjetoService {
         catchError(() => of([]))
       );
   }
+
   enviarConvitesDeAvaliacao(payload: {
     envios: AvaliacaoEnvio[];
   }): Observable<ConviteAvaliacaoResponse> {
@@ -447,10 +444,8 @@ export class ProjetoService {
     let message = 'Erro inesperado';
 
     if (error.error instanceof ErrorEvent) {
-      // Falha de rede / CORS etc.
       message = `Erro de rede: ${error.error.message}`;
     } else if (error.status === 422 && Array.isArray(error.error?.detail)) {
-      // FastAPI validation error — mostra o que faltou
       message = error.error.detail
         .map((d: any) => `${(d.loc || []).join('.')}: ${d.msg}`)
         .join(' | ');

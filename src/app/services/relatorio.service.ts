@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { environment } from '../../environments/environment';
+
 import { RelatorioMensal, PendenciaMensal, ConfirmarRelatorioMensalDTO } from '@interfaces/relatorio';
 
 @Injectable({ providedIn: 'root' })
 export class RelatorioService {
-  private readonly apiBase = '/api';
+  private readonly apiBase = environment.apiUrl; // <— trocado
   constructor(private http: HttpClient) {}
 
-  // ORIENTADOR
   listarDoMes(mes?: string): Observable<RelatorioMensal[]> {
     const params = mes ? new HttpParams().set('mes', mes) : undefined;
     return this.http.get<any[]>(`${this.apiBase}/me/relatorios-mensais`, { params })
@@ -29,7 +30,7 @@ export class RelatorioService {
       .pipe(map(rows => (rows || []).map(r => ({
         projetoId: r.id_projeto,
         tituloProjeto: r.titulo_projeto,
-        mes: mes || '',            // o back não manda o mês, então completamos
+        mes: mes || '',
       } as PendenciaMensal))));
   }
 
@@ -46,7 +47,6 @@ export class RelatorioService {
     });
   }
 
-  // SECRETARIA
   listarRecebidosSecretaria(mes?: string): Observable<RelatorioMensal[]> {
     const params = mes ? new HttpParams().set('mes', mes) : undefined;
     return this.http.get<any[]>(`${this.apiBase}/relatorios-mensais`, { params })

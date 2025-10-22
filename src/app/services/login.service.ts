@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
+
 import { LoginResponse } from '@interfaces/login';
 import { ResetPasswordDirectBody } from '@interfaces/login';
 
@@ -8,7 +10,7 @@ type Role = 'SECRETARIA' | 'ORIENTADOR' | 'ALUNO';
 
 @Injectable({ providedIn: 'root' })
 export class LoginService {
-  private baseUrl = '/api';
+  private baseUrl = environment.apiUrl; // <— trocado
 
   constructor(private http: HttpClient) {}
 
@@ -40,12 +42,11 @@ export class LoginService {
     return this.http
       .post<LoginResponse>(
         `${this.baseUrl}/secretarias/login`,
-        { email, senha } // ← JSON
+        { email, senha } // JSON
       )
       .pipe(tap((res) => this.persistTokensFromResponse(res)));
   }
 
-  /** Centraliza a persistência e valida campos do backend */
   private persistTokensFromResponse(res: Partial<LoginResponse>) {
     const access = (res as any)?.access_token || (res as any)?.token;
     const refresh = (res as any)?.refresh_token;

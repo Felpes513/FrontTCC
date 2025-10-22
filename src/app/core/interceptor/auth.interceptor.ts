@@ -1,3 +1,4 @@
+// src/app/core/interceptor/auth.interceptor.ts
 import { inject } from '@angular/core';
 import {
   HttpClient,
@@ -8,14 +9,18 @@ import {
   HttpHandlerFn,
 } from '@angular/common/http';
 import { catchError, switchMap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
-const REFRESH_URL = '/api/refresh-token';
+const API_BASE = environment.apiUrl.replace(/\/+$/, ''); // sem barra no fim
+const REFRESH_URL = `${API_BASE}/refresh-token`;
 
 function normalizePath(u: string): string {
   try {
-    return u.startsWith('http')
-      ? new URL(u, window.location.origin).pathname
-      : u;
+    if (u.startsWith('http')) {
+      const parsed = new URL(u, window.location.origin);
+      return parsed.pathname; // '/api/...'
+    }
+    return u;
   } catch {
     return u;
   }
@@ -29,20 +34,25 @@ export const authInterceptor: HttpInterceptorFn = (
   const rawHttp = new HttpClient(backend);
 
   const path = normalizePath(req.url);
-  const isApi = path.startsWith('/api/');
+
+  // É chamada da API se:
+  // 1) URL absoluta inicia com API_BASE, ou
+  // 2) caminho começa com '/api/'
+  const isApi =
+    req.url.startsWith(API_BASE) ||
+    path.startsWith('/api/');
+
+  // Endpoints que NÃO recebem Authorization
   const isAuthEndpoint =
     path.startsWith('/api/login') ||
     path.startsWith('/api/login-') ||
     path.startsWith('/api/secretarias/login') ||
     path.startsWith('/api/forgot-password') ||
     path.startsWith('/api/reset-password') ||
-    path === REFRESH_URL;
+    req.url === REFRESH_URL ||
+    path === '/api/refresh-token';
 
   const access = localStorage.getItem('access_token');
-
-  if (access && isApi && !isAuthEndpoint) {
-    console.debug('[AUTH-INT] Authorization anexado em', path);
-  }
 
   const authReq =
     access && isApi && !isAuthEndpoint
@@ -57,32 +67,26 @@ export const authInterceptor: HttpInterceptorFn = (
 
       const refresh = localStorage.getItem('refresh_token');
       if (!refresh) {
-        console.debug('[AUTH-INT] 401 sem refresh_token → abort');
         return throwError(() => err);
       }
 
-      console.debug('[AUTH-INT] 401 em', path, '→ tentando refresh');
-
-      // refresh SEM Authorization
+      // Tenta refresh SEM Authorization
       return rawHttp
-        .post<{ access_token: string; token_type: string }>(REFRESH_URL, {
+        .post<{ access_token: string; token_type?: string }>(REFRESH_URL, {
           refresh_token: refresh,
         })
         .pipe(
           switchMap((res) => {
-            if (!res?.access_token) {
-              console.debug('[AUTH-INT] refresh sem access_token');
-              throw err;
-            }
-            localStorage.setItem('access_token', res.access_token);
+            const newAccess = res?.access_token;
+            if (!newAccess) throw err;
+            localStorage.setItem('access_token', newAccess);
             const retried = req.clone({
-              setHeaders: { Authorization: `Bearer ${res.access_token}` },
+              setHeaders: { Authorization: `Bearer ${newAccess}` },
             });
-            console.debug('[AUTH-INT] refresh OK, re-tentando', path);
             return next(retried);
           }),
           catchError((refreshErr) => {
-            console.debug('[AUTH-INT] refresh falhou → limpando storage');
+            // limpa sessão
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             localStorage.removeItem('role');
