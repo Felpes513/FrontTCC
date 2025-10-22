@@ -1,3 +1,4 @@
+import { ProjetoCadastro } from './shared/interfaces/projeto';
 import { Routes } from '@angular/router';
 import { orientadorGuard } from '@core/guards/orientador.guard';
 import { alunoGuard } from '@core/guards/aluno.guard';
@@ -108,7 +109,7 @@ export const routes: Routes = [
         path: 'cadastros',
         loadComponent: () =>
           import('./features/secretaria/cadastros/cadastros.component').then(
-            (m) => m.CadastrosComponent
+            (m) => m.CadastrosComponent // <- certo
           ),
       },
     ],

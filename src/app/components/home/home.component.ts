@@ -1,40 +1,44 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { NavbarComponent } from '../navbar/navbar.component';
-import { FooterComponent } from '../footer/footer.component';
 import { register } from 'swiper/element/bundle';
+
+// Registrar Swiper Web Components
+register();
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavbarComponent, FooterComponent],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [CommonModule, RouterModule],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styleUrls: ['./home.component.css'],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class HomeComponent implements OnInit {
-  
-  ngOnInit() {
-    register();
-  }
-
+export class HomeComponent {
   slides = [
     {
-      title: 'Pesquisa & Inovação',
-      content: 'Desenvolva projetos de pesquisa que podem transformar o conhecimento científico'
+      title: 'Pesquisa e Inovação',
+      content:
+        'Desenvolva projetos inovadores que contribuem para o avanço da ciência e tecnologia.',
+      icon: 'fas fa-flask',
     },
     {
       title: 'Orientação Especializada',
-      content: 'Trabalhe com professores experientes em diversas áreas do conhecimento'
+      content:
+        'Conte com professores experientes para guiar sua jornada acadêmica e científica.',
+      icon: 'fas fa-user-friends',
     },
     {
-      title: 'Desenvolvimento Acadêmico',
-      content: 'Prepare-se para a pós-graduação e construa uma carreira sólida na pesquisa'
+      title: 'Bolsas de Estudo',
+      content:
+        'Oportunidades de bolsas para dedicação exclusiva aos seus projetos de pesquisa.',
+      icon: 'fas fa-graduation-cap',
     },
     {
       title: 'Publicações Científicas',
-      content: 'Tenha a oportunidade de publicar seus resultados em revistas acadêmicas'
-    }
+      content:
+        'Publique seus resultados em revistas e eventos científicos de renome nacional e internacional.',
+      icon: 'fas fa-book-open',
+    },
   ];
 }

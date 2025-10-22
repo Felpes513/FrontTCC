@@ -44,9 +44,9 @@
   font-size: 0.9rem;
 }
 
-/* Abas principais (Aprovações / Inadimplentes) */
 .tabs {
   display: flex;
+  align-items: center; /* centraliza verticalmente */
   gap: 8px;
   background: var(--bg-alt);
   border: 1px solid var(--border);
@@ -55,6 +55,20 @@
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
+
+/* A toolbar “encosta” à direita e mantém largura boa */
+.tabs .toolbar {
+  margin-left: auto;
+  min-width: 280px;
+  max-width: 420px;
+  flex: 1 1 320px;
+}
+
+/* Campo de busca preenche a toolbar */
+.tabs .search {
+  width: 100%;
+}
+
 .tab {
   appearance: none;
   border: 1px solid transparent;
@@ -357,4 +371,27 @@
   .table .col-actions {
     text-align: left;
   }
+}
+
+@media (max-width: 800px) {
+  .tabs {
+    flex-wrap: wrap;
+  }
+  .tabs .toolbar {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 720px) {
+  .tabs {
+    gap: 6px;
+  }
+  .tabs .toolbar {
+    flex: 1 1 100%;
+    order: 3;
+  } /* vai pra última linha */
 }

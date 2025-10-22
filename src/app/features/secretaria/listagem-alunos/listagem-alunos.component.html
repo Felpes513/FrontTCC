@@ -12,13 +12,21 @@
   </ng-container>
 
   <ng-template #conteudo>
-    <!-- ======== MODO SECRETARIA (layout antigo) ======== -->
+    <!-- ======== MODO SECRETARIA ======== -->
     <ng-container *ngIf="modo === 'SECRETARIA'">
       <ng-container *ngIf="lista().length; else vazio">
         <ul class="lista" role="list">
           <li class="item" *ngFor="let a of lista()">
             <div class="dados">
-              <strong class="nome" title="{{ a.nome }}">{{ a.nome }}</strong>
+              <strong class="nome" [title]="a.nome">
+                {{ a.nome }}
+                <span
+                  *ngIf="a.possuiTrabalhoRemunerado"
+                  class="badge remunerado"
+                  title="Possui trabalho remunerado"
+                  >💼 Remunerado</span
+                >
+              </strong>
               <div class="mini">
                 <span>RA: {{ a.matricula }}</span>
                 <span class="sep">•</span>
@@ -59,7 +67,16 @@
                 (change)="toggleSelecionado(i, $any($event.target).checked)"
               />
               <div class="dados">
-                <strong class="nome">{{ alunoNome(i) }}</strong>
+                <strong class="nome">
+                  {{ alunoNome(i) }}
+                  <!-- opcional: mostrar selo aqui também -->
+                  <span
+                    *ngIf="i?.possuiTrabalhoRemunerado"
+                    class="badge remunerado"
+                    title="Possui trabalho remunerado"
+                    >💼 Remunerado</span
+                  >
+                </strong>
                 <div class="mini">
                   <span>ID Aluno: {{ alunoId(i) }}</span>
                   <span class="sep">•</span>
@@ -78,9 +95,11 @@
 
       <!-- Ações -->
       <div class="form-actions" style="margin-top: 12px;" *ngIf="!bloqueado">
-        <button type="button"
-                (click)="salvarSelecao()"
-                [disabled]="salvandoSelecao || (limite>0 && selecionados.size>limite)">
+        <button
+          type="button"
+          (click)="salvarSelecao()"
+          [disabled]="salvandoSelecao || (limite>0 && selecionados.size>limite)"
+        >
           {{ salvandoSelecao ? 'Salvando...' : 'Salvar seleção' }}
         </button>
         <span class="ok" *ngIf="sucessoSelecao">{{ sucessoSelecao }}</span>

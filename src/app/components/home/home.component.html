@@ -1,30 +1,65 @@
-<app-navbar></app-navbar>
+<section class="hero">
+  <div class="hero-container">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span>Portal de Iniciação Científica</span>
+      </div>
+      <h1 class="hero-title">
+        Bem-vindo(a) à Plataforma de
+        <span class="highlight">Iniciação Científica</span>
+      </h1>
+      <p class="hero-description">
+        Conectando alunos, professores e pesquisadores em projetos de excelência
+        acadêmica. Faça parte da comunidade científica da USCS.
+      </p>
 
-<section class="home">
-  <div class="home-box">
-    <div class="left">
-      <h2>Bem vindo(a)</h2>
-      <p>à Plataforma de Iniciação Científica</p>
-      <p>Acesse como:</p>
-      <button [routerLink]="['/login']" [queryParams]="{ perfil: 'orientador' }">Professor(a)</button>
-      <button [routerLink]="['/login']" [queryParams]="{ perfil: 'secretaria' }">Funcionário(a)</button>
-      <button [routerLink]="['/login']" [queryParams]="{ perfil: 'aluno' }">Aluno(a)</button>
-
+      <div class="hero-actions">
+        <h3 class="access-title">Acesse como:</h3>
+        <div class="access-buttons">
+          <button
+            class="access-btn professor"
+            [routerLink]="['/login']"
+            [queryParams]="{ perfil: 'orientador' }"
+          >
+            <i class="fas fa-chalkboard-teacher"></i>
+            <span>Professor(a)</span>
+          </button>
+          <button
+            class="access-btn funcionario"
+            [routerLink]="['/login']"
+            [queryParams]="{ perfil: 'secretaria' }"
+          >
+            <i class="fas fa-user-tie"></i>
+            <span>Funcionário(a)</span>
+          </button>
+          <button
+            class="access-btn aluno"
+            [routerLink]="['/login']"
+            [queryParams]="{ perfil: 'aluno' }"
+          >
+            <i class="fas fa-user-graduate"></i>
+            <span>Aluno(a)</span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="swiper-wrapper">
+    <div class="hero-carousel">
       <swiper-container
         slides-per-view="1"
         navigation="true"
         pagination="true"
         loop="true"
-        autoplay='{"delay": 3000}'
+        autoplay-delay="4000"
+        autoplay-disable-on-interaction="false"
         speed="600"
-        space-between="30"
-        class="mySwiper"
+        class="carousel-swiper"
       >
         <swiper-slide *ngFor="let slide of slides">
           <div class="slide-content">
+            <div class="slide-icon">
+              <i [class]="slide.icon"></i>
+            </div>
             <h3>{{ slide.title }}</h3>
             <p>{{ slide.content }}</p>
           </div>
@@ -34,28 +69,68 @@
   </div>
 </section>
 
-<section class="sobre">
-  <h2>Sobre a Iniciação Científica</h2>
-  <div class="cards">
-    <div class="card">
-      <h3>1 - O que é</h3>
-      <p>
-        A Iniciação Científica é uma oportunidade para alunos de graduação desenvolverem pesquisas acadêmicas sob orientação de professores experientes.
+<section class="about" id="como-funciona">
+  <div class="about-container">
+    <div class="section-header">
+      <h2 class="section-title">Sobre a Iniciação Científica</h2>
+      <p class="section-description">
+        Entenda como funciona o programa de iniciação científica da USCS
       </p>
     </div>
-    <div class="card">
-      <h3>2 - Benefícios</h3>
-      <p>
-        Desenvolvimento de habilidades de pesquisa, pensamento crítico, escrita acadêmica e preparação para pós-graduação e mercado de trabalho.
-      </p>
-    </div>
-    <div class="card">
-      <h3>3 - Como participar</h3>
-      <p>
-        Alunos devem escolher uma área de interesse, encontrar um orientador e submeter um projeto através desta plataforma.
-      </p>
+
+    <div class="about-cards">
+      <div class="about-card">
+        <div class="card-icon">
+          <i class="fas fa-lightbulb"></i>
+        </div>
+        <div class="card-content">
+          <h3>O que é</h3>
+          <p>
+            A Iniciação Científica é uma oportunidade para alunos de graduação
+            desenvolverem pesquisas acadêmicas sob orientação de professores
+            experientes, contribuindo para o avanço do conhecimento científico.
+          </p>
+        </div>
+      </div>
+
+      <div class="about-card">
+        <div class="card-icon">
+          <i class="fas fa-trophy"></i>
+        </div>
+        <div class="card-content">
+          <h3>Benefícios</h3>
+          <p>
+            Desenvolvimento de habilidades de pesquisa, pensamento crítico,
+            escrita acadêmica e preparação para pós-graduação e mercado de
+            trabalho. Além de bolsas de estudo e certificação.
+          </p>
+        </div>
+      </div>
+
+      <div class="about-card">
+        <div class="card-icon">
+          <i class="fas fa-rocket"></i>
+        </div>
+        <div class="card-content">
+          <h3>Como participar</h3>
+          <p>
+            Alunos devem escolher uma área de interesse, encontrar um orientador
+            e submeter um projeto através desta plataforma. O processo é simples
+            e totalmente online.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<app-footer></app-footer>
+<section class="cta">
+  <div class="cta-container">
+    <h2>Pronto para começar sua jornada científica?</h2>
+    <p>Cadastre-se agora e faça parte da comunidade de pesquisa da USCS</p>
+    <button class="btn btn-large" [routerLink]="['/cadastro']">
+      Criar Conta Gratuita
+      <i class="fas fa-arrow-right"></i>
+    </button>
+  </div>
+</section>

@@ -86,14 +86,14 @@
           <button
             class="btn btn-approve"
             (click)="aprovar(a.id)"
-            [disabled]="a.status === 'APROVADO'"
+            [disabled]="a.status === 'APROVADO' || a.status === 'REPROVADO'"
           >
             Aprovar
           </button>
           <button
             class="btn btn-reject"
             (click)="reprovar(a.id)"
-            [disabled]="a.status === 'REPROVADO'"
+            [disabled]="a.status === 'APROVADO' || a.status === 'REPROVADO'"
           >
             Reprovar
           </button>
@@ -145,14 +145,14 @@
           <button
             class="btn btn-approve"
             (click)="aprovar(o.id)"
-            [disabled]="o.status === 'APROVADO'"
+            [disabled]="o.status === 'APROVADO' || o.status === 'REPROVADO'"
           >
             Aprovar
           </button>
           <button
             class="btn btn-reject"
             (click)="reprovar(o.id)"
-            [disabled]="o.status === 'REPROVADO'"
+            [disabled]="o.status === 'APROVADO' || o.status === 'REPROVADO'"
           >
             Reprovar
           </button>
