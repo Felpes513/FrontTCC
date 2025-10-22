@@ -1,0 +1,397 @@
+:host {
+  display: block;
+  --bg: #ffffff;
+  --bg-alt: #f7f7f9;
+  --border: #e6e6ee;
+  --text: #222;
+  --text-muted: #666;
+  --primary: #2b6cb0; /* azul */
+  --primary-50: #e6f0fb;
+  --success: #2f855a; /* verde */
+  --danger: #c53030; /* vermelho */
+  --warning: #b7791f; /* dourado */
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 8px;
+  --pad: 14px;
+}
+
+.cadastros {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+/* Título + descrição */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text);
+  letter-spacing: 0.2px;
+}
+.header .hint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.tabs {
+  display: flex;
+  align-items: center; /* centraliza verticalmente */
+  gap: 8px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+/* A toolbar “encosta” à direita e mantém largura boa */
+.tabs .toolbar {
+  margin-left: auto;
+  min-width: 280px;
+  max-width: 420px;
+  flex: 1 1 320px;
+}
+
+/* Campo de busca preenche a toolbar */
+.tabs .search {
+  width: 100%;
+}
+
+.tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: 0.15s ease;
+  font-weight: 500;
+}
+.tab:hover {
+  color: var(--text);
+  background: #fff;
+}
+.tab.active {
+  background: var(--primary-50);
+  border-color: #cfe2ff;
+  color: var(--primary);
+}
+
+/* Sub-abas (Alunos / Orientadores) */
+.subtabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.subtab {
+  appearance: none;
+  border: 1px dashed var(--border);
+  background: #fff;
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.subtab:hover {
+  border-style: solid;
+  color: var(--text);
+}
+.subtab.active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-50);
+}
+
+/* Toolbar (busca + contadores + ações) */
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+.search {
+  position: relative;
+}
+.search input[type="text"] {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-size: 0.95rem;
+  background: #fff;
+  transition: 0.15s;
+}
+.search input[type="text"]:focus {
+  border-color: #c9d8f6;
+  box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1);
+}
+.search .icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.toolbar .stats {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Tabela/Lista */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.table thead th {
+  text-align: left;
+  background: var(--bg-alt);
+  color: var(--text);
+  font-weight: 600;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.92rem;
+}
+.table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s ease;
+}
+.table tbody tr:hover {
+  background: #fafafe;
+}
+.table td {
+  padding: 10px;
+  vertical-align: middle;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.table .col-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* Estado vazio */
+.empty {
+  text-align: center;
+  padding: 26px 10px;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+/* Skeleton (quando carregando) */
+.loading .skeleton {
+  display: grid;
+  gap: 8px;
+}
+.skeleton-row {
+  height: 42px;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(90deg, #f1f2f6 25%, #eceff4 37%, #f1f2f6 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* Badges de status */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.badge.aprovado {
+  background: #e6f7ef;
+  color: var(--success);
+  border: 1px solid #c8ead7;
+}
+.badge.pendente {
+  background: #fff7e6;
+  color: var(--warning);
+  border: 1px solid #f2dfb3;
+}
+.badge.reprovado {
+  background: #fdeaea;
+  color: var(--danger);
+  border: 1px solid #f3c3c3;
+}
+.badge.inadimplente {
+  background: #f5e8ff;
+  color: #6b21a8;
+  border: 1px solid #e2d0ff;
+}
+
+/* Ações (botões) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.15s;
+}
+.btn:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-approve {
+  background: #e8f6ef;
+  border-color: #cfe9dc;
+  color: var(--success);
+}
+.btn-approve:hover {
+  border-color: #bfe0cf;
+}
+
+.btn-reject {
+  background: #fcecec;
+  border-color: #f3caca;
+  color: var(--danger);
+}
+.btn-reject:hover {
+  border-color: #ecb4b4;
+}
+
+/* Linha com avatar/nome/email compactos (se usar) */
+.user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user .avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.user .meta {
+  display: grid;
+  gap: 2px;
+}
+.user .name {
+  font-weight: 600;
+  color: var(--text);
+}
+.user .email {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+/* Barra superior dentro da tabela (opcional) */
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+  .table thead {
+    display: none;
+  }
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+  .table tr {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+  }
+  .table td {
+    border: none;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 10px;
+  }
+  .table td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .table .col-actions {
+    text-align: left;
+  }
+}
+
+@media (max-width: 800px) {
+  .tabs {
+    flex-wrap: wrap;
+  }
+  .tabs .toolbar {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 720px) {
+  .tabs {
+    gap: 6px;
+  }
+  .tabs .toolbar {
+    flex: 1 1 100%;
+    order: 3;
+  } /* vai pra última linha */
+}

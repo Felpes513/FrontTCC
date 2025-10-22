@@ -24,6 +24,7 @@ export class SidenavSecretariaComponent implements OnInit, OnDestroy {
   role = this.auth.getRole();
   isSecretaria = this.auth.hasRole('SECRETARIA');
   isOrientador = this.auth.hasRole('ORIENTADOR');
+  isAluno = this.auth.hasRole('ALUNO');
 
   papelLegivel = computed(() => {
     const map: Record<Role, string> = {
@@ -63,7 +64,7 @@ export class SidenavSecretariaComponent implements OnInit, OnDestroy {
     e.preventDefault();
     if (!window.confirm('Tem certeza que deseja sair?')) return;
     this.auth.clearSession();
-    this.router.navigate(['/login'], { replaceUrl: true });
+    this.router.navigate(['/'], { replaceUrl: true });
   }
 
   marcarNotificacoesComoLidas() {

@@ -1,67 +1,75 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
-
-// Contratos alinhados com o back
-export interface RelatorioMensalOut {
-  id_relatorio: number;
-  projeto_id: number;
-  mes: string;         // 'YYYY-MM'
-  ok: boolean;
-  observacao?: string;
-  data_envio?: string; // opcional
-}
-
-export interface PendenciaOut {
-  projeto_id: number;
-  projeto_nome?: string;
-  mes: string;         // 'YYYY-MM'
-}
-
-export interface ConfirmarRelatorioMensalDTO {
-  mes: string;         // 'YYYY-MM'
-  ok: boolean;
-  observacao?: string;
-}
+import { Observable, map } from 'rxjs';
+import { RelatorioMensal, PendenciaMensal, ConfirmarRelatorioMensalDTO } from '@interfaces/relatorio';
 
 @Injectable({ providedIn: 'root' })
 export class RelatorioService {
   private readonly apiBase = '/api';
-
   constructor(private http: HttpClient) {}
 
-  /** GET /me/relatorios-mensais?mes=YYYY-MM  */
-  listarDoMes(mes?: string): Observable<RelatorioMensalOut[]> {
+  // ORIENTADOR
+  listarDoMes(mes?: string): Observable<RelatorioMensal[]> {
     const params = mes ? new HttpParams().set('mes', mes) : undefined;
-    return this.http.get<RelatorioMensalOut[]>(
-      `${this.apiBase}/me/relatorios-mensais`,
-      { params }
-    );
+    return this.http.get<any[]>(`${this.apiBase}/me/relatorios-mensais`, { params })
+      .pipe(map(rows => (rows || []).map(r => ({
+        id: r.id_relatorio,
+        projetoId: r.id_projeto,
+        referenciaMes: r.mes,
+        ok: !!r.ok,
+        observacao: r.observacao ?? null,
+        confirmadoEm: r.confirmado_em,
+        idOrientador: r.id_orientador
+      } as RelatorioMensal))));
   }
 
-  /** GET /me/relatorios-mensais/pendentes?mes=YYYY-MM */
-  listarPendentesDoMes(mes?: string): Observable<PendenciaOut[]> {
+  listarPendentesDoMes(mes?: string): Observable<PendenciaMensal[]> {
     const params = mes ? new HttpParams().set('mes', mes) : undefined;
-    return this.http.get<PendenciaOut[]>(
-      `${this.apiBase}/me/relatorios-mensais/pendentes`,
-      { params }
-    );
+    return this.http.get<any[]>(`${this.apiBase}/me/relatorios-mensais/pendentes`, { params })
+      .pipe(map(rows => (rows || []).map(r => ({
+        projetoId: r.id_projeto,
+        tituloProjeto: r.titulo_projeto,
+        mes: mes || '',            // o back não manda o mês, então completamos
+      } as PendenciaMensal))));
   }
 
-  /** POST /{id_projeto}/relatorios-mensais/confirmar */
-  confirmar(projetoId: number, dto: ConfirmarRelatorioMensalDTO):
-    Observable<{ id_relatorio: number; mensagem: string }> {
+  confirmar(projetoId: number, dto: ConfirmarRelatorioMensalDTO)
+    : Observable<{ id_relatorio: number; mensagem: string }> {
     return this.http.post<{ id_relatorio: number; mensagem: string }>(
-      `${this.apiBase}/${projetoId}/relatorios-mensais/confirmar`,
-      dto
-    );
+      `${this.apiBase}/${projetoId}/relatorios-mensais/confirmar`, dto);
   }
 
-   baixarRelatorioAlunos() {
+  baixarRelatorioAlunos() {
     return this.http.get(`${this.apiBase}/relatorio-alunos`, {
       responseType: 'blob',
       observe: 'response'
     });
+  }
+
+  // SECRETARIA
+  listarRecebidosSecretaria(mes?: string): Observable<RelatorioMensal[]> {
+    const params = mes ? new HttpParams().set('mes', mes) : undefined;
+    return this.http.get<any[]>(`${this.apiBase}/relatorios-mensais`, { params })
+      .pipe(map(rows => (rows || []).map(r => ({
+        id: r.id_relatorio,
+        projetoId: r.id_projeto,
+        referenciaMes: r.mes,
+        ok: !!r.ok,
+        observacao: r.observacao ?? null,
+        confirmadoEm: r.confirmado_em,
+        tituloProjeto: r.titulo_projeto,
+        orientadorNome: r.orientador_nome
+      } as RelatorioMensal))));
+  }
+
+  listarPendentesSecretaria(mes?: string): Observable<PendenciaMensal[]> {
+    const params = mes ? new HttpParams().set('mes', mes) : undefined;
+    return this.http.get<any[]>(`${this.apiBase}/relatorios-mensais/pendentes`, { params })
+      .pipe(map(rows => (rows || []).map(r => ({
+        projetoId: r.id_projeto,
+        tituloProjeto: r.titulo_projeto,
+        orientadorNome: r.orientador_nome,
+        mes: r.mes || mes || ''
+      } as PendenciaMensal))));
   }
 }

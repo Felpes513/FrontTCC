@@ -1,165 +1,230 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { RegisterService } from '@services/cadastro.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RegisterService } from '@services/cadastro.service';
+import { ProjetoService } from '@services/projeto.service';
+import { ConfigService } from '@services/config.service';
+import { Campus } from '@interfaces/campus';
+import { Curso } from '@interfaces/curso';
 
 @Component({
   selector: 'app-cadastro',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './cadastro.component.html',
-  styleUrls: ['./cadastro.component.css']
+  styleUrls: ['./cadastro.component.css'],
 })
-export class RegisterComponent {
-  nomeCompleto = '';
-  cpf = '';
-  curso = '';
-  campus = '';
-  email = '';
-  senha = '';
-  confirmarSenha = '';
+export class RegisterComponent implements OnInit {
+  perfilSelecionado: 'orientador' | 'aluno' | null = null;
 
-  // Controles do formulário
+  step = 1;
+  isLoading = false;
   erro: string | null = null;
   sucesso: string | null = null;
-  readonly perfil: 'aluno' = 'aluno';
-  showPassword: boolean = false;
-  showConfirmPassword: boolean = false;
-  isLoading: boolean = false;
-  acceptTerms: boolean = false;
+
+  cursos: Curso[] = [];
+  campus: Campus[] = [];
+
+  // ORIENTADOR
+  ori = {
+    nomeCompleto: '',
+    cpf: '',
+    email: '',
+    senha: '',
+    confirmar: '',
+  };
+  showPassOri = false;
+  acceptTermsOri = false;
+
+  // ALUNO
+  alu = {
+    nomeCompleto: '',
+    cpf: '',
+    email: '',
+    senha: '',
+    confirmar: '',
+    idCurso: '' as any,
+    idCampus: '' as any,
+    possuiTrabalhoRemunerado: false,
+  };
+  showPassAlu = false;
+  acceptTermsAlu = false;
+
+  pdfFile: File | null = null;
+  pdfName = '';
 
   constructor(
     private registerService: RegisterService,
+    private projetoService: ProjetoService,
+    private configService: ConfigService,
     private router: Router
   ) {}
 
-  register() {
-    this.erro = null;
-    this.sucesso = null;
-    this.isLoading = true;
-
-    // Validação do formulário
-    if (!this.validateForm()) {
-      this.isLoading = false;
-      return;
-    }
-
-    this.registerService.registerAluno({
-      nomeCompleto: this.nomeCompleto,
-      cpf: this.cpf,
-      curso: this.curso,
-      campus: this.campus,
-      email: this.email,
-      senha: this.senha
-    }).subscribe({
-      next: () => {
-        this.sucesso = 'Cadastro realizado com sucesso! Redirecionando para o login...';
-        setTimeout(() => {
-          this.router.navigate(['/login'], { queryParams: { perfil: 'aluno' } });
-        }, 2000);
-      },
-      error: (error) => {
-        console.error('Erro no cadastro:', error);
-
-        if (error.status === 400) {
-          this.erro = 'Dados inválidos. Verifique as informações inseridas.';
-        } else if (error.status === 409) {
-          this.erro = 'E-mail já cadastrado no sistema.';
-        } else if (error.status === 422) {
-          this.erro = 'Preencha todos os campos corretamente.';
-        } else {
-          this.erro = 'Erro interno do servidor. Tente novamente mais tarde.';
-        }
-
-        this.isLoading = false;
-      }
+  ngOnInit(): void {
+    this.configService.listarCursos().subscribe({
+      next: (res) => (this.cursos = res.cursos || []),
+      error: () => (this.cursos = []),
+    });
+    this.projetoService.listarCampus().subscribe({
+      next: (res) => (this.campus = res || []),
+      error: () => (this.campus = []),
     });
   }
 
-  validateForm(): boolean {
-    if (!this.nomeCompleto.trim()) {
-      this.erro = 'Nome completo é obrigatório.';
-      return false;
-    }
-
-    if (this.nomeCompleto.trim().length < 3) {
-      this.erro = 'Nome completo deve ter pelo menos 3 caracteres.';
-      return false;
-    }
-
-    if (!this.email.trim()) {
-      this.erro = 'E-mail é obrigatório.';
-      return false;
-    }
-
-    if (!this.isValidEmail(this.email)) {
-      this.erro = 'E-mail deve ter um formato válido.';
-      return false;
-    }
-
-    if (!this.senha) {
-      this.erro = 'Senha é obrigatória.';
-      return false;
-    }
-
-    if (this.senha.length < 6) {
-      this.erro = 'Senha deve ter pelo menos 6 caracteres.';
-      return false;
-    }
-
-    if (this.senha !== this.confirmarSenha) {
-      this.erro = 'As senhas não coincidem.';
-      return false;
-    }
-
-    if (!this.acceptTerms) {
-      this.erro = 'Você deve aceitar os termos de uso.';
-      return false;
-    }
-
-    return true;
+  selecionarPerfil(p: 'orientador' | 'aluno') {
+    this.perfilSelecionado = p;
+    this.erro = null;
+    this.sucesso = null;
+    this.step = 1;
   }
 
+  goStep(n: number) {
+    this.step = n;
+    this.erro = null;
+    this.sucesso = null;
+  }
+
+  /** Aplica máscara no CPF quando o campo perde o foco */
+  applyCpfMask(kind: 'ori' | 'alu') {
+    const raw = (kind === 'ori' ? this.ori.cpf : this.alu.cpf)
+      .replace(/\D/g, '')
+      .slice(0, 11);
+    const masked =
+      raw.length === 11
+        ? raw.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+        : raw;
+    if (kind === 'ori') this.ori.cpf = masked;
+    else this.alu.cpf = masked;
+  }
+
+  /** Valida a etapa 1 do aluno usando apenas dígitos do CPF */
+  validStep1(): boolean {
+    const cpfDigits = this.alu.cpf.replace(/\D/g, '');
+    return (
+      this.alu.nomeCompleto.trim().length >= 3 &&
+      cpfDigits.length === 11 &&
+      this.isValidEmail(this.alu.email) &&
+      this.alu.senha.length >= 6 &&
+      this.alu.senha === this.alu.confirmar
+    );
+  }
+
+  onPdfChange(ev: Event) {
+    const input = ev.target as HTMLInputElement;
+    const f = input.files?.[0] || null;
+    if (!f) {
+      this.pdfFile = null;
+      this.pdfName = '';
+      return;
+    }
+    if (!/\.pdf$/i.test(f.name)) {
+      this.erro = 'Envie um arquivo .pdf válido.';
+      input.value = '';
+      return;
+    }
+    this.pdfFile = f;
+    this.pdfName = f.name;
+  }
+
+  // ===== SUBMITS =====
+  onSubmitOrientador() {
+    this.erro = null;
+    this.sucesso = null;
+
+    const cpfDigits = this.ori.cpf.replace(/\D/g, '');
+
+    if (
+      !this.ori.nomeCompleto.trim() ||
+      cpfDigits.length !== 11 ||
+      !this.isValidEmail(this.ori.email)
+    ) {
+      this.erro = 'Preencha os campos corretamente.';
+      return;
+    }
+    if (this.ori.senha.length < 6 || this.ori.senha !== this.ori.confirmar) {
+      this.erro = 'Senha inválida ou diferente da confirmação.';
+      return;
+    }
+    if (!this.acceptTermsOri) {
+      this.erro = 'Você deve aceitar os termos.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.registerService
+      .registerOrientador({
+        nomeCompleto: this.ori.nomeCompleto,
+        cpf: this.ori.cpf, // o service já normaliza/limpa
+        email: this.ori.email,
+        senha: this.ori.senha,
+      })
+      .subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.sucesso = 'Cadastro realizado com sucesso! Redirecionando...';
+          setTimeout(
+            () =>
+              this.router.navigate(['/login'], {
+                queryParams: { perfil: 'orientador' },
+              }),
+            1500
+          );
+        },
+        error: (e) => {
+          this.isLoading = false;
+          this.erro = e?.error?.detail || 'Falha no cadastro.';
+        },
+      });
+  }
+
+  onSubmitAluno() {
+    if (this.step !== 3) return;
+
+    this.erro = null;
+    this.sucesso = null;
+
+    if (!this.pdfFile) {
+      this.erro = 'Envie o PDF de notas.';
+      return;
+    }
+    if (!this.acceptTermsAlu) {
+      this.erro = 'Você deve aceitar os termos.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.registerService
+      .registerAluno({
+        nomeCompleto: this.alu.nomeCompleto,
+        cpf: this.alu.cpf, // o service limpa
+        email: this.alu.email,
+        senha: this.alu.senha,
+        idCurso: Number(this.alu.idCurso),
+        pdf: this.pdfFile,
+        possuiTrabalhoRemunerado: this.alu.possuiTrabalhoRemunerado,
+      })
+      .subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.sucesso = 'Cadastro realizado com sucesso! Redirecionando...';
+          setTimeout(
+            () =>
+              this.router.navigate(['/login'], {
+                queryParams: { perfil: 'aluno' },
+              }),
+            1500
+          );
+        },
+        error: (e) => {
+          this.isLoading = false;
+          this.erro = e?.error?.detail || 'Falha no cadastro.';
+        },
+      });
+  }
+
+  // ===== helpers =====
   isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  togglePassword() {
-    this.showPassword = !this.showPassword;
-  }
-
-  toggleConfirmPassword() {
-    this.showConfirmPassword = !this.showConfirmPassword;
-  }
-
-  goToLogin() {
-    this.router.navigate(['/login'], { queryParams: { perfil: 'aluno' } });
-  }
-
-  contactSupport(event: Event) {
-    event.preventDefault();
-
-    const email = 'suporte.aluno@uscs.edu.br';
-    const subject = 'Suporte - Cadastro Aluno';
-    const body = 'Olá, preciso de ajuda com o cadastro como aluno.';
-
-    window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-  }
-
-  getPasswordStrength(): string {
-    if (!this.senha) return '';
-
-    let strength = 0;
-    if (this.senha.length >= 8) strength++;
-    if (/[a-z]/.test(this.senha)) strength++;
-    if (/[A-Z]/.test(this.senha)) strength++;
-    if (/[0-9]/.test(this.senha)) strength++;
-    if (/[^A-Za-z0-9]/.test(this.senha)) strength++;
-
-    if (strength < 2) return 'fraca';
-    if (strength < 4) return 'média';
-    return 'forte';
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }

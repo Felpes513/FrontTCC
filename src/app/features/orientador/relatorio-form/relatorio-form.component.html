@@ -1,3 +1,4 @@
+<!-- src/app/features/orientador/relatorio-form/relatorio-form.component.html -->
 <section class="painel">
   <header class="head">
     <h3>Relatório mensal — Projeto #{{ projetoId }}</h3>
@@ -13,7 +14,8 @@
 
       <div class="row" *ngIf="relatorioEnviadoDoMes()">
         <div class="hint">
-          ✅ Já existe relatório enviado para <strong>{{ relatorioEnviadoDoMes()!.mes }}</strong>.
+          ✅ Já existe relatório enviado para
+          <strong>{{ relatorioEnviadoDoMes()!.referenciaMes }}</strong>.
         </div>
       </div>
 
@@ -49,7 +51,8 @@
         </label>
       </div>
 
-      <div class="actions">
+      <!-- esconde a ação quando em modo somente leitura -->
+      <div class="actions" *ngIf="!readOnly">
         <button type="submit" [disabled]="salvando()">
           <i class="fas fa-save"></i> Confirmar relatório
         </button>
@@ -59,7 +62,10 @@
     <aside class="lista-relatorios">
       <h4>Status do mês selecionado</h4>
       <ng-container *ngIf="relatorioEnviadoDoMes(); else pendente">
-        <p>Relatório <strong>enviado</strong> em {{ relatorioEnviadoDoMes()!.data_envio || 'data não informada' }}.</p>
+        <p>
+          Relatório <strong>enviado</strong> em
+          {{ dataBr(relatorioEnviadoDoMes()!.confirmadoEm) }}.
+        </p>
         <p><small>Observação salva:</small></p>
         <pre style="white-space: pre-wrap; font-size: .9rem; margin: .25rem 0 0 0;">
 {{ relatorioEnviadoDoMes()!.observacao || '—' }}</pre>

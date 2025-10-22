@@ -12,13 +12,21 @@
   </ng-container>
 
   <ng-template #conteudo>
-    <!-- ======== MODO SECRETARIA (layout antigo) ======== -->
+    <!-- ======== MODO SECRETARIA ======== -->
     <ng-container *ngIf="modo === 'SECRETARIA'">
       <ng-container *ngIf="lista().length; else vazio">
         <ul class="lista" role="list">
           <li class="item" *ngFor="let a of lista()">
             <div class="dados">
-              <strong class="nome" title="{{ a.nome }}">{{ a.nome }}</strong>
+              <strong class="nome" [title]="a.nome">
+                {{ a.nome }}
+                <span
+                  *ngIf="a.possuiTrabalhoRemunerado"
+                  class="badge remunerado"
+                  title="Possui trabalho remunerado"
+                  >💼 Remunerado</span
+                >
+              </strong>
               <div class="mini">
                 <span>RA: {{ a.matricula }}</span>
                 <span class="sep">•</span>
@@ -40,6 +48,12 @@
 
     <!-- ======== MODO ORIENTADOR (seleção) ======== -->
     <ng-container *ngIf="modo === 'ORIENTADOR'">
+      <div class="alert" *ngIf="bloqueado" style="margin-bottom:8px;">
+        ✅ Seleção finalizada
+        <span *ngIf="bloqueadoEm">&nbsp;em {{ bloqueadoEm | date:'short' }}</span>.
+        Para ajustes, contate a Secretaria.
+      </div>
+
       <!-- Aprovados -->
       <div *ngIf="aprovadas.length; else nenhumAprovado">
         <h4>Aprovados pela Secretaria</h4>
@@ -49,11 +63,20 @@
               <input
                 type="checkbox"
                 [checked]="selecionados.has(alunoId(i))"
-                [disabled]="disabledCheckbox(i)"
+                [disabled]="disabledCheckbox(i) || bloqueado"
                 (change)="toggleSelecionado(i, $any($event.target).checked)"
               />
               <div class="dados">
-                <strong class="nome">{{ alunoNome(i) }}</strong>
+                <strong class="nome">
+                  {{ alunoNome(i) }}
+                  <!-- opcional: mostrar selo aqui também -->
+                  <span
+                    *ngIf="i?.possuiTrabalhoRemunerado"
+                    class="badge remunerado"
+                    title="Possui trabalho remunerado"
+                    >💼 Remunerado</span
+                  >
+                </strong>
                 <div class="mini">
                   <span>ID Aluno: {{ alunoId(i) }}</span>
                   <span class="sep">•</span>
@@ -64,31 +87,19 @@
           </li>
         </ul>
       </div>
+
+      <!-- estado quando não há aprovados -->
       <ng-template #nenhumAprovado>
         <p class="muted">Nenhum aluno aprovado pela Secretaria ainda.</p>
       </ng-template>
 
-      <!-- Pendentes / Reprovados -->
-      <h4 style="margin-top:12px;">Pendentes / Reprovados</h4>
-      <ul class="lista" *ngIf="pendentesOuReprovadas.length">
-        <li class="item" *ngFor="let i of pendentesOuReprovadas">
-          <div class="dados">
-            <strong class="nome">{{ alunoNome(i) }}</strong>
-            <div class="mini">
-              <span>ID Aluno: {{ alunoId(i) }}</span>
-              <span class="sep">•</span>
-              <span>Status: <b>{{ (i?.status || i?.situacao || 'PENDENTE') | uppercase }}</b></span>
-            </div>
-          </div>
-        </li>
-      </ul>
-
       <!-- Ações -->
-      <div class="form-actions" style="margin-top: 12px;">
-        <button type="button"
-                (click)="salvarSelecao()
-                "
-                [disabled]="salvandoSelecao || (limite>0 && selecionados.size>limite)">
+      <div class="form-actions" style="margin-top: 12px;" *ngIf="!bloqueado">
+        <button
+          type="button"
+          (click)="salvarSelecao()"
+          [disabled]="salvandoSelecao || (limite>0 && selecionados.size>limite)"
+        >
           {{ salvandoSelecao ? 'Salvando...' : 'Salvar seleção' }}
         </button>
         <span class="ok" *ngIf="sucessoSelecao">{{ sucessoSelecao }}</span>

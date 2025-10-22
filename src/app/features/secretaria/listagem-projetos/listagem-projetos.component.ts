@@ -1,3 +1,4 @@
+import { InscricoesService } from '@services/inscricoes.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +7,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Projeto } from '@interfaces/projeto';
 import { ProjetoService } from '@services/projeto.service';
 import { AuthService } from '@services/auth.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-listagem-projetos',
@@ -15,63 +18,131 @@ import { AuthService } from '@services/auth.service';
   styleUrls: ['./listagem-projetos.component.css'],
 })
 export class ListagemProjetosComponent implements OnInit {
-  projetos: Projeto[] = [];
-  filtro: string = '';
-  carregando: boolean = false;
-  erro: string | null = null;
-  filtroStatus: string = '';
+  readonly MAX_ESCOLHIDOS = 4;
 
-  // 👉 papel atual
+  projetos: (Projeto & { alunosIds?: number[] })[] = [];
+  filtro = '';
+  carregando = false;
+  erro: string | null = null;
+  filtroStatus = '';
+  inscrevendoId: number | null = null;
+
+  // papeis
   isOrientador = false;
+  isSecretaria = false;
+  isAluno = false;
+
+  // ids de projetos em que ESTE aluno já clicou em "inscrever" (sessão atual)
+  private inscricoesDoAluno = new Set<number>();
 
   constructor(
     private projetoService: ProjetoService,
     private authService: AuthService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private inscricoesService: InscricoesService
   ) {}
 
   ngOnInit(): void {
     this.isOrientador = this.authService.hasRole('ORIENTADOR');
+    this.isSecretaria = this.authService.hasRole('SECRETARIA');
+    this.isAluno = this.authService.hasRole('ALUNO');
     this.carregarProjetos();
   }
 
   trackByFn(index: number, item: Projeto): any {
-    return item?.id ?? index;
+    return (item as any)?.id ?? index;
   }
 
-  // ✅ Carregar projetos (decide pelo papel)
   carregarProjetos(): void {
     this.carregando = true;
     this.erro = null;
 
     if (this.isOrientador) {
-      // lista só do orientador
       this.projetoService.listarProjetosDoOrientador().subscribe({
         next: (projetos) => {
-          this.projetos = projetos ?? [];
+          this.projetos = (projetos ?? []) as any[];
           this.carregando = false;
-          // debug enxuto
-          console.log('[ORIENTADOR] projetos:', this.projetos);
+          this.hidratarSelecionados(); // alunos aprovados (com ids)
+          this.hidratarNotas();
         },
         error: (error) => this.handleLoadError(error),
       });
       return;
     }
 
-    // secretaria (sua lógica atual)
+    // Secretaria e Aluno
     this.projetoService.listarProjetos().subscribe({
       next: (projetos) => {
-        // avisos de id inválido (mantive da sua versão)
-        const invalidos = projetos.filter((p) => !p.id || p.id <= 0);
-        if (invalidos.length) {
+        const invalidos = projetos.filter(
+          (p) => !(p as any).id || (p as any).id <= 0
+        );
+        if (invalidos.length)
           console.warn('⚠️ Projetos com ID inválido:', invalidos);
-        }
-        this.projetos = projetos;
+
+        this.projetos = (projetos as any[]) ?? [];
         this.carregando = false;
+
+        this.hidratarSelecionados(); // alunos aprovados (com ids)
+        this.hidratarNotas();
       },
       error: (error) => this.handleLoadError(error),
     });
+  }
+
+  /** Preenche nomesAlunos e também alunosIds (IDs aprovados pela Secretaria) */
+  private hidratarSelecionados() {
+    const calls = this.projetos
+      .filter((p) => this.isIdValido((p as any).id))
+      .map((p) =>
+        this.inscricoesService.listarAprovadosDoProjeto((p as any).id).pipe(
+          tap((alunos: any[]) => {
+            const nomes = (alunos || []).map(
+              (a) =>
+                a?.nome_completo ||
+                a?.nome ||
+                a?.aluno?.nome ||
+                `Aluno #${a?.id_aluno || a?.id || ''}`
+            );
+            const ids = (alunos || [])
+              .map((a) => Number(a?.id_aluno ?? a?.id ?? a?.aluno?.id ?? 0))
+              .filter((n) => !!n);
+
+            (p as any).nomesAlunos = nomes;
+            (p as any).alunosIds = ids;
+            (p as any).inscritosTotal = nomes.length;
+          }),
+          catchError(() => of(null))
+        )
+      );
+
+    if (calls.length) forkJoin(calls).subscribe();
+  }
+
+  private hidratarNotas() {
+    const calls = this.projetos
+      .filter((p) => this.isIdValido((p as any).id))
+      .map((p) =>
+        this.projetoService.listarNotasDoProjeto((p as any).id).pipe(
+          tap((notas: number[]) => {
+            (p as any).notas = notas || [];
+            if ((p as any).notas.length) {
+              const soma = (p as any).notas.reduce(
+                (acc: number, n: number) => acc + (Number(n) || 0),
+                0
+              );
+              (p as any).mediaNota = Number(
+                (soma / (p as any).notas.length).toFixed(2)
+              );
+            } else {
+              (p as any).mediaNota = undefined;
+            }
+          }),
+          catchError(() => of(null))
+        )
+      );
+
+    if (calls.length) forkJoin(calls).subscribe();
   }
 
   private handleLoadError(error: any) {
@@ -79,7 +150,8 @@ export class ListagemProjetosComponent implements OnInit {
     if (error.status === 0) {
       this.erro = 'Erro de conexão: verifique se a API FastAPI está rodando.';
     } else if (error.status === 404) {
-      this.erro = 'Endpoint não encontrado: verifique se a rota /projetos está correta.';
+      this.erro =
+        'Endpoint não encontrado: verifique se a rota /projetos está correta.';
     } else if (error.status >= 500) {
       this.erro = 'Erro interno do servidor: verifique os logs da API FastAPI.';
     } else {
@@ -88,42 +160,55 @@ export class ListagemProjetosComponent implements OnInit {
     this.carregando = false;
   }
 
-  // ✅ Filtro de projetos
   projetosFiltrados(): Projeto[] {
     const filtroLower = this.filtro.toLowerCase().trim();
 
-    return this.projetos.filter((projeto) => {
+    return this.projetos.filter((projeto: any) => {
       const combinaTexto =
         (projeto.nomeProjeto || '').toLowerCase().includes(filtroLower) ||
         (projeto.nomeOrientador || '').toLowerCase().includes(filtroLower) ||
         (projeto.campus || '').toLowerCase().includes(filtroLower);
 
-      // em orientador não usamos filtro de status (botões somem no HTML)
-      const combinaStatus = !this.filtroStatus || (projeto as any).status === this.filtroStatus;
+      const combinaStatus =
+        !this.isSecretaria ||
+        !this.filtroStatus ||
+        (projeto as any).status === this.filtroStatus;
 
       return combinaTexto && combinaStatus;
-    });
+    }) as any;
   }
 
-  // ✅ Métodos auxiliares para o template
-  getOrientadorNome(projeto: Projeto): string {
-    return projeto.nomeOrientador;
-  }
+  // ===== Helpers =====
 
-  getQuantidadeAlunos(projeto: Projeto): number {
-    return projeto.quantidadeMaximaAlunos || 0;
+  getQuantidadeAlunos(p: Projeto & { alunosIds?: number[] }): number {
+    return (p as any).inscritosTotal ?? (p as any).nomesAlunos?.length ?? 0;
   }
 
   temAlunos(projeto: Projeto): boolean {
-    return (projeto.quantidadeMaximaAlunos || 0) > 0;
+    return ((projeto as any).nomesAlunos?.length ?? 0) > 0;
+  }
+
+  getOrientadorNome(projeto: Projeto): string {
+    const nome = ((projeto as any)?.nomeOrientador ?? '').trim();
+    return nome ? nome : 'Orientador não informado';
   }
 
   temOrientador(projeto: Projeto): boolean {
-    return projeto.nomeOrientador !== 'Orientador não informado';
+    return this.getOrientadorNome(projeto) !== 'Orientador não informado';
   }
 
-  simularProgresso(index: number): number {
-    return 30 + (index % 3) * 20; // apenas visual
+  isLotado(projeto: Projeto): boolean {
+    return (
+      (this.getQuantidadeAlunos(projeto as any) ?? 0) >= this.MAX_ESCOLHIDOS
+    );
+  }
+
+  getStatusProjeto(projeto: Projeto): string {
+    if (!this.temIdValido(projeto)) return 'erro';
+    const escolhidos = this.getQuantidadeAlunos(projeto as any);
+    if (escolhidos >= this.MAX_ESCOLHIDOS) return 'lotado';
+    if (escolhidos > 0) return 'em-andamento';
+    return 'disponivel';
   }
 
   getCor(index: number): string {
@@ -131,35 +216,36 @@ export class ListagemProjetosComponent implements OnInit {
     return cores[index % cores.length];
   }
 
-  // ✅ Excluir/Editar (somente secretaria)
+  // ===== Ações Secretaria =====
   excluirProjeto(projeto: Projeto | number): void {
-    if (this.isOrientador) {
-      this.snackBar.open('Somente a Secretaria pode excluir projetos.', 'Fechar', { duration: 3000 });
+    if (!this.isSecretaria) {
+      this.snackBar.open('Ação não permitida.', 'Fechar', { duration: 3000 });
       return;
     }
-
     let id: number;
-    let projetoObj: Projeto | null = null;
+    let projetoObj: any | null = null;
 
     if (typeof projeto === 'number') {
       id = projeto;
-      projetoObj = this.projetos.find((p) => p.id === id) || null;
+      projetoObj = this.projetos.find((p: any) => p.id === id) || null;
     } else {
-      id = projeto.id;
-      projetoObj = projeto;
+      id = (projeto as any).id;
+      projetoObj = projeto as any;
     }
 
     if (!this.isIdValido(id)) {
-      alert('Erro: ID do projeto não foi encontrado ou é inválido. Recarregue a página e tente novamente.');
+      alert('ID inválido.');
       return;
     }
     if (!projetoObj) {
-      alert('Erro: Projeto não encontrado. Recarregue a página e tente novamente.');
+      alert('Projeto não encontrado.');
       return;
     }
 
     const nomeExibicao = projetoObj.nomeProjeto || 'Desconhecido';
-    const confirmacao = confirm(`Tem certeza que deseja excluir o projeto "${nomeExibicao}"?\n\nID: ${id}`);
+    const confirmacao = confirm(
+      `Excluir o projeto "${nomeExibicao}"?\n\nID: ${id}`
+    );
     if (!confirmacao) return;
 
     this.projetoService.excluirProjeto(id).subscribe({
@@ -173,32 +259,33 @@ export class ListagemProjetosComponent implements OnInit {
       },
       error: (error) => {
         let mensagemErro = '';
-        if (error.status === 0) mensagemErro = 'Erro de conexão: verifique se a API está rodando';
-        else if (error.status === 404) mensagemErro = 'Projeto não encontrado no servidor';
-        else if (error.status === 422) mensagemErro = 'ID do projeto é inválido';
-        else if (error.status >= 500) mensagemErro = 'Erro interno do servidor';
+        if (error.status === 0) mensagemErro = 'Erro de conexão';
+        else if (error.status === 404) mensagemErro = 'Projeto não encontrado';
+        else if (error.status === 422) mensagemErro = 'ID inválido';
+        else if (error.status >= 500) mensagemErro = 'Erro interno';
         else mensagemErro = error.message || `Erro HTTP ${error.status}`;
-
-        this.snackBar.open(`Erro ao excluir projeto: ${mensagemErro}`, 'Fechar', { duration: 4000 });
+        this.snackBar.open(`Erro ao excluir: ${mensagemErro}`, 'Fechar', {
+          duration: 4000,
+        });
       },
     });
   }
 
   editarProjeto(id: number): void {
-    if (this.isOrientador) {
-      this.snackBar.open('Somente a Secretaria pode editar projetos.', 'Fechar', { duration: 3000 });
+    if (!this.isSecretaria) {
+      this.snackBar.open('Ação não permitida.', 'Fechar', { duration: 3000 });
       return;
     }
     if (!this.isIdValido(id)) {
-      alert('Erro: ID do projeto é inválido');
+      alert('ID inválido');
       return;
     }
     this.router.navigate(['/secretaria/projetos/editar', id]);
   }
 
-  // 👉 Orientador: ir para relatórios do projeto
+  // ===== Ações Orientador =====
   irParaRelatorio(projeto: Projeto): void {
-    const id = projeto?.id;
+    const id = (projeto as any)?.id;
     if (!this.isIdValido(id)) {
       alert('Projeto sem ID válido.');
       return;
@@ -206,94 +293,147 @@ export class ListagemProjetosComponent implements OnInit {
     this.router.navigate(['/orientador/relatorios', id]);
   }
 
-  // ✅ Recarregar lista
+  // ===== Ações Aluno =====
+  inscrever(projeto: Projeto & { alunosIds?: number[] }) {
+    const id = (projeto as any)?.id;
+
+    if (!this.isAluno) {
+      this.snackBar.open(
+        'Somente alunos podem se inscrever em projetos.',
+        'Fechar',
+        { duration: 3000 }
+      );
+      return;
+    }
+    if (!this.isIdValido(id)) {
+      this.snackBar.open('Projeto sem ID válido.', 'Fechar', {
+        duration: 3000,
+      });
+      return;
+    }
+    if (this.isLotado(projeto)) {
+      this.snackBar.open('Seleção finalizada para este projeto.', 'Fechar', {
+        duration: 3000,
+      });
+      return;
+    }
+    if (this.jaInscrito(id)) {
+      this.snackBar.open('Você já se inscreveu neste projeto.', 'Fechar', {
+        duration: 2500,
+      });
+      return;
+    }
+
+    if (
+      !confirm(
+        `Confirmar inscrição no projeto "${(projeto as any).nomeProjeto}"?`
+      )
+    )
+      return;
+
+    this.inscrevendoId = id;
+    this.inscricoesService.inscrever(id).subscribe({
+      next: (res) => {
+        this.inscrevendoId = null;
+        this.marcarInscritoLocal(id);
+        this.snackBar.open(
+          res?.message || 'Inscrição realizada com sucesso!',
+          'Fechar',
+          { duration: 3000 }
+        );
+      },
+      error: (e) => {
+        this.inscrevendoId = null;
+        const msg = e?.error?.detail || e?.message || 'Erro ao inscrever.';
+        this.snackBar.open(msg, 'Fechar', { duration: 4000 });
+      },
+    });
+  }
+
+  irParaRelatorioAluno(projeto: Projeto & { alunosIds?: number[] }) {
+    const id = (projeto as any)?.id;
+    if (!this.isIdValido(id)) {
+      alert('Projeto sem ID válido.');
+      return;
+    }
+    this.router.navigate(['/aluno/relatorios', id]);
+  }
+
+  // ===== Regras de exibição (Aluno) =====
+
+  /** true se o aluno (sessão) já clicou para se inscrever neste projeto */
+  jaInscrito(idProjeto: number): boolean {
+    return this.inscricoesDoAluno.has(idProjeto);
+  }
+  private marcarInscritoLocal(idProjeto: number) {
+    this.inscricoesDoAluno.add(idProjeto);
+  }
+
+  /** Exibe “Meu Relatório” somente se ESTE aluno consta entre os aprovados do projeto */
+  podeVerRelatorio(projeto: Projeto & { alunosIds?: number[] }): boolean {
+    if (!this.isAluno) return false;
+    const meuId = this.getMeuId();
+    if (!meuId) return false;
+    const ids = (projeto as any).alunosIds as number[] | undefined;
+    return Array.isArray(ids) && ids.includes(Number(meuId));
+  }
+
+  // util
   recarregar(): void {
     this.carregarProjetos();
   }
-
-  // ✅ Helpers de ID/status
   temIdValido(projeto: Projeto): boolean {
-    return this.isIdValido(projeto.id);
+    return this.isIdValido((projeto as any).id);
   }
-
   private isIdValido(id: any): id is number {
-    return id !== undefined && id !== null && typeof id === 'number' && !isNaN(id) && id > 0;
-  }
-
-  getStatusProjeto(projeto: Projeto): string {
-    if (!this.temIdValido(projeto)) return 'erro';
-    if (projeto.nomesAlunos.length >= (projeto.quantidadeMaximaAlunos || 0)) return 'lotado';
-    if (projeto.nomesAlunos.length > 0) return 'em-andamento';
-    return 'disponivel';
-  }
-
-  getCorStatus(status: string): string {
-    switch (status) {
-      case 'disponivel': return '#28a745';
-      case 'em-andamento': return '#ffc107';
-      case 'lotado': return '#dc3545';
-      case 'erro': return '#6c757d';
-      default: return '#007bff';
-    }
-  }
-
-  getTextoStatus(status: string): string {
-    switch (status) {
-      case 'disponivel': return 'Disponível';
-      case 'em-andamento': return 'Em andamento';
-      case 'lotado': return 'Lotado';
-      case 'erro': return 'Erro';
-      default: return 'Desconhecido';
-    }
+    return (
+      id !== undefined &&
+      id !== null &&
+      typeof id === 'number' &&
+      !isNaN(id) &&
+      id > 0
+    );
   }
 
   calcularProgresso(projeto: Projeto): number {
-    const max = projeto.quantidadeMaximaAlunos || 0;
-    if (max === 0) return 0;
-    const progresso = (projeto.nomesAlunos.length / max) * 100;
-    return Math.min(progresso, 100);
+    const escolhidos = this.getQuantidadeAlunos(projeto as any);
+    const progresso = (escolhidos / this.MAX_ESCOLHIDOS) * 100;
+    return Math.max(0, Math.min(progresso, 100));
   }
 
-  // DEBUG (mantidos)
+  // tenta obter o ID do usuário logado do AuthService
+  private getMeuId(): number | null {
+    try {
+      // ajuste aqui conforme seu AuthService
+      if (typeof (this.authService as any).getUserId === 'function') {
+        return Number((this.authService as any).getUserId());
+      }
+      if ((this.authService as any).userId != null) {
+        return Number((this.authService as any).userId);
+      }
+    } catch {}
+    return null;
+  }
+
+  // ==== DEBUG =====
   debugProjeto(projeto: Projeto): void {
     console.log('🔍 Debug do projeto:', {
-      id: projeto.id,
-      tipoId: typeof projeto.id,
-      idValido: this.temIdValido(projeto),
-      nome: projeto.nomeProjeto,
-      campus: projeto.campus,
-      orientador: projeto.nomeOrientador,
-      maxAlunos: projeto.quantidadeMaximaAlunos,
-      alunos: projeto.nomesAlunos,
-      qtdAlunosAtual: projeto.nomesAlunos.length,
-      status: this.getStatusProjeto(projeto),
-      progresso: this.calcularProgresso(projeto),
+      id: (projeto as any).id,
+      nome: (projeto as any).nomeProjeto,
+      escolhidos: this.getQuantidadeAlunos(projeto as any),
+      alunosIds: (projeto as any).alunosIds,
+      podeVerRelatorio: this.podeVerRelatorio(projeto as any),
     });
   }
-
   debugListaProjetos(): void {
     console.log('🔍 Debug da lista completa:', {
       totalProjetos: this.projetos.length,
-      projetosComIdValido: this.projetos.filter((p) => this.temIdValido(p)).length,
-      projetos: this.projetos.map((p) => ({
-        id: p.id, tipoId: typeof p.id, nome: p.nomeProjeto,
-        temIdValido: this.temIdValido(p), status: this.getStatusProjeto(p),
+      projetos: this.projetos.map((p: any) => ({
+        id: p.id,
+        nome: p.nomeProjeto,
+        escolhidos: this.getQuantidadeAlunos(p),
+        alunosIds: p.alunosIds,
       })),
     });
-  }
-
-  // Export placeholder
-  exportarProjetos(): void {
-    const dadosExportacao = this.projetos.map((p) => ({
-      ID: p.id,
-      'Nome do Projeto': p.nomeProjeto,
-      Campus: p.campus,
-      Orientador: p.nomeOrientador,
-      'Máximo de Alunos': p.quantidadeMaximaAlunos,
-      'Alunos Inscritos': p.nomesAlunos.length,
-      Status: this.getTextoStatus(this.getStatusProjeto(p)),
-      'Progresso (%)': this.calcularProgresso(p).toFixed(1),
-    }));
-    console.log('📊 Dados para exportação:', dadosExportacao);
   }
 }

@@ -1,4 +1,3 @@
-// src/app/shared/login/login.component.ts
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -63,9 +62,9 @@ export class LoginComponent {
         console.log('[LOGIN OK] role extraída do JWT:', role);
 
         const redirects: Record<string, string> = {
-          ALUNO: '/aluno/dashboard',
+          ALUNO: '/aluno/projetos',
           ORIENTADOR: '/orientador/projetos',
-          SECRETARIA: '/secretaria/projetos',
+          SECRETARIA: '/secretaria/dashboard',
         };
         const destino = (role && redirects[role]) || '/';
 
@@ -75,9 +74,13 @@ export class LoginComponent {
       error: (e) => {
         const status = e?.status;
         if (status === 501 && this.perfil === 'secretaria') {
-          this.erro = "Login da Secretaria usa SSO. Clique em 'Entrar com SSO'.";
+          this.erro =
+            "Login da Secretaria usa SSO. Clique em 'Entrar com SSO'.";
         } else {
-          this.erro = e?.error?.detail || e?.error?.message || 'E-mail ou senha inválidos.';
+          this.erro =
+            e?.error?.detail ||
+            e?.error?.message ||
+            'E-mail ou senha inválidos.';
         }
         this.isLoading = false;
       },
@@ -85,22 +88,31 @@ export class LoginComponent {
   }
 
   entrarComSSO() {
-    // ajuste quando o backend de SSO estiver pronto
-    window.location.href = 'http://127.0.0.1:8001/sso/redirect?provider=empresa';
+    window.location.href =
+      'http://127.0.0.1:8001/sso/redirect?provider=empresa';
   }
 
-  togglePassword() { this.showPassword = !this.showPassword; }
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
 
   forgotPassword(event: Event) {
     event.preventDefault();
-    this.router.navigate(['/forgot-password'], { queryParams: { perfil: this.perfil } });
+    const map: Record<typeof this.perfil, string> = {
+      aluno: '/aluno/reset-password',
+      orientador: '/orientador/reset-password',
+      secretaria: '/secretaria/reset-password',
+    };
+    this.router.navigate([map[this.perfil]]);
   }
 
   goToRegister() {
     if (this.perfil === 'aluno') {
       this.router.navigate(['/register/aluno']);
     } else if (this.perfil === 'orientador') {
-      this.router.navigate(['/cadastro'], { queryParams: { perfil: 'orientador' } });
+      this.router.navigate(['/cadastro'], {
+        queryParams: { perfil: 'orientador' },
+      });
     }
   }
 
@@ -113,10 +125,16 @@ export class LoginComponent {
     } as const;
 
     const email = supportEmails[this.perfil];
-    const subject = `Suporte - Login ${this.perfil.charAt(0).toUpperCase() + this.perfil.slice(1)}`;
+    const subject = `Suporte - Login ${
+      this.perfil.charAt(0).toUpperCase() + this.perfil.slice(1)
+    }`;
     const body = `Olá, preciso de ajuda com o login como ${this.perfil}.`;
 
-    window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    window.open(
+      `mailto:${email}?subject=${encodeURIComponent(
+        subject
+      )}&body=${encodeURIComponent(body)}`
+    );
   }
 
   private handleRememberMe() {
@@ -128,6 +146,9 @@ export class LoginComponent {
   private loadRememberedEmail() {
     const storageKey = `rememberedEmail_${this.perfil}`;
     const savedEmail = localStorage.getItem(storageKey);
-    if (savedEmail) { this.email = savedEmail; this.rememberMe = true; }
+    if (savedEmail) {
+      this.email = savedEmail;
+      this.rememberMe = true;
+    }
   }
 }

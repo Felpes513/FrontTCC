@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { tap, map, catchError, switchMap } from 'rxjs/operators';
 import {
   ProjetoRequest,
@@ -14,6 +14,13 @@ import { Orientador } from '@interfaces/orientador';
 import { Campus } from '@interfaces/campus';
 import { AvaliadorExterno } from '@interfaces/avaliador_externo';
 import { ApiMensagem } from '@interfaces/api';
+import {
+  AvaliacaoEnvio,
+  AvaliacaoLinkInfo,
+  AvaliacaoSalvarDTO,
+  ConviteAvaliacaoResponse,
+  ProjetoBasico,
+} from '@interfaces/avaliacao';
 
 @Injectable({ providedIn: 'root' })
 export class ProjetoService {
@@ -37,12 +44,13 @@ export class ProjetoService {
       }));
     }
 
-    const payload: ProjetoRequest = {
+    const payload: any = {
       titulo_projeto: projeto.titulo_projeto,
-      resumo: projeto.resumo.trim(),
+      resumo: (projeto.resumo || '').trim(),
       id_orientador,
       id_campus: projeto.id_campus,
     };
+    if (projeto.tipo_bolsa != null) payload.tipo_bolsa = projeto.tipo_bolsa;
 
     return this.http.post(this.apiUrlProjetos, payload).pipe(
       tap((response) => console.log('✅ Projeto cadastrado:', response)),
@@ -79,9 +87,18 @@ export class ProjetoService {
   }
 
   getProjetoPorId(id: number) {
-    return this.http
-      .get<any>(`${this.apiUrlProjetos}${id}`)
-      .pipe(catchError(this.handleError));
+    return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
+      map((res) => {
+        const raw = (res.projetos || []).find(
+          (p) => Number(p.id_projeto ?? p.id) === Number(id)
+        );
+        if (!raw) {
+          throw { message: 'Projeto não encontrado', status: 404 };
+        }
+        return this.normalizarProjetoDetalhado(raw);
+      }),
+      catchError(this.handleError)
+    );
   }
 
   getProjetoDetalhado(id: number) {
@@ -109,6 +126,12 @@ export class ProjetoService {
           .pipe(catchError(this.handleError));
       })
     );
+  }
+
+  listarProjetosRaw() {
+    return this.http
+      .get<{ projetos: any[] }>(this.apiUrlProjetos)
+      .pipe(map((res) => res.projetos ?? []));
   }
 
   excluirProjeto(id: number): Observable<ApiMensagem> {
@@ -152,10 +175,34 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
+  // src/app/services/projeto.service.ts
   listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
     return this.http
-      .get<any[]>(`${this.apiUrlInscricoes}/projetos/${idProjeto}/inscricoes`)
-      .pipe(catchError(this.handleError));
+      .get<{ id_projeto: number; alunos: any[] }>(
+        `${this.apiUrlProjetos}${idProjeto}/alunos`
+      )
+      .pipe(
+        map((res) => {
+          const alunos = res?.alunos ?? [];
+          // adaptamos para o formato usado nos componentes
+          return alunos.map((a: any) => ({
+            id_aluno: a.id ?? a.id_aluno ?? 0,
+            aluno: {
+              id: a.id ?? a.id_aluno ?? 0,
+              nome: a.nome_completo ?? a.nome ?? '—',
+              email: a.email ?? '—',
+              matricula: a.matricula ?? a.cpf ?? '—',
+            },
+            // como a query do back já filtra aprovados, marcamos como APROVADO
+            status: 'APROVADO',
+            nome_aluno: a.nome_completo ?? a.nome ?? '—',
+            email: a.email ?? '—',
+            matricula: a.matricula ?? a.cpf ?? '—',
+            documentoNotasUrl: a.documentoNotasUrl ?? null,
+          }));
+        }),
+        catchError(this.handleError)
+      );
   }
 
   aprovarAluno(id: number): Observable<any> {
@@ -275,6 +322,125 @@ export class ProjetoService {
     };
   }
 
+  // Upload de projetos
+  uploadDocx(idProjeto: number, arquivo: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', arquivo);
+    return this.http.put(
+      `${this.apiUrlProjetos}${idProjeto}/docx/upload`,
+      formData
+    );
+  }
+
+  downloadDocx(idProjeto: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrlProjetos}${idProjeto}/docx`, {
+      responseType: 'blob',
+    });
+  }
+
+  uploadPdf(idProjeto: number, arquivo: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', arquivo);
+    return this.http.put(
+      `${this.apiUrlProjetos}${idProjeto}/pdf/upload`,
+      formData
+    );
+  }
+
+  downloadPdf(idProjeto: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrlProjetos}${idProjeto}/pdf`, {
+      responseType: 'blob',
+    });
+  }
+
+  listarProjetosParaAvaliacao(): Observable<ProjetoBasico[]> {
+    return this.http
+      .get<any[]>(`${this.apiBase}/avaliacoes/projetos-para-avaliacao`)
+      .pipe(
+        map((rows) =>
+          (rows || []).map(
+            (r) =>
+              ({
+                id: r.id_projeto,
+                titulo: r.titulo || r.nome || 'Projeto',
+                pdfUrl: r.pdf_url || r.documento_url || '#',
+              } as ProjetoBasico)
+          )
+        ),
+        catchError(this.handleError)
+      );
+  }
+
+  // src/app/services/projeto.service.ts
+  listarNotasDoProjeto(idProjeto: number): Observable<number[]> {
+    return this.http
+      .get<{ notas: number[] }>(
+        `${this.apiBase}/avaliacoes/projetos/${idProjeto}/notas`
+      )
+      .pipe(
+        map((res) => res?.notas || []),
+        catchError(() => of([]))
+      );
+  }
+  enviarConvitesDeAvaliacao(payload: {
+    envios: AvaliacaoEnvio[];
+  }): Observable<ConviteAvaliacaoResponse> {
+    return this.http
+      .post<ConviteAvaliacaoResponse>(
+        `${this.apiBase}/avaliacoes/convites`,
+        payload
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  obterInfoPorToken(token: string): Observable<AvaliacaoLinkInfo> {
+    return this.http
+      .get<AvaliacaoLinkInfo>(`${this.apiBase}/avaliacoes/form/${token}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  salvarAvaliacaoPorToken(
+    token: string,
+    dto: AvaliacaoSalvarDTO
+  ): Observable<{ mensagem: string }> {
+    return this.http
+      .post<{ mensagem: string }>(
+        `${this.apiBase}/avaliacoes/form/${token}`,
+        dto
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  enviarProjetoParaAvaliadores(
+    idProjeto: number,
+    destinatarios: string[],
+    mensagem?: string,
+    assunto?: string
+  ): Observable<{ mensagem: string }> {
+    const body = { destinatarios, mensagem, assunto };
+    return this.http
+      .post<{ mensagem: string }>(
+        `${this.apiUrlProjetos}${idProjeto}/enviar`,
+        body
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  listarProjetosComPdf(): Observable<
+    Array<{ id: number; titulo: string; has_pdf: boolean }>
+  > {
+    return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
+      map((res) =>
+        (res.projetos || []).map((p) => ({
+          id: p.id_projeto,
+          titulo: p.titulo_projeto || p.nome || 'Projeto',
+          has_pdf: !!p.has_pdf,
+        }))
+      ),
+      catchError(this.handleError)
+    );
+  }
+
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     console.error('❌ Erro HTTP:', error);
 
@@ -300,4 +466,10 @@ export class ProjetoService {
       error: error.error,
     }));
   };
+
+  listarOrientadoresAprovados(): Observable<Orientador[]> {
+    return this.http.get<Orientador[]>(
+      `${this.apiBase}/orientadores/aprovados`
+    );
+  }
 }

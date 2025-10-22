@@ -1,13 +1,17 @@
-<div class="container">
+<div class="container avl">
   <h2><i class="fa-solid fa-users"></i> Avaliadores Externos</h2>
 
-  <div class="mb-3 text-end">
+  <!-- Barra de ações: os dois botões alinhados à direita, lado a lado -->
+  <div class="avl-toolbar">
+    <div class="spacer"></div>
     <a class="btn btn-primary" [routerLink]="['/secretaria/avaliadores/novo']">
       <i class="fa-solid fa-plus"></i> Novo Avaliador
     </a>
+    <button class="btn btn-primary" (click)="abrirModal()">
+      <i class="fa-solid fa-paper-plane"></i> Enviar avaliação
+    </button>
   </div>
-
-  <table class="table table-striped">
+  <table class="table table-striped avl-table">
     <thead>
       <tr>
         <th>Nome</th>
@@ -31,10 +35,18 @@
           <span *ngIf="!a.link_lattes" class="text-muted">Não informado</span>
         </td>
         <td class="actions" data-label="Ações:">
-          <button class="btn btn-warning btn-sm" (click)="editar(a)" title="Editar">
+          <button
+            class="btn btn-warning btn-sm"
+            (click)="editar(a)"
+            title="Editar"
+          >
             <i class="fa-solid fa-edit"></i>
           </button>
-          <button class="btn btn-danger btn-sm" (click)="excluir(a.id)" title="Excluir">
+          <button
+            class="btn btn-danger btn-sm"
+            (click)="excluir(a.id)"
+            title="Excluir"
+          >
             <i class="fa-solid fa-trash"></i>
           </button>
         </td>
@@ -42,3 +54,9 @@
     </tbody>
   </table>
 </div>
+<app-enviar-avaliacoes-modal
+  *ngIf="showModal"
+  [avaliadores]="avaliadores"
+  (closed)="onModalClosed($event)"
+>
+</app-enviar-avaliacoes-modal>

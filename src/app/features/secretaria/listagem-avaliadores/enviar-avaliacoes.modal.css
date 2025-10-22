@@ -1,0 +1,24 @@
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.2); backdrop-filter:saturate(140%) blur(1px);
+}
+.modal-card{
+  position:fixed; inset:auto 0 0 0; margin:auto; top:8%; width:min(760px, 92vw);
+  background:#fff; border:1px solid #e5e7eb; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,.18);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+header, footer{ padding:14px 16px; display:flex; align-items:center; justify-content:space-between; }
+header h3{ margin:0; font-size:1.1rem; }
+header .close{ border:0; background:transparent; font-size:22px; cursor:pointer; line-height:1; }
+.body{ padding:0 16px 16px; }
+.row{ display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+select{ padding:10px; border:1px solid #d1d5db; border-radius:8px; }
+.checklist{ display:grid; gap:6px; grid-template-columns:1fr; max-height:240px; overflow:auto; padding:8px;
+            border:1px solid #e5e7eb; border-radius:8px; }
+.rule{ font-size:.9rem; color:#6b7280; margin-top:8px; }
+.hint{ color:#2563eb; }
+.erro{ color:#b91c1c; }
+.sucesso{ color:#065f46; }
+footer{ gap:8px; }
+footer .ghost{ background:#f3f4f6; border:1px solid #e5e7eb; border-radius:10px; padding:10px 14px; cursor:pointer; }
+footer .primary{ background:#2563eb; color:#fff; border:0; border-radius:10px; padding:10px 14px; cursor:pointer; }
+footer .primary:disabled{ opacity:.6; cursor:not-allowed; }

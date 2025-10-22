@@ -1,12 +1,11 @@
-// src/app/shared/interfaces/registros.ts  (ou mova para src/app/interfaces/registros.ts)
-
 export interface RegisterAlunoData {
   nomeCompleto: string;
   cpf: string;
-  curso: string;
-  campus: string;
   email: string;
   senha: string;
+  idCurso: number;
+  pdf: File;
+  possuiTrabalhoRemunerado?: boolean;
 }
 
 export interface RegisterOrientadorData {
@@ -23,7 +22,7 @@ export interface RegisterSecretariaData {
 }
 
 export interface RegisterResponse {
-  message: string;
+  mensagem: string;
   id?: number;
   email?: string;
 }

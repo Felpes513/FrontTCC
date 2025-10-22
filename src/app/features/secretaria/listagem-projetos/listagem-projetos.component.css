@@ -137,12 +137,13 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
-/* ======================== */
-/* BARRA DE PROGRESSO      */
-/* ======================== */
 .progress-bar {
-  height: 5px;
-  background: linear-gradient(90deg, var(--progress-color, #2563eb), var(--progress-color-end, #1d4ed8));
+  position: absolute; /* 👈 sai do fluxo e fica só no topo */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  pointer-events: none; /* 👈 não intercepta cliques */
 }
 
 /* ======================== */
@@ -207,6 +208,8 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  position: relative;
+  z-index: 2;
 }
 
 /* Botão de Editar */

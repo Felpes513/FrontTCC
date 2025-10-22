@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { forkJoin } from 'rxjs';
+
 import { ProjetoService } from '@services/projeto.service';
 import type { ProjetoCadastro, ProjetoDetalhado } from '@interfaces/projeto';
 import type { Orientador } from '@interfaces/orientador';
@@ -12,7 +14,7 @@ import { ListagemAlunosComponent } from '../listagem-alunos/listagem-alunos.comp
 @Component({
   selector: 'app-formulario-projeto',
   standalone: true,
-  imports: [ CommonModule, FormsModule, RouterModule, ListagemAlunosComponent ],
+  imports: [CommonModule, FormsModule, RouterModule, ListagemAlunosComponent],
   templateUrl: './formulario-projeto.component.html',
   styleUrls: ['./formulario-projeto.component.css'],
 })
@@ -28,25 +30,25 @@ export class FormularioProjetoComponent implements OnInit {
 
   orientadores: Orientador[] = [];
   orientadoresFiltrados: Orientador[] = [];
-  buscaOrientador: string = '';
-  emailOrientador: string = '';
-  orientadorSelecionadoId: number = 0;
+  buscaOrientador = '';
+  emailOrientador = '';
+  orientadorSelecionadoId = 0;
 
   alunosInscritos: Aluno[] = [];
 
   campusList: Campus[] = [];
   campusFiltrados: Campus[] = [];
-  campusSelecionadoId: number = 0;
+  campusSelecionadoId = 0;
 
-  carregando: boolean = false;
+  carregando = false;
   erro: string | null = null;
-  modoEdicao: boolean = false;
-  projetoId: number = 0;
+  modoEdicao = false;
+  projetoId = 0;
 
-  // 🆕 Modo orientador
+  // Modo orientador
   isOrientadorMode = false;
 
-  // 🆕 Seleção de alunos (somente para orientador)
+  // Seleção de alunos (somente para orientador)
   inscricoes: any[] = [];
   aprovadas: any[] = [];
   pendentesOuReprovadas: any[] = [];
@@ -56,6 +58,10 @@ export class FormularioProjetoComponent implements OnInit {
   erroSalvarSelecao = '';
   sucessoSelecao = '';
 
+  // Upload
+  arquivoDocx?: File;
+  arquivoPdf?: File;
+
   constructor(
     private projetoService: ProjetoService,
     private router: Router,
@@ -63,8 +69,8 @@ export class FormularioProjetoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // 🆕 detectar modo via data da rota
-    this.isOrientadorMode = (this.route.snapshot.data['modo'] || '').toUpperCase() === 'ORIENTADOR';
+    this.isOrientadorMode =
+      (this.route.snapshot.data['modo'] || '').toUpperCase() === 'ORIENTADOR';
 
     this.carregarOrientadores();
     this.verificarModoEdicao();
@@ -81,73 +87,89 @@ export class FormularioProjetoComponent implements OnInit {
         this.carregarProjeto(projetoId);
       } else {
         console.error('ID do projeto inválido:', id);
-        this.router.navigate([ this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos' ]);
+        this.router.navigate([
+          this.isOrientadorMode
+            ? '/orientador/projetos'
+            : '/secretaria/projetos',
+        ]);
       }
     }
   }
 
+  /** Preenche o form usando apenas GET /projetos/ e cruzando por nome (sem normalização) */
   private carregarProjeto(id: number): void {
     this.carregando = true;
     this.erro = null;
 
-    this.projetoService.getProjetoDetalhado(id).subscribe({
-      next: (projeto: ProjetoDetalhado) => {
-        this.projeto = {
-          titulo_projeto: projeto.titulo_projeto || projeto.nomeProjeto,
-          resumo: projeto.resumo || '',
-          orientador_nome: projeto.nomeOrientador,
-          orientador_email: projeto.orientador_email || '',
-          quantidadeMaximaAlunos: projeto.quantidadeMaximaAlunos,
-          id_campus: projeto.id_campus || 0,
-        };
-
-        this.orientadorSelecionadoId = projeto.id_orientador || 0;
-        this.emailOrientador = projeto.orientador_email || '';
-        this.campusSelecionadoId = projeto.id_campus || 0;
-
-        // Secretaria: lista alunos atuais no projeto
-        if (!this.isOrientadorMode) {
-          if (Array.isArray(projeto.alunos) && projeto.alunos.length > 0) {
-            this.alunosInscritos = projeto.alunos.map((a: any) => ({
-              id: a.id,
-              nome: a.nome_completo ?? a.nome,
-              email: a.email,
-              documentoNotasUrl: a.documentoNotasUrl,
-            }));
-          } else {
-            this.alunosInscritos = [];
-          }
+    forkJoin({
+      projetos: this.projetoService.listarProjetosRaw(),
+      orientadores: this.projetoService.listarOrientadores(),
+      campus: this.projetoService.listarCampus(),
+    }).subscribe({
+      next: ({ projetos, orientadores, campus }) => {
+        // 1) projeto pelo id_projeto
+        const p = (projetos || []).find(
+          (x: any) => Number(x.id_projeto) === Number(id)
+        );
+        if (!p) {
+          this.erro = 'Projeto não encontrado';
+          this.carregando = false;
+          return;
         }
 
-        // 🆕 Orientador: carrega inscrições e pré-seleciona
-        if (this.isOrientadorMode) {
-          this.limite = Number(projeto?.quantidadeMaximaAlunos || 0);
-          this.carregarInscricoesOrientador(id, projeto);
-        }
+        // 2) campos básicos
+        this.projeto.titulo_projeto = p.titulo_projeto || '';
+        this.projeto.resumo = p.resumo || '';
 
+        // 3) orientador pelo nome
+        const o = (orientadores || []).find(
+          (x: any) =>
+            (x.nome_completo || '').trim().toLowerCase() ===
+            (p.orientador || '').trim().toLowerCase()
+        );
+        this.orientadorSelecionadoId = o?.id || 0;
+        this.projeto.orientador_nome = p.orientador || o?.nome_completo || '';
+        this.emailOrientador = o?.email || '';
+
+        // 4) campus pelo nome
+        const c = (campus || []).find(
+          (x: any) =>
+            (x.campus || '').trim().toLowerCase() ===
+            (p.campus || '').trim().toLowerCase()
+        );
+        this.campusSelecionadoId = c?.id_campus || 0;
+        this.projeto.id_campus = this.campusSelecionadoId;
+
+        // (se for usar o modo orientador, chame aqui carregarInscricoesOrientador)
         this.carregando = false;
       },
-      error: (error) => {
-        console.error('Erro ao carregar projeto:', error);
-        this.erro = 'Erro ao carregar dados do projeto';
+      error: (e) => {
+        console.error('Erro ao carregar dados para edição:', e);
+        this.erro = 'Falha ao carregar dados do projeto';
         this.carregando = false;
       },
     });
   }
 
-  // 🆕 (orientador) buscar inscrições e separar por status
-  private carregarInscricoesOrientador(idProjeto: number, projeto?: ProjetoDetalhado) {
+  // (Opcional) modo orientador
+  private carregarInscricoesOrientador(
+    idProjeto: number,
+    projeto?: ProjetoDetalhado
+  ) {
     this.projetoService.listarInscricoesPorProjeto(idProjeto).subscribe({
       next: (inscricoes) => {
         this.inscricoes = Array.isArray(inscricoes) ? inscricoes : [];
         this.aprovadas = this.inscricoes.filter((i) => this.isAprovada(i));
-        this.pendentesOuReprovadas = this.inscricoes.filter((i) => !this.isAprovada(i));
+        this.pendentesOuReprovadas = this.inscricoes.filter(
+          (i) => !this.isAprovada(i)
+        );
 
-        const jaNoProjetoIds = this.extractIdsFromAlunos(projeto?.alunos || projeto?.nomesAlunos || []);
+        const jaNoProjetoIds = this.extractIdsFromAlunos(
+          projeto?.alunos || projeto?.nomesAlunos || []
+        );
         jaNoProjetoIds.forEach((id) => this.selecionados.add(id));
       },
       error: () => {
-        // falha em inscrições não deve travar a tela
         this.inscricoes = [];
         this.aprovadas = [];
         this.pendentesOuReprovadas = [];
@@ -156,15 +178,13 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   private carregarOrientadores(): void {
-    this.projetoService.listarOrientadores().subscribe({
-      next: (orientadores: Orientador[]) => {
-        this.orientadores = Array.isArray(orientadores) ? orientadores : [];
+    this.projetoService.listarOrientadoresAprovados().subscribe({
+      next: (rows) => {
+        this.orientadores = rows ?? [];
         this.orientadoresFiltrados = [...this.orientadores];
       },
-      error: (error) => {
-        console.error('Erro ao carregar orientadores:', error);
-        this.orientadores = [];
-        this.orientadoresFiltrados = [];
+      error: () => {
+        this.orientadores = this.orientadoresFiltrados = [];
       },
     });
   }
@@ -218,7 +238,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   salvarProjeto(): void {
-    if (this.isOrientadorMode) return; // 🆕 orientador não edita projeto
+    if (this.isOrientadorMode) return;
 
     if (!this.validarFormulario()) return;
 
@@ -258,7 +278,10 @@ export class FormularioProjetoComponent implements OnInit {
       alert('Por favor, preencha o resumo do projeto');
       return false;
     }
-    if (!this.projeto.orientador_nome?.trim() || !this.orientadorSelecionadoId) {
+    if (
+      !this.projeto.orientador_nome?.trim() ||
+      !this.orientadorSelecionadoId
+    ) {
       alert('Por favor, selecione um orientador');
       return false;
     }
@@ -270,7 +293,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   aprovarAluno(alunoId: number | undefined): void {
-    if (this.isOrientadorMode) return; // 🆕 orientador não aprova
+    if (this.isOrientadorMode) return;
     if (!alunoId || alunoId <= 0) return;
     this.projetoService.aprovarAluno(alunoId).subscribe({
       next: () => {
@@ -284,7 +307,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   excluirAluno(alunoId: number | undefined): void {
-    if (this.isOrientadorMode) return; // 🆕 orientador não exclui
+    if (this.isOrientadorMode) return;
     if (!alunoId || alunoId <= 0) return;
     if (!confirm('Tem certeza que deseja excluir este aluno?')) return;
     this.projetoService.excluirAluno(alunoId).subscribe({
@@ -299,11 +322,13 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   voltar(): void {
-    this.router.navigate([ this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos' ]);
+    this.router.navigate([
+      this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos',
+    ]);
   }
 
   limparFormulario(): void {
-    if (this.isOrientadorMode) return; // 🆕 sem limpar no modo orientador
+    if (this.isOrientadorMode) return;
     this.projeto = {
       titulo_projeto: '',
       resumo: '',
@@ -331,60 +356,83 @@ export class FormularioProjetoComponent implements OnInit {
     return this.modoEdicao ? 'Atualizar Projeto' : 'Cadastrar Projeto';
   }
 
-  // 🆕 utilitários do modo orientador
+  // utilitários do modo orientador
   isAprovada(i: any): boolean {
     const s = String(i?.status || i?.situacao || '').toUpperCase();
     return s === 'APROVADO' || s === 'APROVADA' || i?.aprovado === true;
   }
+
   isPendente(i: any): boolean {
     const s = String(i?.status || i?.situacao || 'PENDENTE').toUpperCase();
     return s.includes('PENDENTE');
   }
+
   isReprovada(i: any): boolean {
     const s = String(i?.status || i?.situacao || '').toUpperCase();
     return s.startsWith('REPROV');
   }
-  alunoId(i: any): number {
-    return i?.id_aluno ?? i?.aluno_id ?? i?.idAluno ?? i?.aluno?.id ?? i?.id ?? 0;
-  }
-  alunoNome(i: any): string {
-    return i?.aluno?.nome || i?.nome_aluno || i?.nome || i?.aluno_nome || `Aluno #${this.alunoId(i)}`;
-  }
-  disabledCheckbox(i: any): boolean {
-    const id = this.alunoId(i);
-    if (this.selecionados.has(id)) return false;
-    if (!this.limite) return false;
-    return this.selecionados.size >= this.limite;
-  }
-  toggleSelecionado(i: any, checked: boolean) {
-    const id = this.alunoId(i);
-    if (!id) return;
-    if (checked) {
-      if (this.limite && this.selecionados.size >= this.limite) return;
-      this.selecionados.add(id);
-    } else {
-      this.selecionados.delete(id);
-    }
-  }
-  salvarSelecao(): void {
-    if (!this.isOrientadorMode || !this.projetoId) return;
-    this.sucessoSelecao = ''; this.erroSalvarSelecao = '';
-    this.salvandoSelecao = true;
-    const ids = Array.from(this.selecionados);
-    this.projetoService.updateAlunosProjeto(this.projetoId, ids).subscribe({
-      next: () => {
-        this.salvandoSelecao = false;
-        this.sucessoSelecao = 'Alunos atualizados com sucesso!';
-      },
-      error: (e) => {
-        this.salvandoSelecao = false;
-        this.erroSalvarSelecao = e?.message || 'Falha ao salvar seleção.';
-      }
-    });
-  }
 
   private extractIdsFromAlunos(arr: any[]): number[] {
     if (!Array.isArray(arr)) return [];
-    return arr.map((a: any) => a?.id ?? a?.id_aluno ?? a).filter((v: any) => typeof v === 'number');
+    return arr
+      .map((a: any) => a?.id ?? a?.id_aluno ?? a)
+      .filter((v: any) => typeof v === 'number');
+  }
+
+  // ==== UPLOAD / DOWNLOAD (usa o service) ====
+
+  onFileSelected(event: Event, tipo: 'docx' | 'pdf') {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+
+    const file = input.files[0];
+    if (tipo === 'docx' && file.name.toLowerCase().endsWith('.docx')) {
+      this.arquivoDocx = file;
+    } else if (tipo === 'pdf' && file.name.toLowerCase().endsWith('.pdf')) {
+      this.arquivoPdf = file;
+    } else {
+      alert(`Formato inválido. Envie um arquivo ${tipo.toUpperCase()}.`);
+    }
+  }
+
+  enviarArquivo(tipo: 'docx' | 'pdf') {
+    if (!this.projetoId)
+      return alert('Salve o projeto antes de enviar arquivos.');
+
+    const arquivo = tipo === 'docx' ? this.arquivoDocx : this.arquivoPdf;
+    if (!arquivo)
+      return alert(`Selecione um arquivo ${tipo.toUpperCase()} primeiro.`);
+
+    const metodo =
+      tipo === 'docx'
+        ? this.projetoService.uploadDocx(this.projetoId, arquivo)
+        : this.projetoService.uploadPdf(this.projetoId, arquivo);
+
+    metodo.subscribe({
+      next: () => alert(`${tipo.toUpperCase()} enviado com sucesso!`),
+      error: (err) =>
+        alert(`Erro ao enviar ${tipo.toUpperCase()}: ${err.message}`),
+    });
+  }
+
+  baixarArquivo(tipo: 'docx' | 'pdf') {
+    if (!this.projetoId) return alert('Projeto não identificado.');
+    const metodo =
+      tipo === 'docx'
+        ? this.projetoService.downloadDocx(this.projetoId)
+        : this.projetoService.downloadPdf(this.projetoId);
+
+    metodo.subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `projeto_${this.projetoId}.${tipo}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) =>
+        alert(`Erro ao baixar ${tipo.toUpperCase()}: ${err.message}`),
+    });
   }
 }

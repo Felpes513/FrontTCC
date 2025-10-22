@@ -1,13 +1,8 @@
-// src/app/services/login.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs'; // ⬅️ importe tap
-
-interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-}
+import { Observable, tap } from 'rxjs';
+import { LoginResponse } from '@interfaces/login';
+import { ResetPasswordDirectBody } from '@interfaces/login';
 
 type Role = 'SECRETARIA' | 'ORIENTADOR' | 'ALUNO';
 
@@ -25,9 +20,7 @@ export class LoginService {
       .post<LoginResponse>(`${this.baseUrl}/login`, body.toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
-      .pipe(
-        tap((res) => this.persistTokensFromResponse(res)) // ⬅️ salva aqui
-      );
+      .pipe(tap((res) => this.persistTokensFromResponse(res)));
   }
 
   loginOrientador(email: string, senha: string): Observable<LoginResponse> {
@@ -40,9 +33,7 @@ export class LoginService {
         body.toString(),
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       )
-      .pipe(
-        tap((res) => this.persistTokensFromResponse(res)) // ⬅️ salva aqui
-      );
+      .pipe(tap((res) => this.persistTokensFromResponse(res)));
   }
 
   loginSecretaria(email: string, senha: string): Observable<LoginResponse> {
@@ -83,7 +74,7 @@ export class LoginService {
         this.base64UrlDecode(token.split('.')[1] || '')
       );
       const raw =
-        payload.perfil || // ⬅️ inclua 'perfil' se o back usa isso
+        payload.perfil ||
         payload.role ||
         payload.roles?.[0] ||
         payload.authorities?.[0];

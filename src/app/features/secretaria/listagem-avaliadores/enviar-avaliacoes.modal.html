@@ -1,0 +1,72 @@
+<div class="modal-backdrop" (click)="fechar()"></div>
+<div class="modal-card" role="dialog" aria-modal="true">
+  <header>
+    <h3>Enviar projeto (.pdf) aos avaliadores</h3>
+    <button class="close" (click)="fechar()" aria-label="Fechar">×</button>
+  </header>
+
+  <section class="body">
+    <div *ngIf="carregando" class="hint">Carregando…</div>
+    <div *ngIf="erro" class="erro">{{ erro }}</div>
+
+    <ng-container *ngIf="!carregando && !erro">
+      <div class="row">
+        <label>Projeto (somente com PDF disponível)</label>
+        <select
+          [(ngModel)]="projetoSelecionadoId"
+          name="projetoSelecionadoId"
+          required
+        >
+          <option [ngValue]="null">-- Selecione --</option>
+          <option *ngFor="let p of projetos" [ngValue]="p.id">
+            {{ p.titulo }}
+          </option>
+        </select>
+      </div>
+
+      <div class="row" *ngIf="projetoSelecionadoId">
+        <label>Selecione 1 a 5 avaliadores</label>
+        <div class="checklist">
+          <label *ngFor="let a of avaliadores">
+            <input type="checkbox" (change)="onToggle($event, a.email)" />
+            <span>{{ a.nome }} — {{ a.email }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="row">
+        <label>Assunto (opcional)</label>
+        <input
+          type="text"
+          [(ngModel)]="assunto"
+          maxlength="200"
+          placeholder="USCS • Solicitação de Avaliação — (padrão)"
+        />
+      </div>
+
+      <div class="row">
+        <label>Mensagem ao avaliador (opcional)</label>
+        <textarea
+          [(ngModel)]="mensagem"
+          rows="4"
+          maxlength="3000"
+          placeholder="Texto adicional que irá dentro do e-mail"
+        ></textarea>
+      </div>
+
+      <div class="rule">
+        Regra: até <strong>5 destinatários</strong> por envio. O e-mail leva o
+        PDF do projeto em anexo.
+      </div>
+
+      <div class="msg sucesso" *ngIf="sucesso">{{ sucesso }}</div>
+    </ng-container>
+  </section>
+
+  <footer>
+    <button class="ghost" (click)="fechar()">Cancelar</button>
+    <button class="primary" [disabled]="!podeEnviar" (click)="enviar()">
+      Enviar
+    </button>
+  </footer>
+</div>

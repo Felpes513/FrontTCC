@@ -1,18 +1,23 @@
+import { ProjetoCadastro } from './shared/interfaces/projeto';
 import { Routes } from '@angular/router';
 import { orientadorGuard } from '@core/guards/orientador.guard';
-import { ConfiguracoesComponent } from './features/secretaria/configuracoes/configuracoes.component';
+import { alunoGuard } from '@core/guards/aluno.guard';
+import { LandingRedirectGuard } from '@core/guards/landing-redirect.guard';
 
 export const routes: Routes = [
   {
     path: '',
+    canActivate: [LandingRedirectGuard],
     loadComponent: () =>
       import('./components/home/home.component').then((m) => m.HomeComponent),
   },
+
   {
     path: 'login',
     loadComponent: () =>
       import('@shared/login/login.component').then((m) => m.LoginComponent),
   },
+
   {
     path: 'cadastro',
     loadComponent: () =>
@@ -21,7 +26,7 @@ export const routes: Routes = [
       ),
   },
 
-  // ===== SECRETARIA (usa o mesmo sidenav) =====
+  // SECRETARIA
   {
     path: 'secretaria',
     loadComponent: () =>
@@ -36,6 +41,13 @@ export const routes: Routes = [
           import('./features/secretaria/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent
           ),
+      },
+      {
+        path: 'configuracoes',
+        loadComponent: () =>
+          import(
+            './features/secretaria/configuracoes/configuracoes.component'
+          ).then((m) => m.ConfiguracoesComponent),
       },
       {
         path: 'avaliadores',
@@ -54,9 +66,9 @@ export const routes: Routes = [
       {
         path: 'notificacoes',
         loadComponent: () =>
-          import('./features/secretaria/notificacoes/notificacoes.component').then(
-            (m) => m.NotificacoesComponent
-          ),
+          import(
+            './features/secretaria/notificacoes/notificacoes.component'
+          ).then((m) => m.NotificacoesComponent),
       },
       {
         path: 'projetos',
@@ -82,9 +94,9 @@ export const routes: Routes = [
       {
         path: 'email',
         loadComponent: () =>
-          import('./features/secretaria/envio-de-email/envio-de-email.component').then(
-            (m) => m.EnvioDeEmailComponent
-          ),
+          import(
+            './features/secretaria/envio-de-email/envio-de-email.component'
+          ).then((m) => m.EnvioDeEmailComponent),
       },
       {
         path: 'relatorios',
@@ -93,10 +105,17 @@ export const routes: Routes = [
             (m) => m.RelatoriosComponent
           ),
       },
+      {
+        path: 'cadastros',
+        loadComponent: () =>
+          import('./features/secretaria/cadastros/cadastros.component').then(
+            (m) => m.CadastrosComponent // <- certo
+          ),
+      },
     ],
   },
 
-  // ===== ORIENTADOR (mesmo sidenav + guard) =====
+  // ORIENTADOR
   {
     path: 'orientador',
     canActivate: [orientadorGuard],
@@ -107,27 +126,95 @@ export const routes: Routes = [
     children: [
       {
         path: 'projetos',
-        // usa a MESMA listagem da secretaria
         loadComponent: () =>
           import(
             './features/secretaria/listagem-projetos/listagem-projetos.component'
           ).then((m) => m.ListagemProjetosComponent),
-        data: { modo: 'ORIENTADOR' }, // opcional (fallback ao AuthService)
+        data: { modo: 'ORIENTADOR' },
       },
       {
-        path: 'relatorios',
-        redirectTo: 'projetos',
-        pathMatch: 'full',
+        path: 'projetos/:id',
+        loadComponent: () =>
+          import(
+            './features/secretaria/formulario-projeto/formulario-projeto.component'
+          ).then((m) => m.FormularioProjetoComponent),
+        data: { modo: 'ORIENTADOR' },
+      },
+      { path: 'relatorios', redirectTo: 'projetos', pathMatch: 'full' },
+      {
+        path: 'relatorios/:projetoId',
+        loadComponent: () =>
+          import(
+            './features/orientador/relatorio-form/relatorio-form.component'
+          ).then((m) => m.RelatorioFormComponent),
+      },
+      { path: '', redirectTo: 'projetos', pathMatch: 'full' },
+    ],
+  },
+
+  // ALUNO
+  {
+    path: 'aluno',
+    canActivate: [alunoGuard],
+    loadComponent: () =>
+      import('./shared/sidenav/sidenav-secretaria.component').then(
+        (m) => m.SidenavSecretariaComponent
+      ),
+    children: [
+      { path: '', redirectTo: 'projetos', pathMatch: 'full' },
+      {
+        path: 'projetos',
+        loadComponent: () =>
+          import(
+            './features/secretaria/listagem-projetos/listagem-projetos.component'
+          ).then((m) => m.ListagemProjetosComponent),
       },
       {
         path: 'relatorios/:projetoId',
         loadComponent: () =>
-          import('./features/orientador/relatorio-form/relatorio-form.component').then(
-            (m) => m.RelatorioFormComponent
-          ),
+          import(
+            './features/orientador/relatorio-form/relatorio-form.component'
+          ).then((m) => m.RelatorioFormComponent),
       },
-      { path: '', redirectTo: 'projetos', pathMatch: 'full' },
     ],
+  },
+  {
+    path: 'avaliador-externo/avaliacao/:token',
+    loadComponent: () =>
+      import(
+        './features/avaliador-externo/formulario-avaliacao/formulario-avaliacao.component'
+      ).then((m) => m.FormularioAvaliacaoExternaComponent),
+  },
+  {
+    path: 'aluno/reset-password',
+    loadComponent: () =>
+      import('./shared/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent
+      ),
+    data: { perfil: 'aluno' },
+  },
+  {
+    path: 'orientador/reset-password',
+    loadComponent: () =>
+      import('./shared/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent
+      ),
+    data: { perfil: 'orientador' },
+  },
+  {
+    path: 'secretaria/reset-password',
+    loadComponent: () =>
+      import('./shared/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent
+      ),
+    data: { perfil: 'secretaria' },
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./shared/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent
+      ),
   },
 
   // Fallback
