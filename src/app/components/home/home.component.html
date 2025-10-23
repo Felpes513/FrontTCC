@@ -56,6 +56,10 @@
         class="carousel-swiper"
       >
         <swiper-slide *ngFor="let slide of slides">
+          <!-- imagem do slide -->
+          <img class="slide-img" [src]="slide.img" [alt]="slide.title" />
+
+          <!-- conteúdo por cima -->
           <div class="slide-content">
             <div class="slide-icon">
               <i [class]="slide.icon"></i>
