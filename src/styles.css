@@ -97,6 +97,29 @@ body {
   background-color: var(--gray-50);
 }
 
+/* ====== Acessibilidade - Skip Link ====== */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--uscs-blue);
+  color: var(--white);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  text-decoration: none;
+  border-radius: 0 0 var(--radius-md) 0;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  z-index: 9999;
+  transition: top var(--transition-base);
+  box-shadow: var(--shadow-lg);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--uscs-orange);
+  outline-offset: 2px;
+}
+
 /* ====== Tipografia ====== */
 h1,
 h2,

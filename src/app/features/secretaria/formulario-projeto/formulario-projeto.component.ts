@@ -11,6 +11,14 @@ import type { Aluno } from '@interfaces/aluno';
 import type { Campus } from '@interfaces/campus';
 import { ListagemAlunosComponent } from '../listagem-alunos/listagem-alunos.component';
 
+// >>> Extensão local do tipo para suportar campos do template
+type ProjetoCadastroExt = ProjetoCadastro & {
+  nota1?: number | null;
+  nota2?: number | null;
+  notaFinal?: number | null;
+  tipo_bolsa?: string | null;
+};
+
 @Component({
   selector: 'app-formulario-projeto',
   standalone: true,
@@ -19,13 +27,20 @@ import { ListagemAlunosComponent } from '../listagem-alunos/listagem-alunos.comp
   styleUrls: ['./formulario-projeto.component.css'],
 })
 export class FormularioProjetoComponent implements OnInit {
-  projeto: ProjetoCadastro = {
+  // Use o tipo estendido aqui
+  projeto: ProjetoCadastroExt = {
     titulo_projeto: '',
     resumo: '',
     orientador_nome: '',
     orientador_email: '',
     quantidadeMaximaAlunos: 0,
     id_campus: 0,
+
+    // campos usados no HTML
+    nota1: null,
+    nota2: null,
+    notaFinal: null,
+    tipo_bolsa: null,
   };
 
   orientadores: Orientador[] = [];
@@ -107,7 +122,6 @@ export class FormularioProjetoComponent implements OnInit {
       campus: this.projetoService.listarCampus(),
     }).subscribe({
       next: ({ projetos, orientadores, campus }) => {
-        // 1) projeto pelo id_projeto
         const p = (projetos || []).find(
           (x: any) => Number(x.id_projeto) === Number(id)
         );
@@ -117,11 +131,9 @@ export class FormularioProjetoComponent implements OnInit {
           return;
         }
 
-        // 2) campos básicos
         this.projeto.titulo_projeto = p.titulo_projeto || '';
         this.projeto.resumo = p.resumo || '';
 
-        // 3) orientador pelo nome
         const o = (orientadores || []).find(
           (x: any) =>
             (x.nome_completo || '').trim().toLowerCase() ===
@@ -130,8 +142,8 @@ export class FormularioProjetoComponent implements OnInit {
         this.orientadorSelecionadoId = o?.id || 0;
         this.projeto.orientador_nome = p.orientador || o?.nome_completo || '';
         this.emailOrientador = o?.email || '';
+        this.projeto.orientador_email = this.emailOrientador;
 
-        // 4) campus pelo nome
         const c = (campus || []).find(
           (x: any) =>
             (x.campus || '').trim().toLowerCase() ===
@@ -140,7 +152,12 @@ export class FormularioProjetoComponent implements OnInit {
         this.campusSelecionadoId = c?.id_campus || 0;
         this.projeto.id_campus = this.campusSelecionadoId;
 
-        // (se for usar o modo orientador, chame aqui carregarInscricoesOrientador)
+        // Se o seu backend já devolver notas/bolsa, aproveite:
+        this.projeto.nota1 = this.toNumOrNull(p.nota1);
+        this.projeto.nota2 = this.toNumOrNull(p.nota2);
+        this.projeto.notaFinal = this.toNumOrNull(p.notaFinal);
+        this.projeto.tipo_bolsa = p.tipo_bolsa ?? null;
+
         this.carregando = false;
       },
       error: (e) => {
@@ -149,6 +166,11 @@ export class FormularioProjetoComponent implements OnInit {
         this.carregando = false;
       },
     });
+  }
+
+  private toNumOrNull(v: any): number | null {
+    const n = Number(v);
+    return isNaN(n) ? null : n;
   }
 
   // (Opcional) modo orientador
@@ -239,7 +261,6 @@ export class FormularioProjetoComponent implements OnInit {
 
   salvarProjeto(): void {
     if (this.isOrientadorMode) return;
-
     if (!this.validarFormulario()) return;
 
     this.carregando = true;
@@ -336,6 +357,10 @@ export class FormularioProjetoComponent implements OnInit {
       orientador_email: '',
       quantidadeMaximaAlunos: 0,
       id_campus: 0,
+      nota1: null,
+      nota2: null,
+      notaFinal: null,
+      tipo_bolsa: null,
     };
     this.orientadorSelecionadoId = 0;
     this.emailOrientador = '';
@@ -380,7 +405,6 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   // ==== UPLOAD / DOWNLOAD (usa o service) ====
-
   onFileSelected(event: Event, tipo: 'docx' | 'pdf') {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;

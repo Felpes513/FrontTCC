@@ -1,23 +1,31 @@
 <div class="notificacoes-container">
-  <h2><i class="fas fa-bell"></i> Notificações</h2>
+  <h2><mat-icon>notifications</mat-icon> Notificações</h2>
 
   <div class="toolbar">
-    <button class="btn-marcar" (click)="marcarTodasComoLidas()" [disabled]="!notificacoes.length">
-      <i class="fas fa-check-circle"></i> Ler todas as notificações
+    <button
+      class="btn-marcar"
+      (click)="marcarTodasComoLidas()"
+      [disabled]="!notificacoes.length"
+    >
+      <mat-icon>done_all</mat-icon> Ler todas as notificações
     </button>
 
     <div class="paginacao">
-      <button (click)="anterior()" [disabled]="page <= 1">‹</button>
+      <button (click)="anterior()" [disabled]="page <= 1">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
       <span>Página {{ page }} / {{ totalPages }}</span>
-      <button (click)="proxima()" [disabled]="page >= totalPages">›</button>
+      <button (click)="proxima()" [disabled]="page >= totalPages">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
     </div>
   </div>
 
-  <!-- estados -->
   <div *ngIf="carregando" class="loading">Carregando…</div>
-  <div *ngIf="erro" class="error">⚠️ {{ erro }}</div>
+  <div *ngIf="erro" class="error">
+    <mat-icon>warning_amber</mat-icon> {{ erro }}
+  </div>
 
-  <!-- lista da página corrente -->
   <ng-container *ngIf="!carregando && !erro">
     <div
       *ngFor="let notificacao of notificacoes"
@@ -26,20 +34,27 @@
       (click)="abrirNotificacao(notificacao)"
     >
       <p class="tipo">{{ notificacao.tipo }}</p>
-      <p class="mensagem"><strong>{{ notificacao.mensagem }}</strong></p>
+      <p class="mensagem">
+        <strong>{{ notificacao.mensagem }}</strong>
+      </p>
       <p class="data">{{ notificacao.data }} às {{ notificacao.hora }}</p>
     </div>
 
     <p *ngIf="!notificacoes?.length" class="vazio">Sem notificações.</p>
   </ng-container>
 
-  <!-- Modal -->
   <div class="modal" *ngIf="notificacaoAberta">
     <div class="modal-conteudo">
-      <button class="fechar" (click)="fecharModal()">&times;</button>
+      <button class="fechar" (click)="fecharModal()">
+        <mat-icon>close</mat-icon>
+      </button>
       <h3>{{ notificacaoAberta.tipo }}</h3>
-      <p class="mensagem"><strong>{{ notificacaoAberta.mensagem }}</strong></p>
-      <small class="data">{{ notificacaoAberta.data }} às {{ notificacaoAberta.hora }}</small>
+      <p class="mensagem">
+        <strong>{{ notificacaoAberta.mensagem }}</strong>
+      </p>
+      <small class="data"
+        >{{ notificacaoAberta.data }} às {{ notificacaoAberta.hora }}</small
+      >
     </div>
   </div>
 </div>

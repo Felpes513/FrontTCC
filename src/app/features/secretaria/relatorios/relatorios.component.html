@@ -1,32 +1,28 @@
 <h2>Relatórios</h2>
 
-<!-- Barra de ações -->
 <div class="toolbar">
   <div class="mes-picker">
     <label for="mes"
-      ><i class="far fa-calendar-alt"></i> Mês de referência</label
+      ><mat-icon>calendar_month</mat-icon> Mês de referência</label
     >
     <input id="mes" type="month" [(ngModel)]="mes" (change)="atualizarMes()" />
   </div>
 
   <button class="btn" [disabled]="baixando" (click)="baixarAlunosXlsx()">
-    <i class="fas fa-file-excel"></i>
+    <mat-icon>download</mat-icon>
     {{ baixando ? "Gerando..." : "Baixar Alunos (XLSX)" }}
   </button>
 </div>
 
-<!-- Estado de carregamento/erro -->
 <div *ngIf="carregandoMensal" class="loading">
   Carregando relatórios do mês…
 </div>
 <div *ngIf="!carregandoMensal && erroMensal" class="erro">{{ erroMensal }}</div>
 
-<!-- Grid -->
 <div class="grid">
-  <!-- Recebidos -->
   <section class="card">
     <header>
-      <h3><i class="fas fa-check-circle"></i> Recebidos no mês</h3>
+      <h3><mat-icon>check_circle</mat-icon> Recebidos no mês</h3>
       <span class="badge">{{ recebidos.length }}</span>
     </header>
 
@@ -67,10 +63,9 @@
     </table>
   </section>
 
-  <!-- Pendentes -->
   <section class="card">
     <header>
-      <h3><i class="fas fa-exclamation-circle"></i> Pendências no mês</h3>
+      <h3><mat-icon>error</mat-icon> Pendências no mês</h3>
       <span class="badge warn">{{ pendentes.length }}</span>
     </header>
 

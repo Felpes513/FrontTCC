@@ -1,15 +1,8 @@
-/* ======================== */
-/* CONTAINER PRINCIPAL     */
-/* ======================== */
 .projects-container {
   padding: 30px;
   background-color: #f8f9fa;
   min-height: 100vh;
 }
-
-/* ======================== */
-/* CABEÇALHO DA PÁGINA     */
-/* ======================== */
 .header {
   display: flex;
   justify-content: space-between;
@@ -18,23 +11,17 @@
   padding-bottom: 15px;
   border-bottom: 2px solid #e9ecef;
 }
-
 .header h2 {
   color: #2c3e50;
   font-size: 28px;
   font-weight: 600;
   margin: 0;
 }
-
-/* ======================== */
-/* ÁREA DE FILTROS         */
-/* ======================== */
 .filters {
   display: flex;
   gap: 15px;
   align-items: center;
 }
-
 .filters input {
   padding: 10px 15px;
   border-radius: 8px;
@@ -43,21 +30,16 @@
   width: 250px;
   transition: all 0.3s ease;
 }
-
 .filters input:focus {
-  outline: none;
+  outline: 0;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
-
-/* ======================== */
-/* BOTÃO: ADICIONAR PROJETO */
-/* ======================== */
 .btn-add {
   padding: 12px 20px;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: white;
-  border: none;
+  color: #fff;
+  border: 0;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
@@ -69,141 +51,229 @@
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
-
 .btn-add:hover {
   background: linear-gradient(135deg, #1d4ed8, #1e40af);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
-
-/* ======================== */
-/* BOTÕES DE FILTRO STATUS */
-/* ======================== */
+.btn-reload {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+.btn-reload:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+.btn-reload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
 .filter-buttons {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
 }
-
 .filter-buttons button {
   padding: 10px 16px;
-  border: none;
+  border: 0;
   border-radius: 8px;
   font-weight: 600;
   font-size: 13px;
   background: linear-gradient(135deg, #1d4ed8, #1d4ed8);
-  color: white;
+  color: #fff;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(241, 238, 238, 0.938);
 }
-
 .filter-buttons button:hover {
   background: linear-gradient(135deg, #d1d5db, #9ca3af);
   transform: translateY(-1px);
 }
-
 .filter-buttons button.active {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: white;
+  color: #fff;
   box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
-
-/* ======================== */
-/* GRID DE CARDS            */
-/* ======================== */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 25px;
 }
-
-/* ======================== */
-/* CARD DO PROJETO         */
-/* ======================== */
 .card {
   position: relative;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: all 0.3s ease;
   border: 1px solid #f1f5f9;
   animation: fadeIn 0.5s ease-out;
 }
-
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
 }
-
 .progress-bar {
-  position: absolute; /* 👈 sai do fluxo e fica só no topo */
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 6px;
-  pointer-events: none; /* 👈 não intercepta cliques */
+  height: 5px;
+  pointer-events: none;
 }
-
-/* ======================== */
-/* CORPO DO CARD           */
-/* ======================== */
 .card-body {
-  padding: 20px;
+  padding: 22px;
+  position: relative;
 }
-
+.card-menu {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+.menu-trigger {
+  background: transparent;
+  border: 0;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+.menu-trigger:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+.menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 240px;
+  overflow: hidden;
+  z-index: 100;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 0;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  border-bottom: 1px solid #f3f4f6;
+}
+.menu-item:last-child {
+  border-bottom: none;
+}
+.menu-item:hover {
+  background: #f9fafb;
+  color: #1f2937;
+}
+.menu-item.danger {
+  color: #dc2626;
+}
+.menu-item.danger:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.menu-item.warning {
+  color: #d97706;
+}
+.menu-item.warning:hover {
+  background: #fffbeb;
+  color: #b45309;
+}
 .card h3 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 19px;
+  font-weight: 700;
   margin: 0 0 12px 0;
   color: #1f2937;
   line-height: 1.3;
+  padding-right: 32px;
 }
-
-/* ======================== */
-/* INFORMAÇÕES DO PROJETO */
-/* ======================== */
 .orientador-info,
 .campus-info,
 .alunos-info {
-  color: #666;
+  color: #6b7280;
   font-size: 14px;
-  margin-bottom: 8px;
-}
-
-/* ======================== */
-/* LISTA DE ALUNOS         */
-/* ======================== */
-.chips {
-  margin: 15px 0;
+  margin-bottom: 6px;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
 }
-
-.chip {
-  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
-  border-radius: 20px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #4b5563;
-  border: 1px solid #e5e7eb;
-  transition: all 0.2s ease;
+.orientador-info strong,
+.campus-info strong,
+.alunos-info strong {
+  color: #374151;
+  font-weight: 600;
 }
-
+.orientador-vazio {
+  color: #dc2626;
+  font-style: italic;
+}
+.alunos-lista {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+.alunos-lista strong {
+  display: block;
+  color: #374151;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e40af;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
 .chip:hover {
-  background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
   transform: scale(1.05);
 }
-
-/* ======================== */
-/* BOTÕES DE AÇÃO NO CARD */
-/* ======================== */
 .card-actions {
-  padding: 15px 20px;
-  background: #f8fafc;
+  padding: 16px 24px;
+  background: #f9fafb;
   border-top: 1px solid #f1f5f9;
   display: flex;
   gap: 10px;
@@ -211,12 +281,10 @@
   position: relative;
   z-index: 2;
 }
-
-/* Botão de Editar */
 .btn-edit {
   background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-  border: none;
+  color: #fff;
+  border: 0;
   padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -229,18 +297,22 @@
   box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
   flex: 1;
   justify-content: center;
+  text-decoration: none;
 }
-
 .btn-edit:hover {
   background: linear-gradient(135deg, #d97706, #b45309);
   transform: translateY(-1px);
+  text-decoration: none;
 }
-
-/* Botão de Deletar */
+.btn-edit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
 .btn-delete {
   background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  border: none;
+  color: #fff;
+  border: 0;
   padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -254,98 +326,144 @@
   flex: 1;
   justify-content: center;
 }
-
 .btn-delete:hover {
   background: linear-gradient(135deg, #dc2626, #b91c1c);
   transform: translateY(-1px);
 }
-
-/* ======================== */
-/* ESTADOS DE LOADING/ERRO */
-/* ======================== */
+.btn-report {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: #fff;
+  border: 0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+  flex: 1;
+  justify-content: center;
+  text-decoration: none;
+}
+.btn-report:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+.btn-report:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-clear-filter {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+.btn-clear-filter:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+  transform: translateY(-1px);
+}
+.btn-retry {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+.btn-retry:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+}
 .loading,
 .error-message,
 .no-projects,
 .no-results {
   text-align: center;
   color: #6b7280;
-  padding: 40px 20px;
+  padding: 60px 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
-
-/* ======================== */
-/* RESPONSIVIDADE           */
-/* ======================== */
+.loading p,
+.error-message p,
+.no-projects h3,
+.no-results h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+.no-projects p,
+.no-results p {
+  color: #9ca3af;
+  font-size: 15px;
+}
 @media (max-width: 768px) {
   .projects-container {
     padding: 20px;
   }
-
   .header {
     flex-direction: column;
     gap: 15px;
     align-items: stretch;
   }
-
   .filters {
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
   }
-
   .filters input {
     width: 100%;
-    max-width: 300px;
+    max-width: none;
   }
-
   .card-grid {
     grid-template-columns: 1fr;
   }
-
   .card-actions {
     flex-direction: column;
     gap: 8px;
   }
-
   .btn-edit,
-  .btn-delete {
+  .btn-delete,
+  .btn-report {
     width: 100%;
   }
 }
-
 @media (max-width: 480px) {
   .projects-container {
     padding: 15px;
   }
-
   .header h2 {
     font-size: 22px;
     text-align: center;
   }
-
-  .filters {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .btn-add {
+  .btn-add,
+  .btn-reload {
     width: 100%;
     font-size: 13px;
     padding: 10px 16px;
     justify-content: center;
   }
-
   .card h3 {
-    font-size: 16px;
+    font-size: 17px;
   }
-
   .chip {
-    font-size: 11px;
-    padding: 4px 10px;
+    font-size: 12px;
+    padding: 5px 12px;
   }
 }
-
-/* ======================== */
-/* ANIMAÇÕES                */
-/* ======================== */
 @keyframes fadeIn {
   from {
     opacity: 0;

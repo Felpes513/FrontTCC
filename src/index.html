@@ -1,16 +1,57 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <title>Sistema de Gerenciamento de Projetos de Iniciação Cíentifica</title>
+  <title>Sistema de Gerenciamento de Projetos de Iniciação Científica - USCS</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="icon" type="image/x-icon" href="assets/Logo.jpg">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- Viewport e compatibilidade -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- SEO -->
+  <meta name="description" content="Portal de gerenciamento de projetos de iniciação científica da USCS. Conectando alunos, professores e pesquisadores em projetos de excelência acadêmica.">
+  <meta name="keywords" content="USCS, iniciação científica, projetos acadêmicos, pesquisa, universidade">
+  <meta name="author" content="USCS - Universidade Municipal de São Caetano do Sul">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Portal de Iniciação Científica - USCS">
+  <meta property="og:description" content="Sistema de gerenciamento de projetos de iniciação científica da USCS">
+  <meta property="og:image" content="assets/Logo.png">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Portal de Iniciação Científica - USCS">
+  <meta name="twitter:description" content="Sistema de gerenciamento de projetos de iniciação científica da USCS">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="./assets/Logo.jpg">
+  <link rel="apple-touch-icon" href="./assets/Logo.png">
+
+  <!-- Preconnect para melhor performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Fontes -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Theme color -->
+  <meta name="theme-color" content="#003366">
 </head>
 <body class="mat-typography">
+  <!-- Skip navigation para acessibilidade -->
+  <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+
   <app-root></app-root>
+
+  <!-- Fallback para quando JavaScript está desabilitado -->
+  <noscript>
+    <div style="text-align: center; padding: 2rem; font-family: Roboto, sans-serif;">
+      <h1>JavaScript Necessário</h1>
+      <p>Este aplicativo requer JavaScript para funcionar. Por favor, habilite JavaScript no seu navegador.</p>
+    </div>
+  </noscript>
 </body>
 </html>

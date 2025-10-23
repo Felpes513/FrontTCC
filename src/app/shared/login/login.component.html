@@ -51,7 +51,9 @@
           (click)="togglePassword()"
           aria-label="Mostrar/ocultar senha"
         >
-          <i class="icon" [class.show]="showPassword">👁️</i>
+          <mat-icon>{{
+            showPassword ? "visibility_off" : "visibility"
+          }}</mat-icon>
         </button>
       </div>
       <div class="field-error" *ngIf="senhaInput.invalid && senhaInput.touched">
@@ -76,14 +78,12 @@
     </button>
 
     <div class="erro" *ngIf="erro">
-      <i class="error-icon">⚠️</i>
+      <mat-icon>warning_amber</mat-icon>
       {{ erro }}
     </div>
   </form>
 
-  <div class="divider">
-    <span>ou</span>
-  </div>
+  <div class="divider"><span>ou</span></div>
 
   <button
     type="button"
@@ -91,7 +91,7 @@
     (click)="goToRegister()"
     *ngIf="perfil === 'aluno'"
   >
-    <i class="register-icon">👤</i>
+    <mat-icon>person_add</mat-icon>
     Criar nova conta
   </button>
 

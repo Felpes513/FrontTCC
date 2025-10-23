@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { RelatorioService } from '@services/relatorio.service';
 import { RelatorioMensal, PendenciaMensal } from '@interfaces/relatorio';
 import { forkJoin, of } from 'rxjs';
@@ -10,20 +11,17 @@ import { Router } from '@angular/router';
 @Component({
   standalone: true,
   selector: 'app-relatorios',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './relatorios.component.html',
   styleUrls: ['./relatorios.component.css'],
 })
 export class RelatoriosComponent implements OnInit {
   private relatorioService = inject(RelatorioService);
   private router = inject(Router);
-
   baixando = false;
   mes = this.toYYYYMM(new Date());
-
   recebidos: RelatorioMensal[] = [];
   pendentes: PendenciaMensal[] = [];
-
   carregandoMensal = false;
   erroMensal: string | null = null;
 
@@ -46,33 +44,24 @@ export class RelatoriosComponent implements OnInit {
     this.erroMensal = null;
 
     forkJoin({
-      recebidos: this.relatorioService.listarRecebidosSecretaria(this.mes).pipe(
-        catchError((e) => {
-          console.warn('Recebidos (secretaria) indisponível:', e);
-          return of<RelatorioMensal[]>([]);
-        })
-      ),
-      pendentes: this.relatorioService.listarPendentesSecretaria(this.mes).pipe(
-        catchError((e) => {
-          console.warn('Pendentes (secretaria) indisponível:', e);
-          return of<PendenciaMensal[]>([]);
-        })
-      ),
+      recebidos: this.relatorioService
+        .listarRecebidosSecretaria(this.mes)
+        .pipe(catchError(() => of<RelatorioMensal[]>([]))),
+      pendentes: this.relatorioService
+        .listarPendentesSecretaria(this.mes)
+        .pipe(catchError(() => of<PendenciaMensal[]>([]))),
     }).subscribe({
       next: ({ recebidos, pendentes }) => {
         this.recebidos = recebidos ?? [];
         this.pendentes = pendentes ?? [];
         this.carregandoMensal = false;
-
         if (!recebidos.length && !pendentes.length) {
-          this.erroMensal =
-            'Nenhum dado retornado. Se os endpoints da Secretaria ainda não existem, crie-os em /relatorios-mensais e /relatorios-mensais/pendentes.';
+          this.erroMensal = 'Nenhum dado retornado.';
         }
       },
-      error: (err) => {
+      error: () => {
         this.erroMensal = 'Falha ao carregar relatórios do mês.';
         this.carregandoMensal = false;
-        console.error(err);
       },
     });
   }
@@ -95,21 +84,18 @@ export class RelatoriosComponent implements OnInit {
         window.URL.revokeObjectURL(url);
         this.baixando = false;
       },
-      error: (err) => {
-        console.error('Erro ao baixar XLSX:', err);
+      error: () => {
         alert('Não foi possível gerar o relatório de alunos.');
         this.baixando = false;
       },
     });
   }
 
-  // ✅ usar a propriedade correta (projetoId)
   abrirDetalhe(r: RelatorioMensal) {
-    const id = r?.projetoId ?? (r as any)?.id_projeto; // fallback defensivo
+    const id = r?.projetoId ?? (r as any)?.id_projeto;
     if (!id) return;
-
     this.router.navigate(['/orientador/relatorios', id], {
-      queryParams: { mes: r.referenciaMes, readonly: 1 }, // somente leitura
+      queryParams: { mes: r.referenciaMes, readonly: 1 },
     });
   }
 

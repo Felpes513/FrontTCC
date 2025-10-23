@@ -2,12 +2,13 @@ import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { LoginService } from '@services/login.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
 })
@@ -16,7 +17,6 @@ export class LoginComponent {
   senha = '';
   erro: string | null = null;
   perfil: 'aluno' | 'orientador' | 'secretaria' = 'aluno';
-
   showPassword = false;
   rememberMe = false;
   isLoading = false;
@@ -33,41 +33,30 @@ export class LoginComponent {
   }
 
   login() {
-    if (this.isLoading) return; // evita duplo clique
+    if (this.isLoading) return;
     this.erro = null;
     this.isLoading = true;
-
     const email = this.email.trim();
     const senha = this.senha;
-
     let observable;
     if (this.perfil === 'aluno') {
       observable = this.loginService.loginAluno(email, senha);
     } else if (this.perfil === 'orientador') {
       observable = this.loginService.loginOrientador(email, senha);
     } else {
-      // enquanto SSO não estiver pronto, isso retornará 501
       observable = this.loginService.loginSecretaria(email, senha);
     }
-
     observable.subscribe({
       next: (res) => {
         this.loginService.setTokens(res.access_token, res.refresh_token);
         this.handleRememberMe();
-
-        // debug opcional do payload:
-        // console.log('payload', JSON.parse(atob(res.access_token.split('.')[1])));
-
         const role = this.loginService.getRole();
-        console.log('[LOGIN OK] role extraída do JWT:', role);
-
         const redirects: Record<string, string> = {
           ALUNO: '/aluno/projetos',
           ORIENTADOR: '/orientador/projetos',
           SECRETARIA: '/secretaria/dashboard',
         };
         const destino = (role && redirects[role]) || '/';
-
         this.isLoading = false;
         this.router.navigateByUrl(destino);
       },
@@ -123,13 +112,11 @@ export class LoginComponent {
       orientador: 'suporte.orientador@uscs.edu.br',
       secretaria: 'suporte.secretaria@uscs.edu.br',
     } as const;
-
     const email = supportEmails[this.perfil];
     const subject = `Suporte - Login ${
       this.perfil.charAt(0).toUpperCase() + this.perfil.slice(1)
     }`;
     const body = `Olá, preciso de ajuda com o login como ${this.perfil}.`;
-
     window.open(
       `mailto:${email}?subject=${encodeURIComponent(
         subject

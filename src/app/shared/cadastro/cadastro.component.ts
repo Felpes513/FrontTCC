@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { RegisterService } from '@services/cadastro.service';
 import { ProjetoService } from '@services/projeto.service';
 import { ConfigService } from '@services/config.service';
@@ -11,33 +12,21 @@ import { Curso } from '@interfaces/curso';
 @Component({
   selector: 'app-cadastro',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './cadastro.component.html',
   styleUrls: ['./cadastro.component.css'],
 })
 export class RegisterComponent implements OnInit {
   perfilSelecionado: 'orientador' | 'aluno' | null = null;
-
   step = 1;
   isLoading = false;
   erro: string | null = null;
   sucesso: string | null = null;
-
   cursos: Curso[] = [];
   campus: Campus[] = [];
-
-  // ORIENTADOR
-  ori = {
-    nomeCompleto: '',
-    cpf: '',
-    email: '',
-    senha: '',
-    confirmar: '',
-  };
+  ori = { nomeCompleto: '', cpf: '', email: '', senha: '', confirmar: '' };
   showPassOri = false;
   acceptTermsOri = false;
-
-  // ALUNO
   alu = {
     nomeCompleto: '',
     cpf: '',
@@ -50,7 +39,6 @@ export class RegisterComponent implements OnInit {
   };
   showPassAlu = false;
   acceptTermsAlu = false;
-
   pdfFile: File | null = null;
   pdfName = '';
 
@@ -85,7 +73,6 @@ export class RegisterComponent implements OnInit {
     this.sucesso = null;
   }
 
-  /** Aplica máscara no CPF quando o campo perde o foco */
   applyCpfMask(kind: 'ori' | 'alu') {
     const raw = (kind === 'ori' ? this.ori.cpf : this.alu.cpf)
       .replace(/\D/g, '')
@@ -98,13 +85,12 @@ export class RegisterComponent implements OnInit {
     else this.alu.cpf = masked;
   }
 
-  /** Valida a etapa 1 do aluno usando apenas dígitos do CPF */
   validStep1(): boolean {
     const cpfDigits = this.alu.cpf.replace(/\D/g, '');
     return (
       this.alu.nomeCompleto.trim().length >= 3 &&
       cpfDigits.length === 11 &&
-      this.isValidEmail(this.alu.email) &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.alu.email) &&
       this.alu.senha.length >= 6 &&
       this.alu.senha === this.alu.confirmar
     );
@@ -127,17 +113,14 @@ export class RegisterComponent implements OnInit {
     this.pdfName = f.name;
   }
 
-  // ===== SUBMITS =====
   onSubmitOrientador() {
     this.erro = null;
     this.sucesso = null;
-
     const cpfDigits = this.ori.cpf.replace(/\D/g, '');
-
     if (
       !this.ori.nomeCompleto.trim() ||
       cpfDigits.length !== 11 ||
-      !this.isValidEmail(this.ori.email)
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.ori.email)
     ) {
       this.erro = 'Preencha os campos corretamente.';
       return;
@@ -150,12 +133,11 @@ export class RegisterComponent implements OnInit {
       this.erro = 'Você deve aceitar os termos.';
       return;
     }
-
     this.isLoading = true;
     this.registerService
       .registerOrientador({
         nomeCompleto: this.ori.nomeCompleto,
-        cpf: this.ori.cpf, // o service já normaliza/limpa
+        cpf: this.ori.cpf,
         email: this.ori.email,
         senha: this.ori.senha,
       })
@@ -180,10 +162,8 @@ export class RegisterComponent implements OnInit {
 
   onSubmitAluno() {
     if (this.step !== 3) return;
-
     this.erro = null;
     this.sucesso = null;
-
     if (!this.pdfFile) {
       this.erro = 'Envie o PDF de notas.';
       return;
@@ -192,12 +172,11 @@ export class RegisterComponent implements OnInit {
       this.erro = 'Você deve aceitar os termos.';
       return;
     }
-
     this.isLoading = true;
     this.registerService
       .registerAluno({
         nomeCompleto: this.alu.nomeCompleto,
-        cpf: this.alu.cpf, // o service limpa
+        cpf: this.alu.cpf,
         email: this.alu.email,
         senha: this.alu.senha,
         idCurso: Number(this.alu.idCurso),
@@ -221,10 +200,5 @@ export class RegisterComponent implements OnInit {
           this.erro = e?.error?.detail || 'Falha no cadastro.';
         },
       });
-  }
-
-  // ===== helpers =====
-  isValidEmail(email: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }

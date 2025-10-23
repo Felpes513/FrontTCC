@@ -1,76 +1,61 @@
-/* === Layout geral === */
 .config-page {
   min-height: 100vh;
   padding: 40px 20px;
-  background-color: #f8fafc; /* mesmo tom de fundo do restante do sistema */
-  color: #222;
-  font-family: 'Poppins', sans-serif;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+  font-family: var(--font-family-base);
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-
-/* === Títulos === */
 .config-page h2 {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #1f2a44;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--uscs-blue-dark);
   margin-bottom: 6px;
   text-align: center;
 }
-
 .config-page .muted {
   font-size: 0.95rem;
-  color: #6b7280;
+  color: var(--gray-500);
   margin-bottom: 30px;
   text-align: center;
 }
-
-/* === Container principal === */
 mat-tab-group {
   width: 100%;
   max-width: 950px;
-  background: #fff;
-  border-radius: 14px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
   padding: 25px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-200);
 }
-
-/* === Abas === */
 ::ng-deep .mat-mdc-tab-labels {
   justify-content: center;
 }
-
 ::ng-deep .mat-mdc-tab-label {
-  color: #555 !important;
+  color: var(--gray-600) !important;
   font-weight: 500;
   text-transform: uppercase;
   transition: all 0.25s ease;
 }
-
 ::ng-deep .mat-mdc-tab-label.mdc-tab--active {
-  color: #0056d2 !important;
+  color: var(--uscs-blue) !important;
   font-weight: 600;
 }
-
 ::ng-deep .mat-mdc-ink-bar {
-  background-color: #0056d2 !important;
+  background-color: var(--uscs-blue) !important;
 }
-
-/* === Sessão de formulário === */
 .form-section {
   padding: 25px 10px;
   text-align: center;
 }
-
 .form-section h3 {
   font-size: 1.2rem;
   margin-bottom: 15px;
-  color: #0056d2;
+  color: var(--uscs-blue);
   letter-spacing: 0.5px;
 }
-
 .form-section form {
   display: flex;
   justify-content: center;
@@ -78,87 +63,25 @@ mat-tab-group {
   gap: 10px;
   margin-bottom: 25px;
 }
-
-/* === Inputs === */
 .form-section input {
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #f9fafb;
   width: 280px;
-  transition: all 0.25s ease;
-  font-size: 0.95rem;
 }
-
-.form-section input:focus {
-  border-color: #0056d2;
-  background: #fff;
-  outline: none;
-}
-
-/* === Botões === */
-.form-section button {
-  background: linear-gradient(135deg, #0063ff, #1e88ff);
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  padding: 10px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 3px 10px rgba(0, 99, 255, 0.3);
-}
-
-.form-section button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0, 99, 255, 0.4);
-}
-
-/* === Listagem === */
-.form-section ul {
-  list-style: none;
-  padding: 0;
-  margin-top: 15px;
-}
-
-.form-section li {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  margin: 5px auto;
-  padding: 8px 12px;
-  width: fit-content;
-  color: #334155;
-  font-size: 0.95rem;
-  transition: background 0.2s ease;
-}
-
-.form-section li:hover {
-  background: #e2e8f0;
-}
-
-/* === Mensagem reset senha === */
 .form-section p {
   color: #0284c7;
   font-weight: 500;
   margin-top: 10px;
 }
-
-/* === Responsivo === */
 @media (max-width: 768px) {
   mat-tab-group {
     padding: 15px;
   }
-
   .config-page h2 {
     font-size: 1.5rem;
   }
-
   .form-section input {
     width: 100%;
     max-width: 320px;
   }
-
   .form-section button {
     width: 100%;
     max-width: 200px;

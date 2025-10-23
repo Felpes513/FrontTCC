@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 import { Projeto } from '@interfaces/projeto';
 import { ProjetoService } from '@services/projeto.service';
 import { AuthService } from '@services/auth.service';
@@ -13,26 +14,28 @@ import { catchError, tap } from 'rxjs/operators';
 @Component({
   selector: 'app-listagem-projetos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MatSnackBarModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    MatSnackBarModule,
+    MatIconModule,
+  ],
   templateUrl: './listagem-projetos.component.html',
   styleUrls: ['./listagem-projetos.component.css'],
 })
 export class ListagemProjetosComponent implements OnInit {
   readonly MAX_ESCOLHIDOS = 4;
-
   projetos: (Projeto & { alunosIds?: number[] })[] = [];
   filtro = '';
   carregando = false;
   erro: string | null = null;
   filtroStatus = '';
   inscrevendoId: number | null = null;
-
-  // papeis
+  menuAberto: number | null = null;
   isOrientador = false;
   isSecretaria = false;
   isAluno = false;
-
-  // ids de projetos em que ESTE aluno já clicou em "inscrever" (sessão atual)
   private inscricoesDoAluno = new Set<number>();
 
   constructor(
@@ -63,7 +66,7 @@ export class ListagemProjetosComponent implements OnInit {
         next: (projetos) => {
           this.projetos = (projetos ?? []) as any[];
           this.carregando = false;
-          this.hidratarSelecionados(); // alunos aprovados (com ids)
+          this.hidratarSelecionados();
           this.hidratarNotas();
         },
         error: (error) => this.handleLoadError(error),
@@ -71,7 +74,6 @@ export class ListagemProjetosComponent implements OnInit {
       return;
     }
 
-    // Secretaria e Aluno
     this.projetoService.listarProjetos().subscribe({
       next: (projetos) => {
         const invalidos = projetos.filter(
@@ -79,18 +81,15 @@ export class ListagemProjetosComponent implements OnInit {
         );
         if (invalidos.length)
           console.warn('⚠️ Projetos com ID inválido:', invalidos);
-
         this.projetos = (projetos as any[]) ?? [];
         this.carregando = false;
-
-        this.hidratarSelecionados(); // alunos aprovados (com ids)
+        this.hidratarSelecionados();
         this.hidratarNotas();
       },
       error: (error) => this.handleLoadError(error),
     });
   }
 
-  /** Preenche nomesAlunos e também alunosIds (IDs aprovados pela Secretaria) */
   private hidratarSelecionados() {
     const calls = this.projetos
       .filter((p) => this.isIdValido((p as any).id))
@@ -107,7 +106,6 @@ export class ListagemProjetosComponent implements OnInit {
             const ids = (alunos || [])
               .map((a) => Number(a?.id_aluno ?? a?.id ?? a?.aluno?.id ?? 0))
               .filter((n) => !!n);
-
             (p as any).nomesAlunos = nomes;
             (p as any).alunosIds = ids;
             (p as any).inscritosTotal = nomes.length;
@@ -115,7 +113,6 @@ export class ListagemProjetosComponent implements OnInit {
           catchError(() => of(null))
         )
       );
-
     if (calls.length) forkJoin(calls).subscribe();
   }
 
@@ -141,44 +138,35 @@ export class ListagemProjetosComponent implements OnInit {
           catchError(() => of(null))
         )
       );
-
     if (calls.length) forkJoin(calls).subscribe();
   }
 
   private handleLoadError(error: any) {
-    console.error('❌ Erro ao carregar projetos:', error);
-    if (error.status === 0) {
+    if (error.status === 0)
       this.erro = 'Erro de conexão: verifique se a API FastAPI está rodando.';
-    } else if (error.status === 404) {
+    else if (error.status === 404)
       this.erro =
         'Endpoint não encontrado: verifique se a rota /projetos está correta.';
-    } else if (error.status >= 500) {
+    else if (error.status >= 500)
       this.erro = 'Erro interno do servidor: verifique os logs da API FastAPI.';
-    } else {
-      this.erro = error.message || 'Erro desconhecido ao carregar projetos';
-    }
+    else this.erro = error.message || 'Erro desconhecido ao carregar projetos';
     this.carregando = false;
   }
 
   projetosFiltrados(): Projeto[] {
     const filtroLower = this.filtro.toLowerCase().trim();
-
     return this.projetos.filter((projeto: any) => {
       const combinaTexto =
         (projeto.nomeProjeto || '').toLowerCase().includes(filtroLower) ||
         (projeto.nomeOrientador || '').toLowerCase().includes(filtroLower) ||
         (projeto.campus || '').toLowerCase().includes(filtroLower);
-
       const combinaStatus =
         !this.isSecretaria ||
         !this.filtroStatus ||
         (projeto as any).status === this.filtroStatus;
-
       return combinaTexto && combinaStatus;
     }) as any;
   }
-
-  // ===== Helpers =====
 
   getQuantidadeAlunos(p: Projeto & { alunosIds?: number[] }): number {
     return (p as any).inscritosTotal ?? (p as any).nomesAlunos?.length ?? 0;
@@ -216,7 +204,152 @@ export class ListagemProjetosComponent implements OnInit {
     return cores[index % cores.length];
   }
 
-  // ===== Ações Secretaria =====
+  toggleMenu(id: number | null): void {
+    this.menuAberto = this.menuAberto === id ? null : id;
+  }
+
+  cancelarProjeto(id: number): void {
+    if (!this.isSecretaria) return;
+    if (!this.isIdValido(id)) {
+      this.snackBar.open('ID inválido.', 'Fechar', { duration: 2500 });
+      return;
+    }
+    if (!confirm('Tem certeza que deseja cancelar este projeto?')) return;
+    if (typeof (this.projetoService as any).cancelarProjeto !== 'function') {
+      this.snackBar.open(
+        'Endpoint cancelarProjeto não implementado.',
+        'Fechar',
+        { duration: 3500 }
+      );
+      return;
+    }
+    (this.projetoService as any).cancelarProjeto(id).subscribe({
+      next: (res: any) => {
+        this.snackBar.open(res?.mensagem || 'Projeto cancelado.', 'Fechar', {
+          duration: 3000,
+        });
+        this.carregarProjetos();
+      },
+      error: (e: any) => {
+        this.snackBar.open(
+          e?.error?.detail || 'Erro ao cancelar projeto.',
+          'Fechar',
+          { duration: 4000 }
+        );
+      },
+    });
+  }
+
+  tornarAlunosInadimplentes(id: number): void {
+    if (!this.isSecretaria) return;
+    if (!this.isIdValido(id)) {
+      this.snackBar.open('ID inválido.', 'Fechar', { duration: 2500 });
+      return;
+    }
+    if (
+      !confirm(
+        'Marcar TODOS os alunos do projeto como inadimplentes por 2 anos?'
+      )
+    )
+      return;
+    const fn = (this.projetoService as any).tornarAlunosInadimplentes;
+    if (typeof fn !== 'function') {
+      this.snackBar.open(
+        'Endpoint tornarAlunosInadimplentes não implementado.',
+        'Fechar',
+        { duration: 3500 }
+      );
+      return;
+    }
+    fn.call(this.projetoService, id).subscribe({
+      next: (res: any) => {
+        this.snackBar.open(
+          res?.mensagem || 'Alunos marcados como inadimplentes.',
+          'Fechar',
+          { duration: 3000 }
+        );
+        this.carregarProjetos();
+      },
+      error: (e: any) => {
+        this.snackBar.open(e?.error?.detail || 'Erro na operação.', 'Fechar', {
+          duration: 4000,
+        });
+      },
+    });
+  }
+
+  tornarOrientadorInadimplente(id: number): void {
+    if (!this.isSecretaria) return;
+    if (!this.isIdValido(id)) {
+      this.snackBar.open('ID inválido.', 'Fechar', { duration: 2500 });
+      return;
+    }
+    if (
+      !confirm(
+        'Marcar o ORIENTADOR deste projeto como inadimplente por 2 anos?'
+      )
+    )
+      return;
+    const fn = (this.projetoService as any).tornarOrientadorInadimplente;
+    if (typeof fn !== 'function') {
+      this.snackBar.open(
+        'Endpoint tornarOrientadorInadimplente não implementado.',
+        'Fechar',
+        { duration: 3500 }
+      );
+      return;
+    }
+    fn.call(this.projetoService, id).subscribe({
+      next: (res: any) => {
+        this.snackBar.open(
+          res?.mensagem || 'Orientador marcado como inadimplente.',
+          'Fechar',
+          { duration: 3000 }
+        );
+        this.carregarProjetos();
+      },
+      error: (e: any) => {
+        this.snackBar.open(e?.error?.detail || 'Erro na operação.', 'Fechar', {
+          duration: 4000,
+        });
+      },
+    });
+  }
+
+  tornarTodosInadimplentes(id: number): void {
+    if (!this.isSecretaria) return;
+    if (!this.isIdValido(id)) {
+      this.snackBar.open('ID inválido.', 'Fechar', { duration: 2500 });
+      return;
+    }
+    if (!confirm('Marcar ORIENTADOR e ALUNOS como inadimplentes por 2 anos?'))
+      return;
+    const fn = (this.projetoService as any).tornarTodosInadimplentes;
+    if (typeof fn !== 'function') {
+      this.snackBar.open(
+        'Endpoint tornarTodosInadimplentes não implementado.',
+        'Fechar',
+        { duration: 3500 }
+      );
+      return;
+    }
+    fn.call(this.projetoService, id).subscribe({
+      next: (res: any) => {
+        this.snackBar.open(
+          res?.mensagem || 'Todos marcados como inadimplentes.',
+          'Fechar',
+          { duration: 3000 }
+        );
+        this.carregarProjetos();
+      },
+      error: (e: any) => {
+        this.snackBar.open(e?.error?.detail || 'Erro na operação.', 'Fechar', {
+          duration: 4000,
+        });
+      },
+    });
+  }
+
   excluirProjeto(projeto: Projeto | number): void {
     if (!this.isSecretaria) {
       this.snackBar.open('Ação não permitida.', 'Fechar', { duration: 3000 });
@@ -283,7 +416,6 @@ export class ListagemProjetosComponent implements OnInit {
     this.router.navigate(['/secretaria/projetos/editar', id]);
   }
 
-  // ===== Ações Orientador =====
   irParaRelatorio(projeto: Projeto): void {
     const id = (projeto as any)?.id;
     if (!this.isIdValido(id)) {
@@ -293,10 +425,8 @@ export class ListagemProjetosComponent implements OnInit {
     this.router.navigate(['/orientador/relatorios', id]);
   }
 
-  // ===== Ações Aluno =====
   inscrever(projeto: Projeto & { alunosIds?: number[] }) {
     const id = (projeto as any)?.id;
-
     if (!this.isAluno) {
       this.snackBar.open(
         'Somente alunos podem se inscrever em projetos.',
@@ -323,7 +453,6 @@ export class ListagemProjetosComponent implements OnInit {
       });
       return;
     }
-
     if (
       !confirm(
         `Confirmar inscrição no projeto "${(projeto as any).nomeProjeto}"?`
@@ -359,9 +488,6 @@ export class ListagemProjetosComponent implements OnInit {
     this.router.navigate(['/aluno/relatorios', id]);
   }
 
-  // ===== Regras de exibição (Aluno) =====
-
-  /** true se o aluno (sessão) já clicou para se inscrever neste projeto */
   jaInscrito(idProjeto: number): boolean {
     return this.inscricoesDoAluno.has(idProjeto);
   }
@@ -369,7 +495,6 @@ export class ListagemProjetosComponent implements OnInit {
     this.inscricoesDoAluno.add(idProjeto);
   }
 
-  /** Exibe “Meu Relatório” somente se ESTE aluno consta entre os aprovados do projeto */
   podeVerRelatorio(projeto: Projeto & { alunosIds?: number[] }): boolean {
     if (!this.isAluno) return false;
     const meuId = this.getMeuId();
@@ -378,7 +503,6 @@ export class ListagemProjetosComponent implements OnInit {
     return Array.isArray(ids) && ids.includes(Number(meuId));
   }
 
-  // util
   recarregar(): void {
     this.carregarProjetos();
   }
@@ -401,10 +525,8 @@ export class ListagemProjetosComponent implements OnInit {
     return Math.max(0, Math.min(progresso, 100));
   }
 
-  // tenta obter o ID do usuário logado do AuthService
   private getMeuId(): number | null {
     try {
-      // ajuste aqui conforme seu AuthService
       if (typeof (this.authService as any).getUserId === 'function') {
         return Number((this.authService as any).getUserId());
       }
@@ -415,7 +537,6 @@ export class ListagemProjetosComponent implements OnInit {
     return null;
   }
 
-  // ==== DEBUG =====
   debugProjeto(projeto: Projeto): void {
     console.log('🔍 Debug do projeto:', {
       id: (projeto as any).id,

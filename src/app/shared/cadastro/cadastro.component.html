@@ -1,29 +1,25 @@
 <div class="auth-wrapper">
-  <!-- Lado esquerdo: apenas o logo -->
   <aside class="auth-left">
     <div class="brand only-logo">
       <img src="/assets/Logo.jpg" alt="USCS" />
     </div>
   </aside>
 
-  <!-- Lado direito (formulário) -->
   <section class="auth-right">
     <header class="header">
       <h1>Hello!</h1>
       <p>Crie sua conta</p>
     </header>
 
-    <!-- Seleção de perfil -->
     <div class="perfil-toggle" *ngIf="!perfilSelecionado">
       <button (click)="selecionarPerfil('orientador')" class="toggle-btn">
-        Sou Orientador
+        <mat-icon>school</mat-icon> Sou Orientador
       </button>
       <button (click)="selecionarPerfil('aluno')" class="toggle-btn alt">
-        Sou Aluno
+        <mat-icon>person</mat-icon> Sou Aluno
       </button>
     </div>
 
-    <!-- Form ORIENTADOR -->
     <form
       *ngIf="perfilSelecionado === 'orientador'"
       (ngSubmit)="onSubmitOrientador()"
@@ -170,7 +166,6 @@
         </div>
       </ng-container>
 
-      <!-- ETAPA 2 -->
       <ng-container *ngIf="step === 2">
         <div class="form-row">
           <select name="alu_curso" [(ngModel)]="alu.idCurso" required>
@@ -192,7 +187,7 @@
 
         <div class="form-actions">
           <button type="button" class="ghost" (click)="goStep(1)">
-            Voltar
+            <mat-icon>arrow_back</mat-icon> Voltar
           </button>
           <button
             type="button"
@@ -205,7 +200,6 @@
         </div>
       </ng-container>
 
-      <!-- ETAPA 3 -->
       <ng-container *ngIf="step === 3">
         <div class="upload">
           <label class="file">
@@ -214,12 +208,11 @@
               (change)="onPdfChange($event)"
               accept="application/pdf"
             />
-            <span>{{ pdfName || "Enviar notas em PDF" }}</span>
+            <span>Enviar notas em PDF</span>
           </label>
           <small>Somente .pdf</small>
         </div>
 
-        <!-- NOVO: possui trabalho remunerado -->
         <div class="form-row inline">
           <label class="radio">
             <input
@@ -243,7 +236,6 @@
             <span>Não possui</span>
           </label>
         </div>
-        <!-- /NOVO -->
 
         <label class="terms">
           <input
@@ -257,7 +249,7 @@
 
         <div class="form-actions">
           <button type="button" class="ghost" (click)="goStep(2)">
-            Voltar
+            <mat-icon>arrow_back</mat-icon> Voltar
           </button>
           <button
             type="submit"
