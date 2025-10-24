@@ -7,21 +7,23 @@
   );
   color: var(--white);
   padding: var(--spacing-3xl) var(--spacing-lg);
+  max-width: 100%;
   min-height: 600px;
   display: flex;
+  justify-content: center;
   align-items: center;
 }
 
 .hero-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-3xl);
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
   align-items: center;
+  gap: var(--spacing-3xl);
 }
 
 .hero-content {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
@@ -116,89 +118,140 @@
   color: var(--uscs-orange);
 }
 
-/* Carousel */
+/* --- Estilos do Carrossel Hero --- */
+
 .hero-carousel {
-  height: 100%;
-  min-height: 400px;
+  /* Usamos aspect-ratio para manter a proporção.
+     Ajuste conforme necessário (ex: 16/9, 4/3).
+     Isso substitui o min-height antigo.
+  */
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
 .carousel-swiper {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-xl);
 }
 
-.slide-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  min-height: 400px;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 51, 102, 0.95) 0%,
-    rgba(0, 64, 128, 0.95) 100%
-  );
-  color: var(--white);
-  text-align: center;
-  padding: var(--spacing-3xl) var(--spacing-xl);
+/* Container de cada slide.
+  Usamos display: block pois o Swiper cuida do layout.
+*/
+.swiper-slide {
   position: relative;
+  overflow: hidden;
+  display: block; /* Importante para o efeito de fade */
 }
 
-.slide-content::before {
-  content: "";
+.slide-img {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-  opacity: 0.3;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Cobre todo o slide sem distorcer */
   z-index: 1;
+
+  /* Efeito "Ken Burns" (zoom sutil) */
+  transform: scale(1.15);
+  transition: transform 6s ease-out;
 }
 
-.slide-icon {
-  position: relative;
+/* Quando o slide está ativo, o zoom diminui lentamente */
+.swiper-slide-active .slide-img {
+  transform: scale(1);
+}
+
+.slide-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Gradiente para escurecer mais na parte de baixo, onde o texto está */
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.1) 20%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
   z-index: 2;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--uscs-orange);
-  border-radius: var(--radius-full);
-  margin-bottom: var(--spacing-lg);
-  box-shadow: 0 8px 20px rgba(255, 140, 0, 0.3);
 }
 
-.slide-icon i {
-  font-size: 2.5rem;
-  color: var(--white);
+.slide-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  color: #fff;
+  padding: 2.5rem; /* 40px */
+  width: 100%;
+  box-sizing: border-box; /* Garante que o padding não estoure a div */
 }
 
-.slide-content h3,
-.slide-content p {
-  position: relative;
-  z-index: 2;
+.slide-content i {
+  font-size: 2.5rem; /* 40px */
+  margin-bottom: 1rem; /* 16px */
+  /* Recomendo usar a variável de cor da sua marca, se tiver */
+  color: var(--uscs-orange, #f39c12);
 }
 
 .slide-content h3 {
-  font-size: var(--font-size-3xl);
+  font-size: 2rem; /* 32px */
   font-weight: 700;
-  margin-bottom: var(--spacing-md);
-  color: var(--white);
+  margin-bottom: 0.75rem; /* 12px */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .slide-content p {
-  font-size: var(--font-size-lg);
+  font-size: 1.1rem; /* 18px */
   line-height: 1.6;
-  max-width: 500px;
-  color: rgba(255, 255, 255, 0.95);
-  margin: 0;
+  max-width: 90%; /* Evita que o texto vá até a borda */
+  opacity: 0.9;
 }
+
+/* Estilização da Navegação (Setas)
+  Usamos ::part() para estilizar o Shadow DOM do Swiper Elements
+*/
+.carousel-swiper::part(button-prev),
+.carousel-swiper::part(button-next) {
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.25);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.carousel-swiper::part(button-prev):hover,
+.carousel-swiper::part(button-next):hover {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.carousel-swiper::part(button-prev) {
+  left: 20px;
+}
+.carousel-swiper::part(button-next) {
+  right: 20px;
+}
+
+/* Estilização da Paginação (Bullets)
+*/
+.carousel-swiper::part(pagination-bullet) {
+  background: rgba(255, 255, 255, 0.5);
+  width: 10px;
+  height: 10px;
+  opacity: 1;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.carousel-swiper::part(pagination-bullet-active) {
+  background: #ffffff;
+  transform: scale(1.2);
+}
+
 
 /* About Section */
 .about {
@@ -342,9 +395,7 @@
     gap: var(--spacing-2xl);
   }
 
-  .hero-carousel {
-    min-height: 350px;
-  }
+  /* Regra do carrossel antigo foi removida daqui */
 }
 
 @media (max-width: 768px) {
@@ -393,34 +444,24 @@
     padding: var(--spacing-md);
   }
 
-  .slide-content {
-    padding: var(--spacing-xl) var(--spacing-md);
-    min-height: 300px;
-  }
-
-  .slide-content h3 {
-    font-size: var(--font-size-2xl);
-  }
-
-  .slide-content p {
-    font-size: var(--font-size-base);
-  }
+  /* Regras do slide-content antigo foram removidas daqui */
 
   .section-title {
     font-size: var(--font-size-2xl);
   }
+
+  /* Ajuste de padding para o conteúdo do slide em telas menores */
+  .slide-content {
+    padding: 1.5rem; /* 24px */
+  }
+
+  .slide-content h3 {
+    font-size: 1.5rem; /* 24px */
+  }
+
+  .slide-content p {
+    font-size: 0.9rem; /* 14.4px */
+  }
 }
 
-.swiper-slide {
-  position: relative;
-}
-
-.slide-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: brightness(0.6);
-  z-index: 0;
-}
+/* Regras antigas de swiper-slide e slide-img foram removidas */
