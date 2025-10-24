@@ -178,29 +178,28 @@ export class ProjetoService {
   // src/app/services/projeto.service.ts
   listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
     return this.http
-      .get<{ id_projeto: number; alunos: any[] }>(
-        `${this.apiUrlProjetos}${idProjeto}/alunos`
-      )
+      .get<any[]>(`${this.apiUrlProjetos}${idProjeto}/inscricoes`)
       .pipe(
-        map((res) => {
-          const alunos = res?.alunos ?? [];
-          // adaptamos para o formato usado nos componentes
-          return alunos.map((a: any) => ({
-            id_aluno: a.id ?? a.id_aluno ?? 0,
+        map((rows) =>
+          (rows || []).map((i: any) => ({
+            id_inscricao: i.id_inscricao,
+            id_aluno: i.id_aluno,
             aluno: {
-              id: a.id ?? a.id_aluno ?? 0,
-              nome: a.nome_completo ?? a.nome ?? '—',
-              email: a.email ?? '—',
-              matricula: a.matricula ?? a.cpf ?? '—',
+              id: i.id_aluno,
+              nome: i.nome_aluno ?? '—',
+              email: i.email ?? '—',
+              matricula: i.cpf ?? i.matricula ?? '—',
             },
-            // como a query do back já filtra aprovados, marcamos como APROVADO
-            status: 'APROVADO',
-            nome_aluno: a.nome_completo ?? a.nome ?? '—',
-            email: a.email ?? '—',
-            matricula: a.matricula ?? a.cpf ?? '—',
-            documentoNotasUrl: a.documentoNotasUrl ?? null,
-          }));
-        }),
+            nome_aluno: i.nome_aluno ?? '—',
+            email: i.email ?? '—',
+            matricula: i.cpf ?? i.matricula ?? '—',
+            status: i.status ?? i.status_aluno ?? 'PENDENTE',
+            possuiTrabalhoRemunerado:
+              !!(i.possuiTrabalhoRemunerado ?? i.possui_trabalho_remunerado),
+            created_at: i.created_at,
+            documentoNotasUrl: i.documentoNotasUrl ?? null,
+          }))
+        ),
         catchError(this.handleError)
       );
   }

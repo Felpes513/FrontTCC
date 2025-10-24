@@ -24,18 +24,14 @@
                   *ngIf="a.possuiTrabalhoRemunerado"
                   class="badge remunerado"
                   title="Possui trabalho remunerado"
-                >
-                  💼 Remunerado
-                </span>
+                >💼 Remunerado</span>
               </strong>
               <div class="mini">
                 <span>RA: {{ a.matricula }}</span>
                 <span class="sep">•</span>
                 <span>Email: {{ a.email }}</span>
                 <span class="sep">•</span>
-                <span
-                  >Status: <b>{{ a.status }}</b></span
-                >
+                <span>Status: <b>{{ a.status }}</b></span>
               </div>
 
               <div class="links" *ngIf="a.documentoNotasUrl">
@@ -51,12 +47,13 @@
 
     <!-- ======== MODO ORIENTADOR (seleção) ======== -->
     <ng-container *ngIf="modo === 'ORIENTADOR'">
+      <!-- ⛔ ALERTA DE BLOQUEIO DESATIVADO
       <div class="alert" *ngIf="bloqueado" style="margin-bottom: 8px">
         ✅ Seleção finalizada
-        <span *ngIf="bloqueadoEm"
-          >&nbsp;em {{ bloqueadoEm | date : "short" }}</span
-        >. Para ajustes, contate a Secretaria.
+        <span *ngIf="bloqueadoEm">&nbsp;em {{ bloqueadoEm | date : 'short' }}</span>.
+        Para ajustes, contate a Secretaria.
       </div>
+      -->
 
       <!-- Aprovados -->
       <div *ngIf="aprovadas.length; else nenhumAprovado">
@@ -67,7 +64,7 @@
               <input
                 type="checkbox"
                 [checked]="selecionados.has(alunoId(i))"
-                [disabled]="disabledCheckbox(i) || bloqueado"
+                [disabled]="disabledCheckbox(i)"
                 (change)="toggleSelecionado(i, $any($event.target).checked)"
               />
               <div class="dados">
@@ -77,9 +74,7 @@
                     *ngIf="i?.possuiTrabalhoRemunerado"
                     class="badge remunerado"
                     title="Possui trabalho remunerado"
-                  >
-                    💼 Remunerado
-                  </span>
+                  >💼 Remunerado</span>
                 </strong>
                 <div class="mini">
                   <span>ID Aluno: {{ alunoId(i) }}</span>
@@ -97,21 +92,17 @@
         <p class="muted">Nenhum aluno aprovado pela Secretaria ainda.</p>
       </ng-template>
 
-      <!-- Ações -->
-      <div class="form-actions" style="margin-top: 12px" *ngIf="!bloqueado">
+      <!-- Ações (sem *ngIf de bloqueio) -->
+      <div class="form-actions" style="margin-top: 12px">
         <button
           type="button"
           (click)="salvarSelecao()"
-          [disabled]="
-            salvandoSelecao || (limite > 0 && selecionados.size > limite)
-          "
+          [disabled]="salvandoSelecao || (limite > 0 && selecionados.size > limite)"
         >
-          {{ salvandoSelecao ? "Salvando..." : "Salvar seleção" }}
+          {{ salvandoSelecao ? 'Salvando...' : 'Salvar seleção' }}
         </button>
         <span class="ok" *ngIf="sucessoSelecao">{{ sucessoSelecao }}</span>
-        <span class="erro" *ngIf="erroSalvarSelecao">{{
-          erroSalvarSelecao
-        }}</span>
+        <span class="erro" *ngIf="erroSalvarSelecao">{{ erroSalvarSelecao }}</span>
         <div class="mini" style="margin-top: 4px">
           Selecionados: {{ selecionados.size }}
           <span *ngIf="limite">/ Limite: {{ limite }}</span>

@@ -1,16 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { ProjetoService } from '@services/projeto.service';
-
-interface Notificacao {
-  tipo: string;
-  mensagem: string;
-  data: string;
-  hora: string;
-  lida: boolean;
-  id?: number;
-}
+import { Notificacao } from '@interfaces/notificacao';
+import { NotificacaoService } from '@services/notificacao.service';
 
 @Component({
   selector: 'app-notificacoes',
@@ -30,7 +22,7 @@ export class NotificacoesComponent implements OnInit {
   erro: string | null = null;
   notificacaoAberta: Notificacao | null = null;
 
-  constructor(private projetoService: ProjetoService) {}
+  constructor(private notifService: NotificacaoService) {}
 
   ngOnInit(): void {
     this.carregar(1);
@@ -53,36 +45,15 @@ export class NotificacoesComponent implements OnInit {
     this.carregando = true;
     this.erro = null;
 
-    if ((this.projetoService as any).getNotificacoesPaginado) {
-      this.projetoService
-        .getNotificacoesPaginado(this.destinatario, p, this.size)
-        .subscribe({
-          next: (res: any) => {
-            const items = res?.items ?? [];
-            this.notificacoes = items.map((x: any) => this.mapItem(x));
-            this.page = res?.page ?? p;
-            this.size = res?.size ?? this.size;
-            this.total = res?.total ?? items.length;
-            this.totalPages = Math.max(1, Math.ceil(this.total / this.size));
-            this.carregando = false;
-          },
-          error: () => {
-            this.erro = 'Falha ao carregar notificações';
-            this.carregando = false;
-          },
-        });
-    } else {
-      this.projetoService.getNotificacoes(this.destinatario).subscribe({
-        next: (lista: any[]) => {
-          const items = lista || [];
-          this.total = items.length;
+    this.notifService.getNotificacoesPaginado(this.destinatario, p, this.size)
+      .subscribe({
+        next: (res) => {
+          const items = res?.items ?? [];
+          this.notificacoes = items.map(x => this.mapItem(x));
+          this.page = res?.page ?? p;
+          this.size = res?.size ?? this.size;
+          this.total = res?.total ?? items.length;
           this.totalPages = Math.max(1, Math.ceil(this.total / this.size));
-          const start = (p - 1) * this.size;
-          const end = start + this.size;
-          this.notificacoes = items
-            .slice(start, end)
-            .map((x: any) => this.mapItem(x));
-          this.page = p;
           this.carregando = false;
         },
         error: () => {
@@ -90,26 +61,17 @@ export class NotificacoesComponent implements OnInit {
           this.carregando = false;
         },
       });
-    }
   }
 
-  anterior(): void {
-    if (this.page > 1) this.carregar(this.page - 1);
-  }
-
-  proxima(): void {
-    if (this.page < this.totalPages) this.carregar(this.page + 1);
-  }
+  anterior(): void { if (this.page > 1) this.carregar(this.page - 1); }
+  proxima(): void { if (this.page < this.totalPages) this.carregar(this.page + 1); }
 
   marcarTodasComoLidas(): void {
     if (!confirm('Marcar todas como lidas?')) return;
-    this.notificacoes = this.notificacoes.map((n) => ({ ...n, lida: true }));
-    if ((this.projetoService as any).marcarTodasComoLidas) {
-      this.projetoService.marcarTodasComoLidas(this.destinatario).subscribe({
-        next: () => this.carregar(this.page),
-        error: () => {},
-      });
-    }
+    this.notifService.marcarTodasComoLidas(this.destinatario).subscribe({
+      next: () => this.carregar(this.page),
+      error: () => {},
+    });
   }
 
   abrirNotificacao(notificacao: Notificacao): void {
@@ -117,9 +79,7 @@ export class NotificacoesComponent implements OnInit {
     notificacao.lida = true;
   }
 
-  fecharModal(): void {
-    this.notificacaoAberta = null;
-  }
+  fecharModal(): void { this.notificacaoAberta = null; }
 
   get novasNotificacoes(): boolean {
     return this.notificacoes.some((n) => !n.lida);

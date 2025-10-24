@@ -85,18 +85,17 @@ export class ListagemAlunosComponent implements OnInit {
             this.aprovadas = aprovados ?? [];
             this.pendentesOuReprovadas = [];
 
-            // ✅ pré-seleciona tudo que já está vinculado
+            // ✅ pré-seleciona tudo que já está vinculado (MANTER)
             this.selecionados = new Set<number>(
               this.aprovadas.map((a) => this.alunoId(a))
             );
 
-            // lock: do storage OU se já atingiu o limite
-            this.carregarLock();
-            if (this.limite && this.aprovadas.length >= this.limite) {
-              this.bloqueado = true;
-              if (!this.bloqueadoEm)
-                this.bloqueadoEm = new Date().toISOString();
-            }
+            // ⛔ LOCK DESATIVADO:
+            // this.carregarLock();
+            // if (this.limite && this.aprovadas.length >= this.limite) {
+            //   this.bloqueado = true;
+            //   if (!this.bloqueadoEm) this.bloqueadoEm = new Date().toISOString();
+            // }
 
             this.loadingFlag = false;
           },
@@ -134,12 +133,8 @@ export class ListagemAlunosComponent implements OnInit {
   }
 
   // ===== API p/ template =====
-  loading() {
-    return this.loadingFlag;
-  }
-  lista() {
-    return this.alunosSecretaria;
-  }
+  loading() { return this.loadingFlag; }
+  lista() { return this.alunosSecretaria; }
   total() {
     return this.modo === 'SECRETARIA'
       ? this.alunosSecretaria.length
@@ -148,9 +143,7 @@ export class ListagemAlunosComponent implements OnInit {
 
   // ===== util ORIENTADOR =====
   alunoId(i: any): number {
-    return (
-      i?.id_aluno ?? i?.aluno_id ?? i?.idAluno ?? i?.aluno?.id ?? i?.id ?? 0
-    );
+    return (i?.id_aluno ?? i?.aluno_id ?? i?.idAluno ?? i?.aluno?.id ?? i?.id ?? 0);
   }
   alunoNome(i: any): string {
     return (
@@ -163,15 +156,16 @@ export class ListagemAlunosComponent implements OnInit {
   }
 
   disabledCheckbox(i: any): boolean {
-    if (this.bloqueado) return true;
+    // ⛔ LOCK DESATIVADO:
+    // if (this.bloqueado) return true;
     const id = this.alunoId(i);
     if (this.selecionados.has(id)) return false;
     return this.selecionados.size >= this.limite;
-    // (se quiser impedir também por "não aprovado", mude aqui)
   }
 
   toggleSelecionado(i: any, checked: boolean) {
-    if (this.bloqueado) return;
+    // ⛔ LOCK DESATIVADO:
+    // if (this.bloqueado) return;
     const id = this.alunoId(i);
     if (!id) return;
     if (checked) {
@@ -183,7 +177,8 @@ export class ListagemAlunosComponent implements OnInit {
   }
 
   salvarSelecao() {
-    if (this.bloqueado) return;
+    // ⛔ LOCK DESATIVADO:
+    // if (this.bloqueado) return;
     this.sucessoSelecao = '';
     this.erroSalvarSelecao = '';
     this.salvandoSelecao = true;
@@ -195,15 +190,16 @@ export class ListagemAlunosComponent implements OnInit {
         this.salvandoSelecao = false;
         this.sucessoSelecao = 'Alunos atualizados com sucesso!';
 
-        // ✅ mantém estado local e trava
+        // mantém estado local
         this.selecionados = new Set<number>(ids);
-        this.bloqueadoEm = new Date().toISOString();
 
-        if (this.limite && this.selecionados.size >= this.limite) {
-          this.salvarLock();
-        }
+        // ⛔ LOCK DESATIVADO:
+        // this.bloqueadoEm = new Date().toISOString();
+        // if (this.limite && this.selecionados.size >= this.limite) {
+        //   this.salvarLock();
+        // }
 
-        // 🔄 recarrega do back (opcional, mas deixa 100% consistente)
+        // recarrega
         this.carregar();
       },
       error: (e) => {
