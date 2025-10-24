@@ -50,14 +50,21 @@
         navigation="true"
         pagination="true"
         loop="true"
-        autoplay-delay="4000"
+        autoplay-delay="5000"
         autoplay-disable-on-interaction="false"
-        speed="600"
+        speed="800"
+        effect="fade"
         class="carousel-swiper"
       >
         <swiper-slide *ngFor="let slide of slides">
-          <div >
-            <img class="slide-img" [src]="slide.img" [alt]="slide.title" />
+          <img class="slide-img" [src]="slide.img" [alt]="slide.title" />
+
+          <div class="slide-overlay"></div>
+
+          <div class="slide-content">
+            <i [class]="slide.icon" aria-hidden="true"></i>
+            <h3>{{ slide.title }}</h3>
+            <p>{{ slide.content }}</p>
           </div>
         </swiper-slide>
       </swiper-container>
