@@ -175,32 +175,30 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  // src/app/services/projeto.service.ts
   listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
     return this.http
-      .get<any[]>(`${this.apiUrlProjetos}${idProjeto}/inscricoes`)
+      .get<any[]>(`${this.apiBase}/projetos/${idProjeto}/inscricoes`)
       .pipe(
-        map((rows) =>
-          (rows || []).map((i: any) => ({
-            id_inscricao: i.id_inscricao,
-            id_aluno: i.id_aluno,
+        map((items: any[]) =>
+          (items || []).map((i) => ({
+            id_inscricao: i.id_inscricao ?? 0,
+            id_aluno: i.aluno?.id ?? i.id_aluno ?? 0,
             aluno: {
-              id: i.id_aluno,
-              nome: i.nome_aluno ?? '—',
-              email: i.email ?? '—',
-              matricula: i.cpf ?? i.matricula ?? '—',
+              id: i.aluno?.id ?? i.id_aluno ?? 0,
+              nome: i.aluno?.nome ?? i.nome_aluno ?? '—',
+              email: i.aluno?.email ?? i.email ?? '—',
             },
-            nome_aluno: i.nome_aluno ?? '—',
-            email: i.email ?? '—',
-            matricula: i.cpf ?? i.matricula ?? '—',
+            nome_aluno: i.nome_aluno ?? i.aluno?.nome ?? '—',
+            email: i.email ?? i.aluno?.email ?? '—',
+            matricula: i.matricula ?? i.cpf ?? '—',
             status: i.status ?? i.status_aluno ?? 'PENDENTE',
-            possuiTrabalhoRemunerado:
-              !!(i.possuiTrabalhoRemunerado ?? i.possui_trabalho_remunerado),
-            created_at: i.created_at,
+            possuiTrabalhoRemunerado: !!(
+              i.possuiTrabalhoRemunerado ?? i.possui_trabalho_remunerado
+            ),
+            created_at: i.created_at ?? null,
             documentoNotasUrl: i.documentoNotasUrl ?? null,
           }))
-        ),
-        catchError(this.handleError)
+        )
       );
   }
 
