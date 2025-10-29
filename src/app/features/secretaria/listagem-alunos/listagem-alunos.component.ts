@@ -1,4 +1,4 @@
-// src/app/features/secretaria/listagem-alunos/listagem-alunos.component.ts
+import { BolsaService } from './../../../services/bolsa.service';
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -39,9 +39,12 @@ export class ListagemAlunosComponent implements OnInit {
   sucessoSelecao = '';
   erroSalvarSelecao = '';
 
+  bolsaMarcada = new Set<number>();
+
   constructor(
     private projetoService: ProjetoService,
-    private inscricoesService: InscricoesService
+    private inscricoesService: InscricoesService,
+    private bolsaService: BolsaService
   ) {}
 
   ngOnInit(): void {
@@ -211,5 +214,28 @@ export class ListagemAlunosComponent implements OnInit {
         this.erroSalvarSelecao = e?.message || 'Falha ao salvar seleção.';
       },
     });
+  }
+
+  toggleBolsa(i: any, checked: boolean) {
+    if (!this.bloqueado) return;
+    const id = this.alunoId(i);
+    if (!id) return;
+
+    if (checked) this.bolsaMarcada.add(id);
+    else this.bolsaMarcada.delete(id);
+
+    this.bolsaService.definirBolsa(this.projetoId, id, checked).subscribe({
+      next: () => {},
+      error: (e) => {
+        if (checked) this.bolsaMarcada.delete(id);
+        else this.bolsaMarcada.add(id);
+        console.error(e);
+      },
+    });
+  }
+
+  temBolsa(i: any) {
+    const id = this.alunoId(i);
+    return this.bolsaMarcada.has(id);
   }
 }
