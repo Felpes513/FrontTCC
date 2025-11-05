@@ -21,10 +21,11 @@ import {
   ConviteAvaliacaoResponse,
   ProjetoBasico,
 } from '@interfaces/avaliacao';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ProjetoService {
-  private readonly apiBase = '/api';
+  private readonly apiBase = environment.apiBaseUrl;
   private readonly apiUrlProjetos = `${this.apiBase}/projetos/`;
   private readonly apiUrlOrientadores = `${this.apiBase}/orientadores`;
   private readonly apiUrlCampus = `${this.apiBase}/campus`;

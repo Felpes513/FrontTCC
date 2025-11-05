@@ -4,10 +4,11 @@ import { Observable } from 'rxjs';
 import { Campus } from '@interfaces/campus';
 import { Curso } from '@interfaces/curso';
 import { Bolsa } from './../shared/interfaces/bolsa';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
-  private readonly apiUrl = '/api';
+  private readonly apiUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -57,7 +58,7 @@ export class ConfigService {
     nova_senha: string;
   }) {
     return this.http.post<{ message: string }>(
-      '/api/reset-password-direct',
+      `${environment.apiBaseUrl}/reset-password-direct`,
       body
     );
   }

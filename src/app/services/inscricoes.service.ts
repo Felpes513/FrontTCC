@@ -3,11 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ListagemResponse } from '@interfaces/listagem';
 import { Inscricao } from '@interfaces/inscricao';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class InscricoesService {
   private http = inject(HttpClient);
-  private baseUrl = '/api';
+  private readonly baseUrl = environment.apiBaseUrl;
 
   // Aluno se inscreve em um projeto
   inscrever(projetoId: number) {

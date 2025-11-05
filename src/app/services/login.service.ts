@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { LoginResponse } from '@interfaces/login';
 import { ResetPasswordDirectBody } from '@interfaces/login';
+import { environment } from '@environments/environment';
 
 type Role = 'SECRETARIA' | 'ORIENTADOR' | 'ALUNO';
 
 @Injectable({ providedIn: 'root' })
 export class LoginService {
-  private baseUrl = '/api';
+  private readonly baseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}
 

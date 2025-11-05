@@ -8,10 +8,11 @@ import {
   RegisterSecretariaData, // se não usar, pode remover
 } from '@interfaces/registros';
 import { map } from 'rxjs/operators';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class RegisterService {
-  private baseUrl = '/api';
+  private readonly baseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}
 

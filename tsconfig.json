@@ -27,7 +27,8 @@
       "@orientador/*": ["app/features/orientador/*"],
       "@secretaria/*": ["app/features/secretaria/*"],
       "@avaliador-externo/*": ["app/features/avaliador-externo/*"],
-      "@shared/*": ["app/shared/*"]
+      "@shared/*": ["app/shared/*"],
+      "@environments/*": ["environments/*"]
     }
   },
   "angularCompilerOptions": {

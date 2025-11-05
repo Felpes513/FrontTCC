@@ -51,6 +51,14 @@ export const authInterceptor: HttpInterceptorFn = (
 
   return next(authReq).pipe(
     catchError((err: HttpErrorResponse) => {
+      if (err.status === 403) {
+        console.warn('[AUTH-INT] Acesso negado para', path);
+      }
+
+      if (err.status >= 500 || err.status === 0) {
+        console.error('[AUTH-INT] Erro de servidor ao acessar', path, err);
+      }
+
       if (err.status !== 401 || isAuthEndpoint) {
         return throwError(() => err);
       }
