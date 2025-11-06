@@ -1,19 +1,19 @@
 export const environment = {
   production: false,
-  /**
-   * Base URL para chamadas da API principal. Utilize uma rota relativa quando
-   * estiver usando o proxy local (`ng serve --proxy-config proxy.conf.json`).
-   */
+
+  // Todas as chamadas da app passam pelo proxy local
   apiBaseUrl: '/api',
-  /** URL de redirecionamento do SSO corporativo utilizado pela secretaria. */
-  ssoRedirectUrl: 'http://127.0.0.1:8001/sso/redirect?provider=empresa',
-  /**
-   * Endpoint do serviço responsável pelo envio de e-mails/certificados.
-   * Ajuste para o endereço exposto na VPS.
-   */
-  emailApiBaseUrl: 'http://localhost:5000/api',
-  /** Habilita logs adicionais enviados pelo GlobalErrorHandler. */
+
+  // Mantemos o SSO também pelo proxy para evitar CORS
+  ssoRedirectUrl: '/api/sso/redirect?provider=empresa',
+
+  // Serviço de e-mail/certificados também roteado pelo proxy
+  // (mapeie /api/email-service no proxy.conf.json para a porta real)
+  emailApiBaseUrl: '/api/email-service',
+
+  // Logs adicionais no dev? normalmente deixo false
   enableErrorLogging: false,
-  /** Endpoint opcional para envio de erros (ex.: Sentry proxy ou Logstash). */
+
+  // Se você tiver um coletor local, coloque aqui (ex.: '/api/logs')
   errorLoggingUrl: '',
 };

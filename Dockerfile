@@ -2,25 +2,28 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copia package.json e package-lock para instalar dependências
+# Instala dependências
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
 
-# Copia o restante do código e gera o build de produção
+# Copia código e gera o build de produção
 COPY . .
 RUN npm run build -- --configuration=production
 
-# Etapa 2: imagem final baseada em Nginx
+# Etapa 2: imagem final com Nginx
 FROM nginx:1.27-alpine
 
-# Copia configuração customizada do Nginx
+# (opcional) utilitário para healthcheck http
+RUN apk add --no-cache curl
+
+# Config do Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copia os artefatos gerados na etapa de build
-COPY --from=build /app/dist/FrontTCC /usr/share/nginx/html
+# Artefatos do Angular (Angular 17+/CLI: dist/<app>/browser)
+COPY --from=build /app/dist/FrontTCC/browser /usr/share/nginx/html
 
-# Exponha a porta padrão do Nginx
 EXPOSE 80
 
-# Healthcheck simples
-HEALTHCHECK CMD wget --spider -q http://localhost/ || exit 1
+# Healthcheck simples na raiz
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -fsS http://localhost/ >/dev/null || exit 1
