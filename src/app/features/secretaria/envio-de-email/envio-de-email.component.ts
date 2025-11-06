@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common'; // ✅ Adicione esta importaçã
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '@environments/environment';
 
 interface Projeto {
   id: number;
@@ -31,7 +32,7 @@ export class EnvioDeEmailComponent implements OnInit {
   loading = false;
   error: string | null = null;
   success: string | null = null;
-  private apiUrl = 'http://localhost:5000/api';
+  private readonly apiUrl = environment.emailApiBaseUrl;
 
   constructor(private http: HttpClient) {}
 

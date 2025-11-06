@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { LoginService } from '@services/login.service';
+import { environment } from '@environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -77,8 +78,7 @@ export class LoginComponent {
   }
 
   entrarComSSO() {
-    window.location.href =
-      'http://127.0.0.1:8001/sso/redirect?provider=empresa';
+    window.location.href = environment.ssoRedirectUrl;
   }
 
   togglePassword() {

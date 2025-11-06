@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { RelatorioMensal, PendenciaMensal, ConfirmarRelatorioMensalDTO } from '@interfaces/relatorio';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class RelatorioService {
-  private readonly apiBase = '/api';
+  private readonly apiBase = environment.apiBaseUrl;
   constructor(private http: HttpClient) {}
 
   // ORIENTADOR

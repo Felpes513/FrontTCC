@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class NotificacaoService {
-  private readonly baseUrl = '/api/notificacoes'; // ajuste se seu proxy for diferente
+  private readonly baseUrl = `${environment.apiBaseUrl}/notificacoes`;
 
   constructor(private http: HttpClient) {}
 

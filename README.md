@@ -1,59 +1,50 @@
-# CursoOrgano
+# 🧭 FrontTCC — Sistema de Gestão de TCC (Frontend)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.13.
+Aplicação **Angular** responsável pelo fluxo de **inscrições, acompanhamento e gestão de projetos de TCC**.  
+O projeto utiliza **proxy local** para integração com o backend **FastAPI**, e conta com **build Dockerizado** para deploy em **VPS** via **Nginx**.
 
-## Development server
+---
 
-To start a local development server, run:
+## ⚙️ Pré-requisitos
 
-```bash
-ng serve
-```
+- **Node.js** 20 LTS  
+- **NPM** 10+  
+- **Docker** e **Docker Compose** (para produção)
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## 🚀 Ambiente de Desenvolvimento
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Após clonar o repositório, instale as dependências:
 
 ```bash
-ng generate --help
+npm install
 ```
 
-## Building
-
-To build the project run:
-
+Execute o servidor local com proxy para o backend (FastAPI):
 ```bash
-ng build
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
+## Build de Produção
 ```bash
-ng test
+npm run build
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
+## Deploy com Docker
+### Gerar imagem
 ```bash
-ng e2e
+docker build -t fronttcc:latest .
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### Executar container
+```bash
+docker run --name fronttcc -p 8080:80 fronttcc:latest
+```
 
-## Additional Resources
+A aplicação estará disponível em http://localhost:8080
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+# Autor
+Felipe Souza Moreira
+Desenvolvedor Full Stack | Q.A | DevOps
+Sistema de Gerenciamento de Projetos de Iniciação Científica - SGPIC USCS

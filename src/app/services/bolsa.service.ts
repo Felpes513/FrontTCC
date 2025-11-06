@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class BolsaService {
-  private readonly api = '/api/bolsas';
+  private readonly api = `${environment.apiBaseUrl}/bolsas`;
 
   constructor(private http: HttpClient) {}
 
