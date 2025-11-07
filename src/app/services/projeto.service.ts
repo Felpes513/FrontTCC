@@ -35,8 +35,19 @@ export class ProjetoService {
 
   constructor(private http: HttpClient) {}
 
+  // Gerador simples para cod_projeto caso o usuário não informe
+  private gerarCodProjeto(): string {
+    const ano = new Date().getFullYear();
+    const suf = Math.random().toString(36).slice(2, 8).toUpperCase();
+    return `P-${ano}-${suf}`;
+  }
+
+  private stripDataUrl(b64: string): string {
+    return (b64 || '').replace(/^data:.*;base64,/, '');
+  }
+
   cadastrarProjetoCompleto(
-    projeto: ProjetoCadastro,
+    projeto: ProjetoCadastro & { ideia_inicial_b64?: string },
     id_orientador: number
   ): Observable<any> {
     if (projeto.id_campus == null) {
@@ -45,13 +56,25 @@ export class ProjetoService {
       }));
     }
 
-    const payload: any = {
+    const ideiaPura = this.stripDataUrl(projeto.ideia_inicial_b64 || '');
+    if (!ideiaPura) {
+      return throwError(() => ({
+        message: 'Envie o documento inicial (.docx) em Base64.',
+      }));
+    }
+
+    const payload: ProjetoRequest = {
       titulo_projeto: projeto.titulo_projeto,
       resumo: (projeto.resumo || '').trim(),
       id_orientador,
       id_campus: projeto.id_campus,
+      cod_projeto: (projeto.cod_projeto || '').trim() || this.gerarCodProjeto(),
+      ideia_inicial_b64: ideiaPura, // base64 "cru" — sem prefixo data-url
     };
-    if (projeto.tipo_bolsa != null) payload.tipo_bolsa = projeto.tipo_bolsa;
+
+    if (projeto.tipo_bolsa != null) {
+      (payload as any).tipo_bolsa = projeto.tipo_bolsa;
+    }
 
     return this.http.post(this.apiUrlProjetos, payload).pipe(
       tap((response) => console.log('✅ Projeto cadastrado:', response)),
@@ -59,16 +82,35 @@ export class ProjetoService {
     );
   }
 
+  // ====== ATUALIZAÇÃO (stub até existir PUT /projetos/{id} no backend) ======
+  atualizarProjeto(id: number, _payload: any): Observable<any> {
+    // TODO: quando o backend disponibilizar PUT /projetos/{id},
+    // trocar por:
+    // return this.http.put(`${this.apiUrlProjetos}${id}`, body).pipe(catchError(this.handleError));
+    return this.nopEdit();
+  }
+
+  // Temporário até existir PUT /projetos/{id} no backend
+  nopEdit(): Observable<any> {
+    return of({ ok: true });
+  }
+
   private processarDadosECadastrar(
-    formulario: ProjetoFormulario
+    formulario: ProjetoFormulario & { ideia_inicial_b64?: string }
   ): Observable<any> {
     return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
       switchMap((orientador: Orientador) => {
+        const ideiaPura = this.stripDataUrl(
+          (formulario as any).ideia_inicial_b64 || ''
+        );
         const payload: ProjetoRequest = {
           titulo_projeto: formulario.titulo_projeto,
           resumo: formulario.resumo || '',
           id_orientador: orientador.id,
           id_campus: formulario.id_campus,
+          cod_projeto:
+            (formulario.cod_projeto || '').trim() || this.gerarCodProjeto(),
+          ideia_inicial_b64: ideiaPura,
         };
 
         return this.http.post(this.apiUrlProjetos, payload).pipe(
@@ -80,7 +122,6 @@ export class ProjetoService {
   }
 
   listarProjetos(): Observable<Projeto[]> {
-    // não precisa colocar outra barra
     return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
       map((res) => (res.projetos || []).map((p) => this.normalizarProjeto(p))),
       catchError(this.handleError)
@@ -113,21 +154,7 @@ export class ProjetoService {
     );
   }
 
-  atualizarProjeto(id: number, formulario: ProjetoFormulario) {
-    return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
-      switchMap((orientador: Orientador) => {
-        const payload: ProjetoRequest = {
-          titulo_projeto: formulario.titulo_projeto,
-          resumo: formulario.resumo || '',
-          id_orientador: orientador.id,
-          id_campus: formulario.id_campus,
-        };
-        return this.http
-          .put(`${this.apiUrlProjetos}${id}`, payload)
-          .pipe(catchError(this.handleError));
-      })
-    );
-  }
+  // ===== CRUD AUX =====
 
   listarProjetosRaw() {
     return this.http
@@ -351,25 +378,21 @@ export class ProjetoService {
     });
   }
 
-  listarProjetosParaAvaliacao(): Observable<ProjetoBasico[]> {
-    return this.http
-      .get<any[]>(`${this.apiBase}/avaliacoes/projetos-para-avaliacao`)
-      .pipe(
-        map((rows) =>
-          (rows || []).map(
-            (r) =>
-              ({
-                id: r.id_projeto,
-                titulo: r.titulo || r.nome || 'Projeto',
-                pdfUrl: r.pdf_url || r.documento_url || '#',
-              } as ProjetoBasico)
-          )
-        ),
-        catchError(this.handleError)
-      );
+  listarProjetosParaAvaliacao(): Observable<
+    Array<{ id: number; titulo: string; has_pdf: boolean }>
+  > {
+    return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
+      map((res) =>
+        (res.projetos || []).map((p) => ({
+          id: p.id_projeto,
+          titulo: p.titulo_projeto || p.nome || 'Projeto',
+          has_pdf: !!p.has_pdf,
+        }))
+      ),
+      catchError(this.handleError)
+    );
   }
 
-  // src/app/services/projeto.service.ts
   listarNotasDoProjeto(idProjeto: number): Observable<number[]> {
     return this.http
       .get<{ notas: number[] }>(
@@ -380,6 +403,7 @@ export class ProjetoService {
         catchError(() => of([]))
       );
   }
+
   enviarConvitesDeAvaliacao(payload: {
     envios: AvaliacaoEnvio[];
   }): Observable<ConviteAvaliacaoResponse> {
@@ -445,10 +469,8 @@ export class ProjetoService {
     let message = 'Erro inesperado';
 
     if (error.error instanceof ErrorEvent) {
-      // Falha de rede / CORS etc.
       message = `Erro de rede: ${error.error.message}`;
     } else if (error.status === 422 && Array.isArray(error.error?.detail)) {
-      // FastAPI validation error — mostra o que faltou
       message = error.error.detail
         .map((d: any) => `${(d.loc || []).join('.')}: ${d.msg}`)
         .join(' | ');
