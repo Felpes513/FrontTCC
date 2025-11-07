@@ -7,6 +7,7 @@
         type="text"
         placeholder="Buscar por projeto, orientador ou campus"
         [(ngModel)]="filtro"
+        (ngModelChange)="onFiltroChange($event)"
         class="search-input"
       />
       <button class="btn-reload" (click)="recarregar()" [disabled]="carregando">
@@ -19,13 +20,19 @@
   </div>
 
   <div class="filter-buttons" *ngIf="isSecretaria">
-    <button (click)="filtroStatus = ''">
+    <button (click)="setFiltroStatus('')" [class.active]="filtroStatus === ''">
       <mat-icon>description</mat-icon> Todos
     </button>
-    <button (click)="filtroStatus = 'EM_EXECUCAO'">
+    <button
+      (click)="setFiltroStatus('EM_EXECUCAO')"
+      [class.active]="filtroStatus === 'EM_EXECUCAO'"
+    >
       <mat-icon>rocket_launch</mat-icon> Em Execução
     </button>
-    <button (click)="filtroStatus = 'CONCLUIDO'">
+    <button
+      (click)="setFiltroStatus('CONCLUIDO')"
+      [class.active]="filtroStatus === 'CONCLUIDO'"
+    >
       <mat-icon>check_circle</mat-icon> Concluídos
     </button>
   </div>
@@ -41,10 +48,11 @@
     </button>
   </div>
 
+  <!-- usa a lista cacheada -->
   <div *ngIf="!carregando && !erro" class="card-grid">
     <div
       *ngFor="
-        let projeto of projetosFiltrados();
+        let projeto of projetosFiltradosLista;
         let i = index;
         trackBy: trackByFn
       "
@@ -54,7 +62,7 @@
         class="progress-bar"
         [ngStyle]="{
           width: calcularProgresso(projeto) + '%',
-          background: getCor(i)
+          background: cores[i % cores.length]
         }"
       ></div>
 
@@ -64,14 +72,22 @@
             class="menu-trigger"
             (click)="toggleMenu(projeto.id)"
             type="button"
+            [attr.aria-expanded]="menuAberto === projeto.id"
+            aria-haspopup="menu"
           >
             <mat-icon>more_vert</mat-icon>
           </button>
-          <div class="menu-dropdown" *ngIf="menuAberto === projeto.id">
+
+          <div
+            class="menu-dropdown"
+            *ngIf="menuAberto === projeto.id"
+            role="menu"
+          >
             <button
               class="menu-item danger"
               (click)="cancelarProjeto(projeto.id); toggleMenu(null)"
               type="button"
+              role="menuitem"
             >
               <mat-icon>block</mat-icon> Cancelar Projeto
             </button>
@@ -79,6 +95,7 @@
               class="menu-item warning"
               (click)="tornarAlunosInadimplentes(projeto.id); toggleMenu(null)"
               type="button"
+              role="menuitem"
             >
               <mat-icon>report_problem</mat-icon> Tornar Alunos Inadimplentes
             </button>
@@ -88,6 +105,7 @@
                 tornarOrientadorInadimplente(projeto.id); toggleMenu(null)
               "
               type="button"
+              role="menuitem"
             >
               <mat-icon>report_problem</mat-icon> Tornar Orientador Inadimplente
             </button>
@@ -95,6 +113,7 @@
               class="menu-item danger"
               (click)="tornarTodosInadimplentes(projeto.id); toggleMenu(null)"
               type="button"
+              role="menuitem"
             >
               <mat-icon>cancel</mat-icon> Tornar Todos Inadimplentes
             </button>
@@ -106,9 +125,9 @@
         <div class="orientador-info">
           <mat-icon>person</mat-icon>
           <strong>Orientador:</strong>
-          <span [class.orientador-vazio]="!temOrientador(projeto)">{{
-            getOrientadorNome(projeto)
-          }}</span>
+          <span [class.orientador-vazio]="!temOrientador(projeto)">
+            {{ getOrientadorNome(projeto) }}
+          </span>
         </div>
 
         <div class="campus-info">
@@ -235,13 +254,17 @@
       !carregando &&
       !erro &&
       projetos.length > 0 &&
-      projetosFiltrados().length === 0
+      projetosFiltradosLista.length === 0
     "
     class="no-results"
   >
     <h3><mat-icon>search</mat-icon> Nenhum resultado encontrado</h3>
     <p>Tente ajustar os termos da sua busca.</p>
-    <button class="btn-clear-filter" (click)="filtro = ''" *ngIf="isSecretaria">
+    <button
+      class="btn-clear-filter"
+      (click)="onFiltroChange(''); setFiltroStatus('')"
+      *ngIf="isSecretaria"
+    >
       <mat-icon>backspace</mat-icon> Limpar filtro
     </button>
   </div>

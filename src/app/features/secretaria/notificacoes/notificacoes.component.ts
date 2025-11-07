@@ -1,4 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  Renderer2,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Notificacao } from '@interfaces/notificacao';
@@ -11,8 +17,9 @@ import { NotificacaoService } from '@services/notificacao.service';
   templateUrl: './notificacoes.component.html',
   styleUrls: ['./notificacoes.component.css'],
 })
-export class NotificacoesComponent implements OnInit {
+export class NotificacoesComponent implements OnInit, OnDestroy {
   private readonly destinatario = 'secretaria';
+
   notificacoes: Notificacao[] = [];
   page = 1;
   size = 10;
@@ -22,10 +29,18 @@ export class NotificacoesComponent implements OnInit {
   erro: string | null = null;
   notificacaoAberta: Notificacao | null = null;
 
-  constructor(private notifService: NotificacaoService) {}
+  constructor(
+    private notifService: NotificacaoService,
+    private renderer: Renderer2
+  ) {}
 
   ngOnInit(): void {
     this.carregar(1);
+  }
+
+  ngOnDestroy(): void {
+    // garante que o body não fique travado caso o componente seja destruído com modal aberto
+    this.renderer.removeClass(document.body, 'modal-open');
   }
 
   private mapItem(n: any): Notificacao {
@@ -45,11 +60,12 @@ export class NotificacoesComponent implements OnInit {
     this.carregando = true;
     this.erro = null;
 
-    this.notifService.getNotificacoesPaginado(this.destinatario, p, this.size)
+    this.notifService
+      .getNotificacoesPaginado(this.destinatario, p, this.size)
       .subscribe({
         next: (res) => {
           const items = res?.items ?? [];
-          this.notificacoes = items.map(x => this.mapItem(x));
+          this.notificacoes = items.map((x: any) => this.mapItem(x));
           this.page = res?.page ?? p;
           this.size = res?.size ?? this.size;
           this.total = res?.total ?? items.length;
@@ -63,8 +79,13 @@ export class NotificacoesComponent implements OnInit {
       });
   }
 
-  anterior(): void { if (this.page > 1) this.carregar(this.page - 1); }
-  proxima(): void { if (this.page < this.totalPages) this.carregar(this.page + 1); }
+  anterior(): void {
+    if (this.page > 1) this.carregar(this.page - 1);
+  }
+
+  proxima(): void {
+    if (this.page < this.totalPages) this.carregar(this.page + 1);
+  }
 
   marcarTodasComoLidas(): void {
     if (!confirm('Marcar todas como lidas?')) return;
@@ -77,9 +98,21 @@ export class NotificacoesComponent implements OnInit {
   abrirNotificacao(notificacao: Notificacao): void {
     this.notificacaoAberta = notificacao;
     notificacao.lida = true;
+    // trava o scroll de fundo
+    this.renderer.addClass(document.body, 'modal-open');
   }
 
-  fecharModal(): void { this.notificacaoAberta = null; }
+  fecharModal(): void {
+    this.notificacaoAberta = null;
+    // libera o scroll de fundo
+    this.renderer.removeClass(document.body, 'modal-open');
+  }
+
+  // ESC fecha o modal — sem parâmetro para evitar o erro de tipagem
+  @HostListener('document:keydown.escape')
+  onEsc(): void {
+    if (this.notificacaoAberta) this.fecharModal();
+  }
 
   get novasNotificacoes(): boolean {
     return this.notificacoes.some((n) => !n.lida);
