@@ -1,9 +1,9 @@
-<div class="page container">
+<div class="config-page">
   <h2>Configurações do Sistema</h2>
-  <p class="muted">Gerencie campus, cursos, bolsas e redefina senhas</p>
+  <p class="muted">Gerencie campus, cursos e bolsas</p>
 
   <mat-tab-group>
-    <!-- Aba Campus -->
+    <!-- ===== Campus ===== -->
     <mat-tab label="Campus">
       <div class="form-section">
         <h3>Cadastrar Campus</h3>
@@ -12,20 +12,25 @@
             type="text"
             [(ngModel)]="novoCampus"
             name="nomeCampus"
-            placeholder="Nome do Campus"
+            placeholder="Nome do campus"
             required
           />
           <button type="submit">Salvar</button>
         </form>
 
         <h4>Campus cadastrados</h4>
-        <ul>
-          <li *ngFor="let c of campus">{{ c.nome }}</li>
+        <ul class="list">
+          <li *ngFor="let c of campus">
+            <span>{{ c.campus }}</span>
+            <button class="danger" (click)="excluirCampus(c.id_campus)">
+              Excluir
+            </button>
+          </li>
         </ul>
       </div>
     </mat-tab>
 
-    <!-- Aba Cursos -->
+    <!-- ===== Cursos ===== -->
     <mat-tab label="Cursos">
       <div class="form-section">
         <h3>Cadastrar Curso</h3>
@@ -34,86 +39,99 @@
             type="text"
             [(ngModel)]="novoCurso"
             name="nomeCurso"
-            placeholder="Nome do Curso"
+            placeholder="Nome do curso"
             required
           />
           <button type="submit">Salvar</button>
         </form>
 
         <h4>Cursos cadastrados</h4>
-        <ul>
-          <li *ngFor="let c of cursos">{{ c.nome }}</li>
+        <ul class="list">
+          <li *ngFor="let c of cursos">
+            <span>{{ c.nome }}</span>
+            <button class="danger" (click)="excluirCurso(c.id_curso)">
+              Excluir
+            </button>
+          </li>
         </ul>
       </div>
     </mat-tab>
 
-    <!-- Aba Bolsas -->
+    <!-- ===== BOLSAS (usar exatamente o seu HTML) ===== -->
     <mat-tab label="Bolsas">
       <div class="form-section">
+        <!-- ========== Tipos de Bolsa (CRUD) ========== -->
         <h3>Cadastrar Bolsa</h3>
-        <form (ngSubmit)="cadastrarBolsa()">
+        <form (ngSubmit)="cadastrarTipoBolsa()" class="crud-inline">
           <input
             type="text"
             [(ngModel)]="novaBolsa"
             name="nomeBolsa"
-            placeholder="Nome da Bolsa"
+            placeholder="Nome da bolsa (ex.: Bolsa PIBIC)"
             required
           />
           <button type="submit">Salvar</button>
         </form>
 
         <h4>Bolsas cadastradas</h4>
-        <ul>
-          <li *ngFor="let b of bolsas">{{ b.nome }}</li>
+        <ul class="list">
+          <li *ngFor="let b of tiposBolsa">
+            <span>{{ b.nome }}</span>
+            <button class="danger" (click)="excluirTipoBolsa(b.id_bolsa)">
+              Excluir
+            </button>
+          </li>
         </ul>
-      </div>
-    </mat-tab>
 
-    <!-- Aba Reset de Senha -->
-    <mat-tab label="Reset de Senha">
-      <div class="form-section">
-        <h3>Redefinir Senha (direto)</h3>
-        <form (ngSubmit)="resetarSenhaDireto()">
-          <select [(ngModel)]="perfilReset" name="perfilReset" required>
-            <option value="aluno">Aluno</option>
-            <option value="orientador">Orientador</option>
-            <option value="secretaria">Secretaria</option>
-          </select>
+        <hr class="section-divider" />
 
-          <input
-            type="email"
-            [(ngModel)]="emailReset"
-            name="emailReset"
-            placeholder="E-mail do usuário"
-            required
-          />
+        <!-- ========== Atribuição para Alunos ========== -->
+        <h3>Alunos (atribuição de bolsas)</h3>
+        <div class="bolsas-filter">
           <input
             type="text"
-            [(ngModel)]="cpfReset"
-            name="cpfReset"
-            placeholder="CPF do usuário"
-            required
+            [(ngModel)]="filtroBolsa"
+            placeholder="Filtrar por nome ou e-mail"
           />
-          <input
-            type="password"
-            [(ngModel)]="novaSenhaReset"
-            name="novaSenhaReset"
-            placeholder="Nova senha"
-            required
-            minlength="6"
-          />
-          <input
-            type="password"
-            [(ngModel)]="confirmaSenhaReset"
-            name="confirmaSenhaReset"
-            placeholder="Confirmar senha"
-            required
-            minlength="6"
-          />
+        </div>
 
-          <button type="submit">Redefinir</button>
-        </form>
-        <p *ngIf="mensagemReset">{{ mensagemReset }}</p>
+        <div *ngIf="carregandoBolsas" class="loading">Carregando...</div>
+        <div *ngIf="erroBolsas" class="error">{{ erroBolsas }}</div>
+
+        <table class="table table-bolsas" *ngIf="!carregandoBolsas">
+          <thead>
+            <tr>
+              <th class="center">Aluno</th>
+              <th class="center">Email</th>
+              <th class="center">Bolsista</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let r of bolsas"
+              [hidden]="!matchBolsa(filtroBolsa, r.nome_completo, r.email)"
+            >
+              <td class="center">{{ r.nome_completo }}</td>
+              <td class="center">{{ r.email }}</td>
+              <td class="center">
+                <label class="switch" title="Alternar status de bolsa">
+                  <input
+                    type="checkbox"
+                    [checked]="r.possui_bolsa"
+                    (change)="toggleBolsa(r)"
+                    [attr.aria-label]="'Alternar bolsa de ' + r.nome_completo"
+                    role="switch"
+                  />
+                  <span class="slider"></span>
+                </label>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="muted" *ngIf="!carregandoBolsas && bolsas.length === 0">
+          Nenhum registro de aluno encontrado.
+        </p>
       </div>
     </mat-tab>
   </mat-tab-group>

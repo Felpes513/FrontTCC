@@ -1,3 +1,4 @@
+/* Página */
 .config-page {
   min-height: 100vh;
   padding: 40px 20px;
@@ -21,7 +22,9 @@
   margin-bottom: 30px;
   text-align: center;
 }
-mat-tab-group {
+
+/* Tabs */
+.config-page mat-tab-group {
   width: 100%;
   max-width: 950px;
   background: var(--white);
@@ -30,22 +33,24 @@ mat-tab-group {
   box-shadow: var(--shadow-md);
   border: 1px solid var(--gray-200);
 }
-::ng-deep .mat-mdc-tab-labels {
+:host ::ng-deep .mat-mdc-tab-labels {
   justify-content: center;
 }
-::ng-deep .mat-mdc-tab-label {
+:host ::ng-deep .mat-mdc-tab-label {
   color: var(--gray-600) !important;
   font-weight: 500;
   text-transform: uppercase;
-  transition: all 0.25s ease;
+  transition: 0.25s;
 }
-::ng-deep .mat-mdc-tab-label.mdc-tab--active {
+:host ::ng-deep .mat-mdc-tab-label.mdc-tab--active {
   color: var(--uscs-blue) !important;
   font-weight: 600;
 }
-::ng-deep .mat-mdc-ink-bar {
+:host ::ng-deep .mat-mdc-ink-bar {
   background-color: var(--uscs-blue) !important;
 }
+
+/* Seções */
 .form-section {
   padding: 25px 10px;
   text-align: center;
@@ -66,13 +71,181 @@ mat-tab-group {
 .form-section input {
   width: 280px;
 }
-.form-section p {
-  color: #0284c7;
-  font-weight: 500;
-  margin-top: 10px;
+
+/* Listas simples (Campus/Cursos) */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 10px auto 0;
+  max-width: 640px;
+  text-align: left;
 }
+.list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 8px;
+}
+
+/* Tabela (Bolsas) */
+.table {
+  width: 100%;
+  max-width: 950px;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0 auto;
+  table-layout: auto;
+}
+.table thead th {
+  text-align: center; /* títulos centralizados */
+  font-weight: 600;
+  padding: 10px 12px;
+  color: var(--gray-700);
+  border-bottom: 1px solid var(--gray-200);
+}
+.table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-100);
+  text-align: center;
+}
+.table .center {
+  text-align: center;
+}
+
+/* Botões */
+button {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  background: var(--uscs-blue);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+button:hover {
+  filter: brightness(1.05);
+}
+button.danger {
+  background: #ef4444;
+}
+button.danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+.form-section input,
+.form-section select {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+
+/* Toggle iOS */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch .slider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background: var(--gray-300);
+  border-radius: 999px;
+  transition: 0.2s;
+}
+.switch .slider::before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.switch input:checked + .slider {
+  background: var(--uscs-blue);
+}
+.switch input:checked + .slider::before {
+  transform: translateX(22px);
+}
+
+/* CRUD de tipos de bolsa */
+.crud-inline {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* Divisória */
+.section-divider {
+  width: 100%;
+  max-width: 950px;
+  border: 0;
+  border-top: 1px solid var(--gray-200);
+  margin: 22px auto;
+}
+
+/* Filtro */
+.bolsas-filter {
+  max-width: 520px;
+  margin: 6px auto 18px;
+}
+.bolsas-filter input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+
+/* Feedback */
+.loading {
+  margin: 8px 0;
+  color: var(--gray-600);
+}
+.error {
+  margin: 8px 0;
+  color: #ef4444;
+}
+
+/* Sem scroll horizontal */
+.config-page,
+.config-page mat-tab-group {
+  overflow-x: hidden;
+}
+.config-page * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsivo */
 @media (max-width: 768px) {
-  mat-tab-group {
+  .config-page mat-tab-group {
     padding: 15px;
   }
   .config-page h2 {
