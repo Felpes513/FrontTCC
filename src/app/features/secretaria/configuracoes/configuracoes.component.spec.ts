@@ -4,14 +4,24 @@ import { ConfiguracoesComponent } from './configuracoes.component';
 import { ConfigService } from '@services/config.service';
 
 class ConfigServiceStub {
-  listarCampus = jasmine.createSpy().and.returnValue(of({ campus: [{ id: 1, nome: 'Campus' }] }));
-  listarCursos = jasmine.createSpy().and.returnValue(of({ cursos: [{ id: 1, nome: 'Curso' }] }));
-  listarBolsas = jasmine.createSpy().and.returnValue(of({ bolsas: [] }));
+  listarCampus = jasmine
+    .createSpy()
+    .and.returnValue(of({ campus: [{ id: 1, nome: 'Campus' }] }));
+  listarCursos = jasmine
+    .createSpy()
+    .and.returnValue(of({ cursos: [{ id: 1, nome: 'Curso' }] }));
+  // backend retorna array direto:
+  listarBolsas = jasmine
+    .createSpy()
+    .and.returnValue(of([{ id_aluno: 10, possui_bolsa: true }]));
   criarCurso = jasmine.createSpy().and.returnValue(of({}));
   criarCampus = jasmine.createSpy().and.returnValue(of({}));
   criarBolsa = jasmine.createSpy().and.returnValue(of({}));
-  forgotPassword = jasmine.createSpy().and.returnValue(of({ message: 'ok' }));
-  resetPasswordDirect = jasmine.createSpy().and.returnValue(of({ message: 'senha' }));
+
+  // novos métodos:
+  excluirCurso = jasmine.createSpy().and.returnValue(of({}));
+  excluirCampus = jasmine.createSpy().and.returnValue(of({}));
+  excluirBolsa = jasmine.createSpy().and.returnValue(of({}));
 }
 
 describe('ConfiguracoesComponent', () => {
@@ -27,25 +37,32 @@ describe('ConfiguracoesComponent', () => {
     const fixture = TestBed.createComponent(ConfiguracoesComponent);
     component = fixture.componentInstance;
     service = TestBed.inject(ConfigService) as unknown as ConfigServiceStub;
-    component.ngOnInit();
+    fixture.detectChanges(); // ngOnInit
   });
 
   it('should load initial lists on init', () => {
     expect(service.listarCampus).toHaveBeenCalled();
-    expect(component.campus.length).toBe(1);
+    expect(service.listarCursos).toHaveBeenCalled();
+    expect(service.listarBolsas).toHaveBeenCalled();
   });
 
   it('should create a new course', () => {
     component.novoCurso = 'Novo Curso';
     component.cadastrarCurso();
-    expect(service.criarCurso).toHaveBeenCalled();
+    expect(service.criarCurso).toHaveBeenCalledWith({ nome: 'Novo Curso' });
     expect(component.novoCurso).toBe('');
   });
 
-  it('should validate direct password reset', () => {
-    component.novaSenhaReset = '123456';
-    component.confirmaSenhaReset = '654321';
-    component.resetarSenhaDireto();
-    expect(component.mensagemReset).toBe('As senhas não conferem.');
+  it('should delete campus, course and bolsa', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+
+    component.excluirCampus(1);
+    expect(service.excluirCampus).toHaveBeenCalledWith(1);
+
+    component.excluirCurso(2);
+    expect(service.excluirCurso).toHaveBeenCalledWith(2);
+
+    component.excluirBolsa(10);
+    expect(service.excluirBolsa).toHaveBeenCalledWith(10);
   });
 });

@@ -4,8 +4,12 @@ import { CadastrosComponent } from './cadastros.component';
 import { RegisterService } from '@services/cadastro.service';
 
 class RegisterServiceStub {
-  listarAlunos = jasmine.createSpy().and.returnValue(of([{ nome: 'JOSE', cpf: '12345678901' }]));
-  listarOrientadores = jasmine.createSpy().and.returnValue(of([{ nome: 'MARIA', cpf: '98765432100' }]));
+  listarAlunos = jasmine
+    .createSpy()
+    .and.returnValue(of([{ nome: 'JOSE', cpf: '12345678901' }]));
+  listarOrientadores = jasmine
+    .createSpy()
+    .and.returnValue(of([{ nome: 'MARIA', cpf: '98765432100' }]));
   listarAlunosInadimplentes = jasmine.createSpy().and.returnValue(of([]));
   listarOrientadoresInadimplentes = jasmine.createSpy().and.returnValue(of([]));
   aprovarAluno = jasmine.createSpy().and.returnValue(of({}));
@@ -27,7 +31,7 @@ describe('CadastrosComponent', () => {
     const fixture = TestBed.createComponent(CadastrosComponent);
     component = fixture.componentInstance;
     service = TestBed.inject(RegisterService) as unknown as RegisterServiceStub;
-    component.ngOnInit();
+    fixture.detectChanges(); // ngOnInit -> load()
   });
 
   it('should load students by default', () => {
@@ -47,7 +51,7 @@ describe('CadastrosComponent', () => {
   it('should approve using the correct endpoint', () => {
     component.aprovar(1);
     expect(service.aprovarAluno).toHaveBeenCalledWith(1);
-    component.tipo = 'ORIENTADORES';
+    component.setTipo('ORIENTADORES');
     component.aprovar(2);
     expect(service.aprovarOrientador).toHaveBeenCalledWith(2);
   });

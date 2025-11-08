@@ -1,14 +1,28 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { Component } from '@angular/core';
 import { AppComponent } from './app.component';
+
+/** Dummies standalone para as rotas usadas nos testes */
+@Component({ standalone: true, template: '<p>Home</p>' })
+class HomeDummy {}
+
+@Component({ standalone: true, template: '<p>Secretaria Dashboard</p>' })
+class SecretariaDashboardDummy {}
 
 describe('AppComponent', () => {
   let router: Router;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
-      providers: [provideRouter([])],
+      imports: [AppComponent, HomeDummy, SecretariaDashboardDummy],
+      providers: [
+        provideRouter([
+          { path: '', component: HomeDummy },
+          { path: 'home', component: HomeDummy },
+          { path: 'secretaria/dashboard', component: SecretariaDashboardDummy },
+        ]),
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);
@@ -24,10 +38,13 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
 
-    await router.navigateByUrl('/');
+    // navega para '' e 'home' dentro da NgZone
+    await fixture.ngZone!.run(() => router.navigateByUrl('/'));
+    fixture.detectChanges();
     expect(app.showFooter).toBeTrue();
 
-    await router.navigateByUrl('/home');
+    await fixture.ngZone!.run(() => router.navigateByUrl('/home'));
+    fixture.detectChanges();
     expect(app.showFooter).toBeTrue();
   });
 
@@ -35,7 +52,10 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
 
-    await router.navigateByUrl('/secretaria/dashboard');
+    await fixture.ngZone!.run(() =>
+      router.navigateByUrl('/secretaria/dashboard')
+    );
+    fixture.detectChanges();
     expect(app.showFooter).toBeFalse();
   });
 });

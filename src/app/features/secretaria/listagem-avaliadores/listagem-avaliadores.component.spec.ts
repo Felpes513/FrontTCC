@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ListagemAvaliadoresComponent } from './listagem-avaliadores.component';
 import { ProjetoService } from '@services/projeto.service';
-import { Router } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
 
 class ProjetoServiceStub {
   listarAvaliadoresExternos = jasmine
@@ -11,27 +11,20 @@ class ProjetoServiceStub {
   deleteAvaliador = jasmine.createSpy().and.returnValue(of({}));
 }
 
-class RouterStub {
-  navigate = jasmine.createSpy('navigate');
-}
-
 describe('ListagemAvaliadoresComponent', () => {
-  let component: ListagemAvaliadoresComponent;
+  let component: any;
   let service: ProjetoServiceStub;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ListagemAvaliadoresComponent],
-      providers: [
-        { provide: ProjetoService, useClass: ProjetoServiceStub },
-        { provide: Router, useClass: RouterStub },
-      ],
+      imports: [RouterTestingModule, ListagemAvaliadoresComponent],
+      providers: [{ provide: ProjetoService, useClass: ProjetoServiceStub }],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(ListagemAvaliadoresComponent);
     component = fixture.componentInstance;
-    service = TestBed.inject(ProjetoService) as unknown as ProjetoServiceStub;
-    component.ngOnInit();
+    service = TestBed.inject(ProjetoService) as any;
+    fixture.detectChanges(); // ngOnInit
   });
 
   it('should load and normalise evaluators', () => {

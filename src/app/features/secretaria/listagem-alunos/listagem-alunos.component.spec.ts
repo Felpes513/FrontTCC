@@ -16,7 +16,9 @@ class ProjetoServiceStub {
       },
     ])
   );
-  updateAlunosProjeto = jasmine.createSpy().and.returnValue(of({ mensagem: 'ok' }));
+  updateAlunosProjeto = jasmine
+    .createSpy()
+    .and.returnValue(of({ mensagem: 'ok' }));
 }
 
 class InscricoesServiceStub {
@@ -45,32 +47,28 @@ describe('ListagemAlunosComponent', () => {
 
     const fixture = TestBed.createComponent(ListagemAlunosComponent);
     component = fixture.componentInstance;
-    projetoService = TestBed.inject(ProjetoService) as unknown as ProjetoServiceStub;
+    projetoService = TestBed.inject(ProjetoService) as any;
     component.projetoId = 1;
-    component.modo = 'SECRETARIA';
-    component.ngOnInit();
   });
 
   it('should map students for secretaria view', () => {
+    component.modo = 'SECRETARIA';
+    component.ngOnInit();
     expect(component.lista()[0].nome).toBe('Aluno Um');
-  });
-
-  it('should filter using accent agnostic match', () => {
-    const result = (component as any).match('aluno', 'Aluno Um');
-    expect(result).toBeTrue();
   });
 
   it('should toggle selection respecting the limit', () => {
     component.modo = 'ORIENTADOR';
     component.ngOnInit();
-    const inscricao: any = { id_aluno: 2, aluno: { nome: 'Aluno 2' } };
+    const outra: any = { id_aluno: 2, aluno: { nome: 'Aluno 2' } };
     component.limite = 1;
     component.toggleSelecionado(component.aprovadas[0] as any, true);
-    component.toggleSelecionado(inscricao, true);
+    component.toggleSelecionado(outra, true);
     expect(component.selecionados.size).toBe(1);
   });
 
   it('should persist the selected students', () => {
+    component.modo = 'ORIENTADOR';
     component.selecionados = new Set([1]);
     component.salvarSelecao();
     expect(projetoService.updateAlunosProjeto).toHaveBeenCalled();

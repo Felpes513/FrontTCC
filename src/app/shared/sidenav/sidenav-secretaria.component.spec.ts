@@ -3,57 +3,65 @@ import { of } from 'rxjs';
 import { SidenavSecretariaComponent } from './sidenav-secretaria.component';
 import { AuthService, Role } from '@services/auth.service';
 import { ProjetoService } from '@services/projeto.service';
-import { Router } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
 
 class AuthServiceStub {
   role: Role | null = 'SECRETARIA';
   getRole = jasmine.createSpy().and.callFake(() => this.role);
-  hasRole = jasmine.createSpy().and.callFake((role: Role) => this.role === role);
+  hasRole = jasmine.createSpy().and.callFake((r: Role) => this.role === r);
   hasAnyRole = jasmine.createSpy().and.returnValue(true);
   clearSession = jasmine.createSpy('clearSession');
 }
-
 class ProjetoServiceStub {
-  getNotificacoesPaginado = jasmine.createSpy().and.returnValue(of({ items: [], page: 1, size: 10, total: 0 }));
+  getNotificacoesPaginado = jasmine
+    .createSpy()
+    .and.returnValue(of({ items: [] }));
   getNotificacoes = jasmine.createSpy().and.returnValue(of([]));
   marcarTodasComoLidas = jasmine.createSpy().and.returnValue(of({}));
 }
 
-class RouterStub {
-  navigate = jasmine.createSpy('navigate');
-}
+// polyfill matchMedia
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: () => ({
+      matches: false,
+      addListener() {},
+      removeListener() {},
+      addEventListener() {},
+      removeEventListener() {},
+    }),
+  });
+});
 
 describe('SidenavSecretariaComponent', () => {
   let component: SidenavSecretariaComponent;
   let projetoService: ProjetoServiceStub;
   let auth: AuthServiceStub;
 
-  beforeAll(() => {
-    Object.defineProperty(window, 'matchMedia', {
-      writable: true,
-      value: () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }),
-    });
-  });
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SidenavSecretariaComponent],
+      imports: [RouterTestingModule, SidenavSecretariaComponent],
       providers: [
         { provide: AuthService, useClass: AuthServiceStub },
         { provide: ProjetoService, useClass: ProjetoServiceStub },
-        { provide: Router, useClass: RouterStub },
       ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(SidenavSecretariaComponent);
     component = fixture.componentInstance;
-    projetoService = TestBed.inject(ProjetoService) as unknown as ProjetoServiceStub;
-    auth = TestBed.inject(AuthService) as unknown as AuthServiceStub;
+    projetoService = TestBed.inject(ProjetoService) as any;
+    auth = TestBed.inject(AuthService) as any;
   });
 
   it('should expose the readable role name', () => {
+    // valor inicial
     expect(component.papelLegivel()).toBe('Secretaria');
+
+    // muda o stub E o snapshot do componente
     auth.role = 'ORIENTADOR';
+    (component as any).role = 'ORIENTADOR';
+
     expect(component.papelLegivel()).toBe('Orientador');
   });
 
@@ -62,7 +70,6 @@ describe('SidenavSecretariaComponent', () => {
     component.isMenuOpen = true;
     component.toggleMenu();
     expect(component.isMenuOpen).toBeTrue();
-
     component.isMobile = true;
     component.toggleMenu();
     expect(component.isMenuOpen).toBeFalse();
@@ -77,6 +84,8 @@ describe('SidenavSecretariaComponent', () => {
   it('should mark notifications as read for the secretaria', () => {
     component.isSecretaria = true;
     component.marcarNotificacoesComoLidas();
-    expect(projetoService.marcarTodasComoLidas).toHaveBeenCalledWith('secretaria');
+    expect(projetoService.marcarTodasComoLidas).toHaveBeenCalledWith(
+      'secretaria'
+    );
   });
 });

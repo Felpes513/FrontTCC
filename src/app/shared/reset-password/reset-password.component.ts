@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { ConfigService } from '@services/config.service';
+import { PasswordService } from '@services/password.service';
 
 type Perfil = 'aluno' | 'orientador' | 'secretaria';
 
@@ -22,7 +22,7 @@ export class ResetPasswordComponent {
   erro = '';
 
   constructor(
-    private cfg: ConfigService,
+    private pw: PasswordService,
     route: ActivatedRoute,
     private router: Router
   ) {
@@ -43,12 +43,12 @@ export class ResetPasswordComponent {
       return;
     }
     this.loading = true;
-    this.cfg.forgotPassword(this.email.trim()).subscribe({
-      next: (r: any) => {
+    this.pw.forgotPassword(this.email.trim()).subscribe({
+      next: (r) => {
         this.okMsg = r?.message || 'Se o e-mail existir, enviaremos o link.';
         this.loading = false;
       },
-      error: (e: any) => {
+      error: (e) => {
         this.erro = e?.error?.detail || 'Não foi possível enviar o link.';
         this.loading = false;
       },

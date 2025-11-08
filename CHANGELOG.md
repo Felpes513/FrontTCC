@@ -2,16 +2,265 @@
 
 ## [Data: 08/11/2025] - Qualidade e automação de testes
 
+### 🎯 Resumo Geral
+- **31 arquivos de teste criados/modificados**
+- **Novo serviço de senha implementado**
+- **Refatoração do módulo de configurações**
+- **Correção crítica de URLs de API**
+
+---
+
 ### ✅ Qualidade e Testes
-- Adicionados testes unitários e de integração para todos os componentes standalone do portal (login, cadastros, secretaria, orientador, avaliador externo, dashboards e utilitários).
-- Criados testes para todos os serviços HTTP garantindo serialização correta de payloads e tratamento de erros (projetos, inscrições, relatórios, notificações, cadastros, bolsas, autenticação).
-- Cobertura para componentes auxiliares como `app.component`, `home`, `footer` e `health` assegurando renderização e lógica de roteamento.
+
+#### Testes de Componentes
+- ✅ **AppComponent**: Testes de renderização e lógica de roteamento
+- ✅ **HomeComponent**: Testes de componente principal
+- ✅ **FooterComponent**: Testes de exibição condicional
+- ✅ **HealthComponent**: Testes de verificação de rotas
+- ✅ **LoginComponent**: Testes de autenticação e formulário
+- ✅ **CadastroComponent**: Testes de registro de usuários
+- ✅ **ResetPasswordComponent**: Testes de redefinição de senha
+- ✅ **SidenavSecretariaComponent**: Testes de navegação lateral
+
+#### Testes de Funcionalidades da Secretaria
+- ✅ **ConfiguracoesComponent**: Testes de CRUD de campus, cursos e bolsas
+- ✅ **CadastrosComponent**: Testes de gerenciamento de cadastros
+- ✅ **ListagemAlunosComponent**: Testes de listagem e seleção de alunos
+- ✅ **ListagemAvaliadoresComponent**: Testes de gerenciamento de avaliadores
+- ✅ **ListagemProjetosComponent**: Testes de listagem de projetos
+- ✅ **FormularioProjetoComponent**: Testes de formulário de projeto
+- ✅ **FormularioAvaliadorComponent**: Testes de formulário de avaliador
+- ✅ **RelatoriosComponent**: Testes de relatórios mensais
+- ✅ **NotificacoesComponent**: Testes de notificações
+- ✅ **EnvioDeEmailComponent**: Testes de envio de e-mails
+- ✅ **DashboardComponent**: Testes de dashboard
+- ✅ **EnviarAvaliacoesModal**: Testes de modal de avaliações
+
+#### Testes de Funcionalidades do Orientador
+- ✅ **RelatorioFormComponent**: Testes de formulário de relatório
+
+#### Testes de Funcionalidades do Avaliador Externo
+- ✅ **FormularioAvaliacaoComponent**: Testes de formulário de avaliação externa
+
+#### Testes de Serviços HTTP
+- ✅ **AuthService**: Testes de autenticação e autorização
+- ✅ **LoginService**: Testes de login e SSO
+- ✅ **CadastroService**: Testes de cadastro de usuários
+- ✅ **ProjetoService**: Testes de CRUD de projetos, serialização de payloads e tratamento de erros
+- ✅ **InscricoesService**: Testes de gerenciamento de inscrições
+- ✅ **RelatorioService**: Testes de relatórios mensais
+- ✅ **NotificacaoService**: Testes de notificações
+- ✅ **ConfigService**: Testes de configurações (campus, cursos, bolsas)
+- ✅ **BolsaService**: Testes de gerenciamento de bolsas
+
+#### Cobertura de Testes
+- ✅ Testes unitários para todos os componentes standalone
+- ✅ Testes de integração para serviços HTTP
+- ✅ Validação de serialização correta de payloads
+- ✅ Tratamento de erros em todos os serviços
+- ✅ Testes de renderização e lógica de componentes
+- ✅ Testes de roteamento e navegação
+
+---
+
+### ✨ Implementações
+
+#### 1. **Novo Serviço de Senha (PasswordService)**
+- ✅ Criado serviço dedicado para gerenciamento de senhas
+- ✅ Implementado método `forgotPassword()` para envio de e-mail de redefinição
+- ✅ Implementado método `resetPassword()` para confirmação de redefinição via token
+- ✅ Localização: `src/app/services/password.service.ts`
+
+#### 2. **Refatoração do Componente de Configurações**
+- ✅ Integrado CRUD de Tipos de Bolsa no componente de configurações
+- ✅ Implementada listagem de alunos para atribuição de bolsas
+- ✅ Adicionado filtro de busca por nome ou e-mail para bolsas
+- ✅ Implementado toggle de status de bolsa por aluno
+- ✅ Adicionada formatação `properCase` para nomes de alunos
+- ✅ Implementada normalização de texto (remoção de acentos) para buscas
+- ✅ Melhorada interface de usuário com tabs do Material Design
+
+#### 3. **Serviço de Configurações (ConfigService)**
+- ✅ Adicionados métodos para CRUD de Tipos de Bolsa:
+  - `listarTiposBolsa()`: Lista todos os tipos de bolsa
+  - `criarTipoBolsa(body: { nome: string })`: Cria novo tipo de bolsa
+  - `excluirTipoBolsa(id_bolsa: number)`: Exclui tipo de bolsa
+- ✅ Endpoints configurados para `/bolsas/tipos`
+
+#### 4. **Serviço de Bolsas (BolsaService)**
+- ✅ Implementado método `listar()` para listar alunos com status de bolsa
+- ✅ Implementado método `setStatus()` para atualizar status de bolsa de aluno
+- ✅ Interface `BolsaRow` definida com campos: `id_aluno`, `nome_completo`, `email`, `possui_bolsa`
+
+#### 5. **Melhorias no Serviço de Notificações**
+- ✅ Refatorado método `getNotificacoes()` para usar paginação padrão
+- ✅ Melhorado método `marcarTodasComoLidas()` com parâmetros corretos
+- ✅ Ajustada estrutura de resposta da API
+
+---
 
 ### 🐛 Correções
-- Ajustado o cálculo da `apiBaseUrl`, `ssoRedirectUrl` e `emailApiBaseUrl` considerando automaticamente host/porta ativos, eliminando `ERR_CONNECTION_REFUSED` ao servir o frontend em portas não padrão.
 
-### 🛠️ Ferramentas
-- Documentado que a suíte utiliza `ChromeHeadless` (definir `CHROME_BIN` no ambiente CI/CD para execução automática).
+#### 1. **Correção Crítica de URLs de API (Environment)**
+- ✅ **Problema**: `ERR_CONNECTION_REFUSED` ao servir o frontend em portas não padrão
+- ✅ **Solução**: Implementada função `resolveUrl()` que calcula automaticamente URLs baseadas no `window.location.origin`
+- ✅ **Arquivos Afetados**:
+  - `src/environments/environment.ts`
+- ✅ **URLs Corrigidas**:
+  - `apiBaseUrl`: Agora resolve automaticamente baseado na origem atual
+  - `ssoRedirectUrl`: Resolve automaticamente para evitar CORS
+  - `emailApiBaseUrl`: Resolve automaticamente através do proxy
+- ✅ **Benefícios**:
+  - Elimina erros de conexão em diferentes portas
+  - Funciona automaticamente em desenvolvimento e produção
+  - Suporta URLs absolutas (http/https) e relativas
+  - Compatível com proxy local
+
+#### 2. **Correção no Componente de Reset de Senha**
+- ✅ Integrado com novo `PasswordService`
+- ✅ Melhorado tratamento de erros
+- ✅ Validação de tokens aprimorada
+
+#### 3. **Correção na Sidenav**
+- ✅ Removido link para componente `atribuir-bolsas` (removido)
+- ✅ Adicionado link para configurações com gerenciamento de bolsas integrado
+
+---
+
+### 🗑️ Remoções
+
+#### 1. **Componente Atribuir Bolsas**
+- ❌ Removido componente `atribuir-bolsas` completamente:
+  - `atribuir-bolsas.component.ts`
+  - `atribuir-bolsas.component.html`
+  - `atribuir-bolsas.component.css`
+  - `atribuir-bolsas.component.spec.ts`
+- **Motivo**: Funcionalidade integrada ao componente de configurações para melhor organização
+- **Migração**: Todas as funcionalidades foram movidas para `configuracoes.component`
+
+---
+
+### 🚨 Bugs Conhecidos
+
+#### 1. **Bug na Criação de Bolsa** ⚠️
+- **Status**: 🔴 **EM INVESTIGAÇÃO**
+- **Descrição**: Erro ao tentar criar uma nova bolsa através do formulário de configurações
+- **Localização**: `src/app/features/secretaria/configuracoes/configuracoes.component.ts`
+- **Método Afetado**: `cadastrarTipoBolsa()`
+- **Possíveis Causas**:
+  - Incompatibilidade com endpoint do backend (`/bolsas/tipos`)
+  - Formato de payload incorreto
+  - Validação no backend rejeitando requisição
+  - Problema de CORS ou autenticação
+- **Endpoint**: `POST ${apiBaseUrl}/bolsas/tipos`
+- **Payload Esperado**: `{ nome: string }`
+- **Ação Necessária**: 
+  - Verificar se o endpoint do backend está correto
+  - Validar formato de resposta do backend
+  - Verificar logs de erro no console do navegador
+  - Testar requisição diretamente via Postman/Insomnia
+- **Workaround Temporário**: Usar interface de administração do backend diretamente
+
+---
+
+### 🛠️ Ferramentas e Configuração
+
+#### Testes
+- ✅ Configurado Karma como test runner
+- ✅ Configurado Jasmine como framework de testes
+- ✅ Configurado ChromeHeadless para execução em CI/CD
+- ✅ **Nota**: Definir `CHROME_BIN` no ambiente CI/CD para execução automática
+- ✅ Cobertura de testes para todos os serviços HTTP
+- ✅ Mocks e stubs configurados para testes isolados
+
+#### Ambiente de Desenvolvimento
+- ✅ Proxy configurado para desenvolvimento local
+- ✅ URLs resolvidas automaticamente baseadas no ambiente
+- ✅ Suporte a diferentes portas de desenvolvimento
+
+---
+
+### 📊 Estatísticas de Alterações
+
+#### Arquivos de Teste Criados/Modificados (31 arquivos)
+- `src/app/app.component.spec.ts` - Modificado
+- `src/app/components/home/home.component.spec.ts` - Modificado
+- `src/app/components/footer/footer.component.spec.ts` - Criado
+- `src/app/debug/health.component.spec.ts` - Criado
+- `src/app/shared/login/login.component.spec.ts` - Criado
+- `src/app/shared/cadastro/cadastro.component.spec.ts` - Criado
+- `src/app/shared/reset-password/reset-password.component.spec.ts` - Criado
+- `src/app/shared/sidenav/sidenav-secretaria.component.spec.ts` - Modificado
+- `src/app/services/auth.service.spec.ts` - Criado
+- `src/app/services/login.service.spec.ts` - Criado
+- `src/app/services/cadastro.service.spec.ts` - Criado
+- `src/app/services/projeto.service.spec.ts` - Criado
+- `src/app/services/inscricoes.service.spec.ts` - Criado
+- `src/app/services/relatorio.service.spec.ts` - Criado
+- `src/app/services/notificacao.service.spec.ts` - Criado
+- `src/app/services/config.service.spec.ts` - Modificado
+- `src/app/services/bolsa.service.spec.ts` - Criado
+- `src/app/features/secretaria/configuracoes/configuracoes.component.spec.ts` - Modificado
+- `src/app/features/secretaria/cadastros/cadastros.component.spec.ts` - Modificado
+- `src/app/features/secretaria/listagem-alunos/listagem-alunos.component.spec.ts` - Modificado
+- `src/app/features/secretaria/listagem-avaliadores/listagem-avaliadores.component.spec.ts` - Modificado
+- `src/app/features/secretaria/listagem-projetos/listagem-projetos.component.spec.ts` - Criado
+- `src/app/features/secretaria/formulario-projeto/formulario-projeto.component.spec.ts` - Criado
+- `src/app/features/secretaria/formulario-avaliador/formulario-avaliador.component.spec.ts` - Criado
+- `src/app/features/secretaria/relatorios/relatorios.component.spec.ts` - Criado
+- `src/app/features/secretaria/notificacoes/notificacoes.component.spec.ts` - Criado
+- `src/app/features/secretaria/envio-de-email/envio-de-email.component.spec.ts` - Criado
+- `src/app/features/secretaria/dashboard/dashboard.component.spec.ts` - Criado
+- `src/app/features/secretaria/listagem-avaliadores/enviar-avaliacoes.modal.spec.ts` - Criado
+- `src/app/features/orientador/relatorio-form/relatorio-form.component.spec.ts` - Criado
+- `src/app/features/avaliador-externo/formulario-avaliacao/formulario-avaliacao.component.spec.ts` - Criado
+
+#### Arquivos de Código Modificados
+- `src/app/services/password.service.ts` - **NOVO** (25 linhas)
+- `src/app/services/config.service.ts` - Modificado (adição de métodos de bolsa)
+- `src/app/services/bolsa.service.ts` - Modificado
+- `src/app/services/notificacao.service.ts` - Modificado
+- `src/app/features/secretaria/configuracoes/configuracoes.component.ts` - Modificado (integração de bolsas)
+- `src/app/features/secretaria/configuracoes/configuracoes.component.html` - Modificado
+- `src/app/features/secretaria/configuracoes/configuracoes.component.css` - Modificado
+- `src/app/shared/reset-password/reset-password.component.ts` - Modificado
+- `src/app/shared/sidenav/sidenav-secretaria.component.html` - Modificado
+- `src/app/shared/sidenav/sidenav-secretaria.component.ts` - Modificado
+- `src/environments/environment.ts` - Modificado (correção de URLs)
+
+#### Arquivos Removidos
+- `src/app/features/secretaria/atribuir-bolsas/atribuir-bolsas.component.ts` - Removido
+- `src/app/features/secretaria/atribuir-bolsas/atribuir-bolsas.component.html` - Removido
+- `src/app/features/secretaria/atribuir-bolsas/atribuir-bolsas.component.css` - Removido
+- `src/app/features/secretaria/atribuir-bolsas/atribuir-bolsas.component.spec.ts` - Removido
+
+---
+
+### 🎯 Próximos Passos
+
+#### Prioridade Alta
+1. 🔴 **Corrigir bug na criação de bolsa**
+   - Investigar endpoint do backend
+   - Validar formato de requisição
+   - Testar integração completa
+   - Adicionar tratamento de erros mais robusto
+
+#### Prioridade Média
+2. Adicionar testes de integração end-to-end
+3. Melhorar cobertura de testes para componentes complexos
+4. Documentar APIs de serviços
+5. Adicionar validação de formulários mais robusta
+
+#### Prioridade Baixa
+6. Otimizar performance de testes
+7. Adicionar testes de acessibilidade
+8. Implementar testes visuais (screenshot testing)
+
+---
+
+**Desenvolvedor:** Felipe Souza Moreira  
+**Data:** 08 de Novembro de 2025  
+**Branch:** `codex/create-frontend-quality-tests-and-changelog`
 
 ## [Data: 08/11/2025]
 

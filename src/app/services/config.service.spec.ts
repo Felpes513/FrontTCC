@@ -32,24 +32,11 @@ describe('ConfigService', () => {
     req.flush({ campus: [{}] });
   });
 
-  it('should call reset password direct endpoint', () => {
-    service
-      .resetPasswordDirect({
-        perfil: 'aluno',
-        email: 'a@a.com',
-        cpf: '123',
-        nova_senha: '123456',
-      })
-      .subscribe();
-
-    const req = http.expectOne(`${base}/reset-password-direct`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({
-      perfil: 'aluno',
-      email: 'a@a.com',
-      cpf: '123',
-      nova_senha: '123456',
-    });
-    req.flush({ message: 'ok' });
+  // 🔁 Substitui o antigo teste de reset por um teste da nova API:
+  it('should delete curso', () => {
+    service.excluirCurso(123).subscribe();
+    const req = http.expectOne(`${base}/cursos/123`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ ok: true });
   });
 });

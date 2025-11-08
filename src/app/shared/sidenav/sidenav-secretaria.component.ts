@@ -67,9 +67,9 @@ export class SidenavSecretariaComponent implements OnInit, OnDestroy {
         )
         .subscribe((res: any) => {
           const items = Array.isArray(res) ? res : res?.items ?? [];
-          this.exibirBadgeNotificacao =
-            items.some((n: any) => n?.lida === false) ||
-            (items.length > 0 && !items.every((n: any) => n?.lida === true));
+          this.exibirBadgeNotificacao = items.some(
+            (n: any) => n?.lida === false
+          );
         });
     }
   }
