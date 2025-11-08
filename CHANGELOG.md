@@ -1,5 +1,18 @@
 # Changelog - FrontTCC
 
+## [Data: 08/11/2025] - Qualidade e automação de testes
+
+### ✅ Qualidade e Testes
+- Adicionados testes unitários e de integração para todos os componentes standalone do portal (login, cadastros, secretaria, orientador, avaliador externo, dashboards e utilitários).
+- Criados testes para todos os serviços HTTP garantindo serialização correta de payloads e tratamento de erros (projetos, inscrições, relatórios, notificações, cadastros, bolsas, autenticação).
+- Cobertura para componentes auxiliares como `app.component`, `home`, `footer` e `health` assegurando renderização e lógica de roteamento.
+
+### 🐛 Correções
+- Ajustado o cálculo da `apiBaseUrl`, `ssoRedirectUrl` e `emailApiBaseUrl` considerando automaticamente host/porta ativos, eliminando `ERR_CONNECTION_REFUSED` ao servir o frontend em portas não padrão.
+
+### 🛠️ Ferramentas
+- Documentado que a suíte utiliza `ChromeHeadless` (definir `CHROME_BIN` no ambiente CI/CD para execução automática).
+
 ## [Data: 08/11/2025]
 
 ### 🎯 Resumo Geral
