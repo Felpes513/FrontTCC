@@ -5,16 +5,20 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { ProjetoService } from '@services/projeto.service';
-import type {
-  ProjetoCadastro,
-  ProjetoDetalhado,
-  DocumentoHistorico,
-  EtapaDocumento,
-} from '@interfaces/projeto';
+import type { ProjetoCadastro } from '@interfaces/projeto';
 import type { Orientador } from '@interfaces/orientador';
 import type { Aluno } from '@interfaces/aluno';
 import type { Campus } from '@interfaces/campus';
 import { ListagemAlunosComponent } from '../listagem-alunos/listagem-alunos.component';
+
+type EtapaDocumento = 'IDEIA' | 'PARCIAL' | 'FINAL';
+type StatusEnvio = 'ENVIADO' | 'NAO_ENVIADO';
+interface DocumentoHistorico {
+  etapa: EtapaDocumento;
+  status: StatusEnvio;
+  dataEnvio?: Date;
+  arquivos?: { docx?: { nome: string }; pdf?: { nome: string } };
+}
 
 type ProjetoCadastroExt = ProjetoCadastro & {
   nota1?: number | null;
@@ -22,6 +26,7 @@ type ProjetoCadastroExt = ProjetoCadastro & {
   notaFinal?: number | null;
   tipo_bolsa?: string | null;
   cod_projeto?: string;
+  ideia_inicial_b64?: string; // <- usado apenas no POST
 };
 
 @Component({
@@ -44,6 +49,7 @@ export class FormularioProjetoComponent implements OnInit {
     notaFinal: null,
     tipo_bolsa: null,
     cod_projeto: '',
+    ideia_inicial_b64: '',
   };
 
   orientadores: Orientador[] = [];
@@ -63,23 +69,16 @@ export class FormularioProjetoComponent implements OnInit {
   modoEdicao = false;
   projetoId = 0;
 
-  // Modo orientador
   isOrientadorMode = false;
 
-  // Upload (área pós-cadastro)
+  // Upload
+  @ViewChild('docxInput') docxInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('pdfInput') pdfInput!: ElementRef<HTMLInputElement>;
   arquivoDocx?: File;
   arquivoPdf?: File;
 
-  // Habilita o botão "Avançar etapa" apenas após enviar PDF
   podeAvancar = false;
 
-  // DOCX (ideia) em Base64 usado SOMENTE no cadastro
-  ideiaInicialB64: string | null = null;
-
-  @ViewChild('docxInput') docxInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('pdfInput') pdfInput!: ElementRef<HTMLInputElement>;
-
-  // Histórico de documentos apenas para UI local
   historico: DocumentoHistorico[] = [
     { etapa: 'IDEIA', status: 'NAO_ENVIADO' },
     { etapa: 'PARCIAL', status: 'NAO_ENVIADO' },
@@ -119,7 +118,6 @@ export class FormularioProjetoComponent implements OnInit {
     }
   }
 
-  /** Preenche o form usando GET /projetos/ e cruza por nome */
   private carregarProjeto(id: number): void {
     this.carregando = true;
     this.erro = null;
@@ -161,7 +159,6 @@ export class FormularioProjetoComponent implements OnInit {
         this.campusSelecionadoId = c?.id_campus || 0;
         this.projeto.id_campus = this.campusSelecionadoId;
 
-        // se já houver PDF no banco, liberar "Avançar"
         this.podeAvancar = !!p.has_pdf;
 
         this.carregando = false;
@@ -267,88 +264,80 @@ export class FormularioProjetoComponent implements OnInit {
     this.carregando = true;
     this.erro = null;
 
-    // na criação, garantimos um DOCX de ideia em base64 (lido do input "docxIdeia")
-    if (!this.modoEdicao && !this.ideiaInicialB64) {
-      if (this.arquivoDocx) {
-        try {
-          this.ideiaInicialB64 = await this.readFileAsBase64(this.arquivoDocx);
-        } catch {
-          this.ideiaInicialB64 = 'data:application/octet-stream;base64,';
-        }
-      } else {
-        // nenhum arquivo selecionado no input inicial -> bloqueia
-        alert('Selecione o Documento inicial (.docx).');
+    // No cadastro, DOCX inicial é obrigatório e vai no POST como Base64
+    if (!this.modoEdicao) {
+      if (!this.arquivoDocx) {
+        alert('Selecione o Documento inicial (.docx) para cadastrar.');
         this.carregando = false;
         return;
+      }
+      try {
+        this.projeto.ideia_inicial_b64 = await this.readFileAsBase64(
+          this.arquivoDocx
+        );
+      } catch {
+        this.projeto.ideia_inicial_b64 = '';
       }
     }
 
     const operacao = this.modoEdicao
-      ? this.projetoService.atualizarProjeto(this.projetoId, {
-          ...this.projeto,
-          ideia_inicial_b64:
-            this.ideiaInicialB64 ?? 'data:application/octet-stream;base64,',
-        } as any)
+      ? this.projetoService.atualizarProjeto(this.projetoId, this.projeto)
       : this.projetoService.cadastrarProjetoCompleto(
           {
             ...this.projeto,
-            ideia_inicial_b64:
-              this.ideiaInicialB64 ?? 'data:application/octet-stream;base64,',
-          } as any,
+            // se o usuário não informar, o service gera
+            cod_projeto: (this.projeto.cod_projeto || '').trim(),
+            ideia_inicial_b64: this.projeto.ideia_inicial_b64 || '',
+          },
           this.orientadorSelecionadoId
         );
 
     operacao.subscribe({
       next: (resp: any) => {
-        // após criar, já consigo baixar o DOCX (o back espelha a ideia em docx_file)
         if (!this.modoEdicao) {
           const idGerado = resp?.id_projeto ?? resp?.id ?? this.projetoId ?? 0;
           if (idGerado) this.projetoId = Number(idGerado);
+
+          // Atualiza histórico da etapa IDEIA com o DOCX enviado no POST
+          if (this.arquivoDocx) {
+            this.atualizarHistoricoParaEtapa(
+              'IDEIA',
+              this.arquivoDocx,
+              undefined
+            );
+          }
           this.modoEdicao = true;
-          this.podeAvancar = false; // ainda não tem PDF
+          this.podeAvancar = false; // aguarda PDF
+          alert('Projeto cadastrado com sucesso!');
+        } else {
+          alert('Projeto atualizado com sucesso!');
         }
-        alert(
-          this.modoEdicao
-            ? 'Projeto atualizado com sucesso!'
-            : 'Projeto cadastrado com sucesso!'
-        );
         this.carregando = false;
       },
-      error: (error: any) => {
+      error: (error) => {
         this.erro = error?.message || 'Erro ao salvar projeto';
         this.carregando = false;
       },
     });
   }
 
-  // seleção de arquivos (pos-cadastro) e também captura do DOCX inicial
-  async onFileSelected(event: Event, tipo: 'docx' | 'pdf') {
+  onFileSelected(event: Event, tipo: 'docx' | 'pdf') {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
 
     const file = input.files[0];
     if (tipo === 'docx' && file.name.toLowerCase().endsWith('.docx')) {
       this.arquivoDocx = file;
-      // se estiver na criação, este é o arquivo que vai em Base64
-      if (!this.modoEdicao) {
-        try {
-          this.ideiaInicialB64 = await this.readFileAsBase64(file);
-        } catch {
-          this.ideiaInicialB64 = 'data:application/octet-stream;base64,';
-        }
-      }
     } else if (tipo === 'pdf' && file.name.toLowerCase().endsWith('.pdf')) {
       this.arquivoPdf = file;
     } else {
       alert(`Formato inválido. Envie um arquivo ${tipo.toUpperCase()}.`);
-      return;
     }
   }
 
   enviarArquivo(tipo: 'docx' | 'pdf') {
     if (!this.projetoId)
       return alert('Salve o projeto antes de enviar arquivos.');
-
     const arquivo = tipo === 'docx' ? this.arquivoDocx : this.arquivoPdf;
     if (!arquivo)
       return alert(`Selecione um arquivo ${tipo.toUpperCase()} primeiro.`);
@@ -361,10 +350,7 @@ export class FormularioProjetoComponent implements OnInit {
     metodo.subscribe({
       next: () => {
         alert(`${tipo.toUpperCase()} enviado com sucesso!`);
-        if (tipo === 'pdf') {
-          // só após PDF liberamos avançar
-          this.podeAvancar = true;
-        }
+        if (tipo === 'pdf') this.podeAvancar = true;
       },
       error: (err) =>
         alert(`Erro ao enviar ${tipo.toUpperCase()}: ${err.message}`),
@@ -392,7 +378,6 @@ export class FormularioProjetoComponent implements OnInit {
     });
   }
 
-  // Etapas
   get proximaEtapa(): EtapaDocumento | null {
     for (const e of this.etapas) {
       const h = this.historico.find((x) => x.etapa === e);
@@ -409,23 +394,13 @@ export class FormularioProjetoComponent implements OnInit {
 
   avancarEtapa(): void {
     const proxima = this.proximaEtapa;
-    if (!proxima) {
-      alert('Todas as etapas já foram concluídas.');
-      return;
-    }
-    if (!this.projetoId) {
-      alert('Salve o projeto antes de avançar etapa.');
-      return;
-    }
-    if (!this.arquivoDocx && !this.arquivoPdf) {
-      // apenas reforço visual; em regra o PDF já foi enviado para liberar o botão
-      alert('Selecione ao menos um arquivo (DOCX ou PDF) antes de avançar.');
-      return;
-    }
+    if (!proxima) return alert('Todas as etapas já foram concluídas.');
+    if (!this.projetoId)
+      return alert('Salve o projeto antes de avançar etapa.');
+    if (!this.arquivoPdf) return alert('Envie o PDF desta etapa para avançar.');
 
-    const etapaLabel = this.tituloEtapa(proxima);
     const ok = confirm(
-      `Você deseja avançar para "${etapaLabel}"?\nOs arquivos selecionados serão movidos para o histórico desta etapa.`
+      `Você deseja avançar para "${this.tituloEtapa(proxima)}"?`
     );
     if (!ok) return;
 
@@ -435,8 +410,8 @@ export class FormularioProjetoComponent implements OnInit {
       this.arquivoPdf
     );
     this.limparInputsUpload();
-    this.podeAvancar = false; // trava novamente até um novo PDF da próxima etapa
-    alert(`Avançou para "${etapaLabel}".`);
+    this.podeAvancar = false;
+    alert(`Avançou para "${this.tituloEtapa(proxima)}".`);
   }
 
   private atualizarHistoricoParaEtapa(
@@ -447,16 +422,13 @@ export class FormularioProjetoComponent implements OnInit {
     const idx = this.historico.findIndex((h) => h.etapa === etapa);
     const novo: DocumentoHistorico =
       idx >= 0 ? { ...this.historico[idx] } : { etapa, status: 'NAO_ENVIADO' };
-
     novo.arquivos = novo.arquivos || {};
     if (docx) novo.arquivos.docx = { nome: docx.name };
     if (pdf) novo.arquivos.pdf = { nome: pdf.name };
-
     if (novo.arquivos.docx || novo.arquivos.pdf) {
       novo.status = 'ENVIADO';
       novo.dataEnvio = new Date();
     }
-
     if (idx >= 0) this.historico[idx] = novo;
     else this.historico.push(novo);
   }
@@ -468,7 +440,6 @@ export class FormularioProjetoComponent implements OnInit {
     this.arquivoPdf = undefined;
   }
 
-  // Labels/ícones
   tituloEtapa(e: EtapaDocumento): string {
     return e === 'IDEIA'
       ? 'Submissão do Projeto (Ideia)'
@@ -511,6 +482,7 @@ export class FormularioProjetoComponent implements OnInit {
       notaFinal: null,
       tipo_bolsa: null,
       cod_projeto: '',
+      ideia_inicial_b64: '',
     };
     this.orientadorSelecionadoId = 0;
     this.emailOrientador = '';
@@ -519,9 +491,17 @@ export class FormularioProjetoComponent implements OnInit {
     this.alunosInscritos = [];
     this.campusSelecionadoId = 0;
     this.erro = null;
-    this.ideiaInicialB64 = null;
     this.arquivoDocx = undefined;
     this.arquivoPdf = undefined;
     this.podeAvancar = false;
+  }
+
+  get tituloPagina(): string {
+    if (this.isOrientadorMode) return 'Selecionar alunos do projeto';
+    return this.modoEdicao ? 'Editar Projeto' : 'Cadastrar Projeto';
+  }
+  get textoBotao(): string {
+    if (this.isOrientadorMode) return 'Salvar seleção';
+    return this.modoEdicao ? 'Atualizar Projeto' : 'Cadastrar Projeto';
   }
 }

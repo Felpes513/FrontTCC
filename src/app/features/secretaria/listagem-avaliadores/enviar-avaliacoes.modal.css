@@ -50,17 +50,13 @@ header .close {
   gap: 6px;
   margin: 10px 0;
 }
-select {
-  padding: 10px;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius-md);
-  background: var(--white);
-  color: var(--gray-900);
-}
+
+/* NÃO estilizamos select aqui — usa o global do styles.css */
+
 .checklist {
   display: grid;
   gap: 6px;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr; /* mobile */
   max-height: 240px;
   overflow: auto;
   padding: 8px;
@@ -68,6 +64,12 @@ select {
   border-radius: var(--radius-md);
   background: var(--white);
 }
+@media (min-width: 560px) {
+  .checklist {
+    grid-template-columns: 1fr 1fr;
+  } /* duas colunas em telas médias+ */
+}
+
 .rule {
   font-size: 0.9rem;
   color: var(--gray-600);
@@ -82,6 +84,7 @@ select {
 .sucesso {
   color: var(--success);
 }
+
 footer {
   gap: 8px;
 }
@@ -112,4 +115,9 @@ footer .primary:disabled {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* garante largura total do select usando o global */
+.row select {
+  width: 100%;
 }

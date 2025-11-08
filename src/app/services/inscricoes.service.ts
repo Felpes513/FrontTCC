@@ -1,7 +1,7 @@
+// src/app/services/inscricoes.service.ts  (apenas ajustes leves)
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { ListagemResponse } from '@interfaces/listagem';
 import { Inscricao } from '@interfaces/inscricao';
 import { environment } from '@environments/environment';
 
@@ -10,7 +10,6 @@ export class InscricoesService {
   private http = inject(HttpClient);
   private readonly baseUrl = environment.apiBaseUrl;
 
-  // Aluno se inscreve em um projeto
   inscrever(projetoId: number) {
     return this.http.post<{
       success: boolean;
@@ -19,7 +18,6 @@ export class InscricoesService {
     }>(`${this.baseUrl}/inscricao/inscrever`, { id_projeto: projetoId });
   }
 
-  // src/app/services/inscricoes.service.ts
   listarPorProjeto(
     projetoId: number,
     status?: string,
@@ -42,7 +40,6 @@ export class InscricoesService {
       .pipe(map((lista) => lista as Inscricao[]));
   }
 
-  // Orientador – aprovados do projeto (usa o endpoint existente do back)
   listarAprovadosDoProjeto(projetoId: number) {
     return this.http
       .get<{ id_projeto: number; alunos: any[] }>(
@@ -51,7 +48,6 @@ export class InscricoesService {
       .pipe(map((r) => r.alunos || []));
   }
 
-  // (se você ainda usa)
   aprovar(inscricaoId: number) {
     return this.http.patch(
       `${this.baseUrl}/inscricoes/${inscricaoId}/aprovar`,
@@ -73,6 +69,7 @@ export class InscricoesService {
   excluir(inscricaoId: number) {
     return this.http.delete(`${this.baseUrl}/inscricoes/${inscricaoId}`);
   }
+
   uploadDocumento(inscricaoId: number, arquivo: File) {
     const formData = new FormData();
     formData.append('arquivo', arquivo);

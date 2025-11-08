@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, of } from 'rxjs';
-import { tap, map, catchError, switchMap } from 'rxjs/operators';
+import { Observable, throwError, of, switchMap, map, catchError } from 'rxjs';
 import {
   ProjetoRequest,
   Projeto,
   ProjetoDetalhado,
   ProjetoCadastro,
   ProjetoFormulario,
+  UpdateProjetoAlunosDTO,
+  ProjetoInscricaoApi,
 } from '@interfaces/projeto';
-import { Aluno } from '@interfaces/aluno';
 import { Orientador } from '@interfaces/orientador';
 import { Campus } from '@interfaces/campus';
 import { AvaliadorExterno } from '@interfaces/avaliador_externo';
@@ -35,7 +35,7 @@ export class ProjetoService {
 
   constructor(private http: HttpClient) {}
 
-  // Gerador simples para cod_projeto caso o usuário não informe
+  // ===== helpers para o POST /projetos
   private gerarCodProjeto(): string {
     const ano = new Date().getFullYear();
     const suf = Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -46,8 +46,16 @@ export class ProjetoService {
     return (b64 || '').replace(/^data:.*;base64,/, '');
   }
 
+  /**
+   * Cadastra projeto já atendendo aos requisitos do backend:
+   * - cod_projeto (gerado se vier vazio)
+   * - ideia_inicial_b64 (Base64 "cru", sem prefixo data-url)
+   */
   cadastrarProjetoCompleto(
-    projeto: ProjetoCadastro & { ideia_inicial_b64?: string },
+    projeto: ProjetoCadastro & {
+      cod_projeto?: string;
+      ideia_inicial_b64?: string;
+    },
     id_orientador: number
   ): Observable<any> {
     if (projeto.id_campus == null) {
@@ -56,8 +64,10 @@ export class ProjetoService {
       }));
     }
 
-    const ideiaPura = this.stripDataUrl(projeto.ideia_inicial_b64 || '');
-    if (!ideiaPura) {
+    const cod = (projeto.cod_projeto || '').trim() || this.gerarCodProjeto();
+    const ideiaCrua = this.stripDataUrl(projeto.ideia_inicial_b64 || '');
+
+    if (!ideiaCrua) {
       return throwError(() => ({
         message: 'Envie o documento inicial (.docx) em Base64.',
       }));
@@ -68,55 +78,32 @@ export class ProjetoService {
       resumo: (projeto.resumo || '').trim(),
       id_orientador,
       id_campus: projeto.id_campus,
-      cod_projeto: (projeto.cod_projeto || '').trim() || this.gerarCodProjeto(),
-      ideia_inicial_b64: ideiaPura, // base64 "cru" — sem prefixo data-url
+      cod_projeto: cod,
+      ideia_inicial_b64: ideiaCrua,
     };
 
-    if (projeto.tipo_bolsa != null) {
-      (payload as any).tipo_bolsa = projeto.tipo_bolsa;
-    }
-
-    return this.http.post(this.apiUrlProjetos, payload).pipe(
-      tap((response) => console.log('✅ Projeto cadastrado:', response)),
-      catchError(this.handleError)
-    );
-  }
-
-  // ====== ATUALIZAÇÃO (stub até existir PUT /projetos/{id} no backend) ======
-  atualizarProjeto(id: number, _payload: any): Observable<any> {
-    // TODO: quando o backend disponibilizar PUT /projetos/{id},
-    // trocar por:
-    // return this.http.put(`${this.apiUrlProjetos}${id}`, body).pipe(catchError(this.handleError));
-    return this.nopEdit();
-  }
-
-  // Temporário até existir PUT /projetos/{id} no backend
-  nopEdit(): Observable<any> {
-    return of({ ok: true });
+    return this.http
+      .post(this.apiUrlProjetos, payload)
+      .pipe(catchError(this.handleError));
   }
 
   private processarDadosECadastrar(
-    formulario: ProjetoFormulario & { ideia_inicial_b64?: string }
+    formulario: ProjetoFormulario
   ): Observable<any> {
     return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
       switchMap((orientador: Orientador) => {
-        const ideiaPura = this.stripDataUrl(
-          (formulario as any).ideia_inicial_b64 || ''
-        );
         const payload: ProjetoRequest = {
           titulo_projeto: formulario.titulo_projeto,
           resumo: formulario.resumo || '',
           id_orientador: orientador.id,
           id_campus: formulario.id_campus,
-          cod_projeto:
-            (formulario.cod_projeto || '').trim() || this.gerarCodProjeto(),
-          ideia_inicial_b64: ideiaPura,
+          // se você quiser usar esse caminho, lembre que aqui também precisaria de cod_projeto/ideia_inicial_b64
+          cod_projeto: 'P-' + new Date().getFullYear() + '-TEMP',
+          ideia_inicial_b64: '',
         };
-
-        return this.http.post(this.apiUrlProjetos, payload).pipe(
-          tap((response) => console.log('✅ Projeto cadastrado:', response)),
-          catchError(this.handleError)
-        );
+        return this.http
+          .post(this.apiUrlProjetos, payload)
+          .pipe(catchError(this.handleError));
       })
     );
   }
@@ -128,15 +115,69 @@ export class ProjetoService {
     );
   }
 
+  listarAlunosCadastrados(id_projeto: number): Observable<
+    Array<{
+      id: number;
+      nome: string;
+      email: string;
+      possuiTrabalhoRemunerado: boolean;
+      id_inscricao?: number;
+    }>
+  > {
+    return this.http.get<
+      Array<{
+        id: number;
+        nome: string;
+        email: string;
+        possuiTrabalhoRemunerado: boolean;
+        id_inscricao?: number;
+      }>
+    >(`${this.apiUrlProjetos}${id_projeto}/alunos-cadastrados`);
+  }
+
+  updateAlunosProjeto(
+    dto: UpdateProjetoAlunosDTO
+  ): Observable<{ mensagem: string }> {
+    return this.http.post<{ mensagem: string }>(
+      `${this.apiUrlProjetos}update-alunos`,
+      dto
+    );
+  }
+
+  atualizarAprovadosEExcluirRejeitados(
+    dto: UpdateProjetoAlunosDTO,
+    inscricoesDoProjeto: Array<{ id_inscricao: number; id_aluno: number }>
+  ): Observable<{ mensagem: string; excluidos: number[] }> {
+    const idsEscolhidos = new Set(dto.ids_alunos_aprovados);
+    const rejeitadas = (inscricoesDoProjeto || [])
+      .filter((i) => !idsEscolhidos.has(i.id_aluno))
+      .map((i) => i.id_inscricao);
+
+    return this.updateAlunosProjeto(dto).pipe(
+      switchMap((res) => {
+        if (!rejeitadas.length)
+          return of({ mensagem: res.mensagem, excluidos: [] });
+        return this.http
+          .request('DELETE', `${this.apiUrlInscricoes}/_batch`, {
+            body: { ids: rejeitadas },
+          })
+          .pipe(
+            map(() => ({ mensagem: res.mensagem, excluidos: rejeitadas })),
+            catchError(() =>
+              of({ mensagem: res.mensagem, excluidos: rejeitadas })
+            )
+          );
+      })
+    );
+  }
+
   getProjetoPorId(id: number) {
     return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
       map((res) => {
         const raw = (res.projetos || []).find(
           (p) => Number(p.id_projeto ?? p.id) === Number(id)
         );
-        if (!raw) {
-          throw { message: 'Projeto não encontrado', status: 404 };
-        }
+        if (!raw) throw { message: 'Projeto não encontrado', status: 404 };
         return this.normalizarProjetoDetalhado(raw);
       }),
       catchError(this.handleError)
@@ -154,7 +195,28 @@ export class ProjetoService {
     );
   }
 
-  // ===== CRUD AUX =====
+  atualizarProjeto(id: number, formulario: ProjetoFormulario) {
+    return this.buscarOrientadorPorNome(formulario.orientador_nome).pipe(
+      switchMap((orientador: Orientador) => {
+        const payload: ProjetoRequest = {
+          titulo_projeto: formulario.titulo_projeto,
+          resumo: formulario.resumo || '',
+          id_orientador: orientador.id,
+          id_campus: formulario.id_campus,
+          // atualização não exige ideia_inicial_b64; não enviaremos aqui
+          cod_projeto: (formulario as any).cod_projeto, // se desejar permitir edição do código
+          ideia_inicial_b64: undefined as any,
+        };
+        // remove campos undefined para não sujar o body
+        Object.keys(payload).forEach(
+          (k) => (payload as any)[k] === undefined && delete (payload as any)[k]
+        );
+        return this.http
+          .put(`${this.apiUrlProjetos}${id}`, payload)
+          .pipe(catchError(this.handleError));
+      })
+    );
+  }
 
   listarProjetosRaw() {
     return this.http
@@ -203,29 +265,32 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
+  listarInscricoesPorProjeto(
+    idProjeto: number
+  ): Observable<ProjetoInscricaoApi[]> {
     return this.http
       .get<any[]>(`${this.apiBase}/projetos/${idProjeto}/inscricoes`)
       .pipe(
-        map((items: any[]) =>
-          (items || []).map((i) => ({
-            id_inscricao: i.id_inscricao ?? 0,
-            id_aluno: i.aluno?.id ?? i.id_aluno ?? 0,
-            aluno: {
-              id: i.aluno?.id ?? i.id_aluno ?? 0,
-              nome: i.aluno?.nome ?? i.nome_aluno ?? '—',
-              email: i.aluno?.email ?? i.email ?? '—',
-            },
-            nome_aluno: i.nome_aluno ?? i.aluno?.nome ?? '—',
-            email: i.email ?? i.aluno?.email ?? '—',
-            matricula: i.matricula ?? i.cpf ?? '—',
-            status: i.status ?? i.status_aluno ?? 'PENDENTE',
-            possuiTrabalhoRemunerado: !!(
-              i.possuiTrabalhoRemunerado ?? i.possui_trabalho_remunerado
-            ),
-            created_at: i.created_at ?? null,
-            documentoNotasUrl: i.documentoNotasUrl ?? null,
-          }))
+        map(
+          (items: any[]) =>
+            (items || []).map((i) => ({
+              id_inscricao: i.id_inscricao ?? 0,
+              id_aluno: i.aluno?.id ?? i.id_aluno ?? 0,
+              aluno: {
+                id: i.aluno?.id ?? i.id_aluno ?? 0,
+                nome: i.aluno?.nome ?? i.nome_aluno ?? '—',
+                email: i.aluno?.email ?? i.email ?? '—',
+              },
+              nome_aluno: i.nome_aluno ?? i.aluno?.nome ?? '—',
+              email: i.email ?? i.aluno?.email ?? '—',
+              matricula: i.matricula ?? i.cpf ?? '—',
+              status: i.status ?? i.status_aluno ?? 'PENDENTE',
+              possuiTrabalhoRemunerado: !!(
+                i.possuiTrabalhoRemunerado ?? i.possui_trabalho_remunerado
+              ),
+              created_at: i.created_at ?? null,
+              documentoNotasUrl: i.documentoNotasUrl ?? null,
+            })) as ProjetoInscricaoApi[]
         )
       );
   }
@@ -298,14 +363,6 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  updateAlunosProjeto(id_projeto: number, id_alunos: number[]) {
-    const body = { id_projeto, id_alunos };
-    return this.http.post(`${this.apiUrlProjetos}update-alunos`, body).pipe(
-      tap((res) => console.log('✅ Alunos atualizados com sucesso:', res)),
-      catchError(this.handleError)
-    );
-  }
-
   listarProjetosDoOrientador() {
     return this.http
       .get<{ projetos: any[] }>(`${this.apiUrlProjetos}me`)
@@ -347,7 +404,7 @@ export class ProjetoService {
     };
   }
 
-  // Upload de projetos
+  // ===== Uploads pós-cadastro
   uploadDocx(idProjeto: number, arquivo: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', arquivo);
@@ -378,19 +435,19 @@ export class ProjetoService {
     });
   }
 
-  listarProjetosParaAvaliacao(): Observable<
-    Array<{ id: number; titulo: string; has_pdf: boolean }>
-  > {
-    return this.http.get<{ projetos: any[] }>(this.apiUrlProjetos).pipe(
-      map((res) =>
-        (res.projetos || []).map((p) => ({
-          id: p.id_projeto,
-          titulo: p.titulo_projeto || p.nome || 'Projeto',
-          has_pdf: !!p.has_pdf,
-        }))
-      ),
-      catchError(this.handleError)
-    );
+  listarProjetosParaAvaliacao(): Observable<ProjetoBasico[]> {
+    return this.http
+      .get<any[]>(`${this.apiBase}/avaliacoes/projetos-para-avaliacao`)
+      .pipe(
+        map((rows) =>
+          (rows || []).map((r) => ({
+            id: r.id_projeto,
+            titulo: r.titulo || r.nome || 'Projeto',
+            pdfUrl: r.pdf_url || r.documento_url || '#',
+          }))
+        ),
+        catchError(this.handleError)
+      );
   }
 
   listarNotasDoProjeto(idProjeto: number): Observable<number[]> {
@@ -464,10 +521,7 @@ export class ProjetoService {
   }
 
   private handleError = (error: HttpErrorResponse): Observable<never> => {
-    console.error('❌ Erro HTTP:', error);
-
     let message = 'Erro inesperado';
-
     if (error.error instanceof ErrorEvent) {
       message = `Erro de rede: ${error.error.message}`;
     } else if (error.status === 422 && Array.isArray(error.error?.detail)) {
@@ -477,9 +531,6 @@ export class ProjetoService {
     } else {
       message = error.error?.detail || `Erro ${error.status}`;
     }
-
-    console.error('➡️ Body do servidor:', error.error);
-
     return throwError(() => ({
       message,
       status: error.status,

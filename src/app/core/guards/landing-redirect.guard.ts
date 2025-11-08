@@ -11,10 +11,13 @@ export class LandingRedirectGuard implements CanActivate {
     if (!role) return true;
 
     const target =
-      role === 'SECRETARIA' ? '/secretaria/dashboard' :
-      role === 'ORIENTADOR' ? '/orientador/projetos' :
-      role === 'ALUNO'      ? '/aluno/projetos' :
-      '/login';
+      role === 'SECRETARIA'
+        ? '/secretaria/dashboard'
+        : role === 'ORIENTADOR'
+        ? '/orientador/projetos'
+        : role === 'ALUNO'
+        ? '/aluno/projetos'
+        : '/login';
 
     return this.router.parseUrl(target);
   }

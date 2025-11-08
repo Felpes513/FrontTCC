@@ -7,7 +7,10 @@
   <!-- Loading -->
   <ng-container *ngIf="loading(); else conteudo">
     <div class="skeleton">
-      <div class="sk-row" *ngFor="let i of [1, 2, 3, 4]"></div>
+      <div
+        class="sk-row"
+        *ngFor="let _ of skeletonRows; trackBy: trackByIndex"
+      ></div>
     </div>
   </ng-container>
 
@@ -16,7 +19,10 @@
     <ng-container *ngIf="modo === 'SECRETARIA'">
       <ng-container *ngIf="lista().length; else vazio">
         <ul class="lista" role="list">
-          <li class="item" *ngFor="let a of lista()">
+          <li
+            class="item"
+            *ngFor="let a of lista(); trackBy: trackByAlunoSecretaria"
+          >
             <div class="dados">
               <strong class="nome" [title]="a.nome">
                 {{ a.nome }}
@@ -59,13 +65,20 @@
       <div *ngIf="aprovadas.length; else nenhumAprovado">
         <h4>Aprovados pela Secretaria</h4>
         <ul class="lista" role="list">
-          <li class="item" *ngFor="let i of aprovadas">
+          <li
+            class="item"
+            *ngFor="let i of aprovadas; trackBy: trackByInscricao"
+          >
             <label class="linha">
               <input
                 type="checkbox"
                 [checked]="selecionados.has(alunoId(i))"
                 [disabled]="disabledCheckbox(i)"
-                (change)="toggleSelecionado(i, $any($event.target).checked)"
+                (change)="onSelecionadoChange($event, i)"
+                role="switch"
+                [attr.aria-label]="'Selecionar aluno ' + alunoNome(i)"
+                [attr.aria-checked]="selecionados.has(alunoId(i))"
+                [attr.aria-disabled]="disabledCheckbox(i) ? 'true' : null"
               />
               <div class="dados">
                 <strong class="nome">
