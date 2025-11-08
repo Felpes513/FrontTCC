@@ -66,11 +66,25 @@
     <tbody>
       <tr
         *ngFor="let a of alunos"
-        [hidden]="filtro && !match(filtro, a.nome_completo, a.email, a.cpf)"
+        [hidden]="
+          filtro &&
+          !match(
+            filtro,
+            a.nomeFmt || a.nome_completo,
+            a.email,
+            a.cpfFmt || a.cpf
+          )
+        "
       >
-        <td data-label="Nome">{{ a.nome_completo }}</td>
+        <td
+          data-label="Nome"
+          class="col-nome"
+          [title]="a.nomeFmt || a.nome_completo"
+        >
+          {{ a.nomeFmt || a.nome_completo }}
+        </td>
         <td data-label="Email">{{ a.email }}</td>
-        <td data-label="CPF">{{ a.cpf }}</td>
+        <td data-label="CPF">{{ a.cpfFmt || a.cpf }}</td>
         <td data-label="Status">
           <span
             class="badge"
@@ -126,11 +140,25 @@
     <tbody>
       <tr
         *ngFor="let o of orientadores"
-        [hidden]="filtro && !match(filtro, o.nome_completo, o.email, o.cpf)"
+        [hidden]="
+          filtro &&
+          !match(
+            filtro,
+            o.nomeFmt || o.nome_completo,
+            o.email,
+            o.cpfFmt || o.cpf
+          )
+        "
       >
-        <td data-label="Nome">{{ o.nome_completo }}</td>
+        <td
+          data-label="Nome"
+          class="col-nome"
+          [title]="o.nomeFmt || o.nome_completo"
+        >
+          {{ o.nomeFmt || o.nome_completo }}
+        </td>
         <td data-label="Email">{{ o.email }}</td>
-        <td data-label="CPF">{{ o.cpf }}</td>
+        <td data-label="CPF">{{ o.cpfFmt || o.cpf }}</td>
         <td data-label="Status">
           <span
             class="badge"
@@ -175,9 +203,9 @@
       </thead>
       <tbody>
         <tr *ngFor="let a of alunosInad">
-          <td data-label="Nome">{{ a.nome_completo }}</td>
+          <td data-label="Nome">{{ a.nomeFmt || a.nome_completo }}</td>
           <td data-label="Email">{{ a.email }}</td>
-          <td data-label="CPF">{{ a.cpf }}</td>
+          <td data-label="CPF">{{ a.cpfFmt || a.cpf }}</td>
           <td data-label="Inadimplente até">
             {{ a.inadimplente_ate | date : "shortDate" }}
           </td>
@@ -197,9 +225,9 @@
       </thead>
       <tbody>
         <tr *ngFor="let o of orientadoresInad">
-          <td data-label="Nome">{{ o.nome_completo }}</td>
+          <td data-label="Nome">{{ o.nomeFmt || o.nome_completo }}</td>
           <td data-label="Email">{{ o.email }}</td>
-          <td data-label="CPF">{{ o.cpf }}</td>
+          <td data-label="CPF">{{ o.cpfFmt || o.cpf }}</td>
           <td data-label="Inadimplente até">
             {{ o.inadimplente_ate | date : "shortDate" }}
           </td>

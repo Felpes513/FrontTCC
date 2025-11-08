@@ -1,93 +1,88 @@
-<h2>Relatórios</h2>
+<section class="card">
+  <header>
+    <h3><mat-icon>check_circle</mat-icon> Recebidos no mês</h3>
+    <span class="badge">{{ recebidos.length }}</span>
+  </header>
 
-<div class="toolbar">
-  <div class="mes-picker">
-    <label for="mes"
-      ><mat-icon>calendar_month</mat-icon> Mês de referência</label
-    >
-    <input id="mes" type="month" [(ngModel)]="mes" (change)="atualizarMes()" />
+  <div *ngIf="!recebidos.length && !carregandoMensal" class="empty">
+    Nenhum relatório confirmado para {{ mes }}.
   </div>
 
-  <button class="btn" [disabled]="baixando" (click)="baixarAlunosXlsx()">
-    <mat-icon>download</mat-icon>
-    {{ baixando ? "Gerando..." : "Baixar Alunos (XLSX)" }}
-  </button>
-</div>
-
-<div *ngIf="carregandoMensal" class="loading">
-  Carregando relatórios do mês…
-</div>
-<div *ngIf="!carregandoMensal && erroMensal" class="erro">{{ erroMensal }}</div>
-
-<div class="grid">
-  <section class="card">
-    <header>
-      <h3><mat-icon>check_circle</mat-icon> Recebidos no mês</h3>
-      <span class="badge">{{ recebidos.length }}</span>
-    </header>
-
-    <div *ngIf="!recebidos.length && !carregandoMensal" class="empty">
-      Nenhum relatório confirmado para {{ mes }}.
+  <div
+    class="table-scroll"
+    *ngIf="recebidos.length"
+    tabindex="0"
+    aria-label="Tabela de relatórios recebidos com rolagem horizontal"
+  >
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr>
+            <th>Projeto</th>
+            <th>Orientador</th>
+            <th>Mês</th>
+            <th>Status</th>
+            <th>Confirmado em</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let r of recebidos"
+            class="row-link"
+            (click)="abrirDetalhe(r)"
+            tabindex="0"
+            (keyup.enter)="abrirDetalhe(r)"
+          >
+            <td class="left">{{ r.tituloProjeto }}</td>
+            <td>{{ r.orientadorNome || "—" }}</td>
+            <td class="nowrap">{{ r.referenciaMes }}</td>
+            <td class="nowrap">
+              <span class="status" [class.ok]="r.ok" [class.nok]="!r.ok">
+                {{ r.ok ? "OK" : "Pendente" }}
+              </span>
+              <!-- resumo removido -->
+            </td>
+            <td class="nowrap">{{ dataBr(r.confirmadoEm) }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </div>
+</section>
 
-    <table *ngIf="recebidos.length">
-      <thead>
-        <tr>
-          <th>Projeto</th>
-          <th>Orientador</th>
-          <th>Mês</th>
-          <th>Status</th>
-          <th>Confirmado em</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          *ngFor="let r of recebidos"
-          class="row-link"
-          (click)="abrirDetalhe(r)"
-          tabindex="0"
-          (keyup.enter)="abrirDetalhe(r)"
-        >
-          <td>{{ r.tituloProjeto }}</td>
-          <td>{{ r.orientadorNome || "—" }}</td>
-          <td>{{ r.referenciaMes }}</td>
-          <td>
-            <span class="status" [class.ok]="r.ok" [class.nok]="!r.ok">
-              {{ r.ok ? "OK" : "Pendente" }}
-            </span>
-            <span class="obs" *ngIf="r.observacao">— {{ r.observacao }}</span>
-          </td>
-          <td>{{ dataBr(r.confirmadoEm) }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
+<section class="card">
+  <header>
+    <h3><mat-icon>error</mat-icon> Pendências no mês</h3>
+    <span class="badge warn">{{ pendentes.length }}</span>
+  </header>
 
-  <section class="card">
-    <header>
-      <h3><mat-icon>error</mat-icon> Pendências no mês</h3>
-      <span class="badge warn">{{ pendentes.length }}</span>
-    </header>
+  <div *ngIf="!pendentes.length && !carregandoMensal" class="empty">
+    Nenhuma pendência para {{ mes }}.
+  </div>
 
-    <div *ngIf="!pendentes.length && !carregandoMensal" class="empty">
-      Nenhuma pendência para {{ mes }}.
+  <div
+    class="table-scroll"
+    *ngIf="pendentes.length"
+    tabindex="0"
+    aria-label="Tabela de relatórios pendentes com rolagem horizontal"
+  >
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr>
+            <th>Projeto</th>
+            <th>Orientador</th>
+            <th>Mês</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of pendentes">
+            <td class="left">{{ p.tituloProjeto }}</td>
+            <td>{{ p.orientadorNome || "—" }}</td>
+            <td class="nowrap">{{ p.mes || mes }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-
-    <table *ngIf="pendentes.length">
-      <thead>
-        <tr>
-          <th>Projeto</th>
-          <th>Orientador</th>
-          <th>Mês</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let p of pendentes">
-          <td>{{ p.tituloProjeto }}</td>
-          <td>{{ p.orientadorNome || "—" }}</td>
-          <td>{{ p.mes || mes }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-</div>
+  </div>
+</section>

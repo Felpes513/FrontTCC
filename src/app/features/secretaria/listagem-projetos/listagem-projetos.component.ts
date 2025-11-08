@@ -96,7 +96,28 @@ export class ListagemProjetosComponent implements OnInit {
   trackByFn(index: number, item: Projeto): any {
     return (item as any)?.id ?? index;
   }
+  private readonly lowerWords = new Set([
+    'de',
+    'da',
+    'do',
+    'das',
+    'dos',
+    'e',
+    'di',
+  ]);
 
+  private properCase(value: string): string {
+    if (!value) return '';
+    return value
+      .toLowerCase()
+      .split(/\s+/)
+      .map((w, i) =>
+        i > 0 && this.lowerWords.has(w)
+          ? w
+          : w.charAt(0).toUpperCase() + w.slice(1)
+      )
+      .join(' ');
+  }
   carregarProjetos(): void {
     this.carregando = true;
     this.erro = null;
@@ -245,7 +266,7 @@ export class ListagemProjetosComponent implements OnInit {
 
   getOrientadorNome(projeto: Projeto): string {
     const nome = ((projeto as any)?.nomeOrientador ?? '').trim();
-    return nome ? nome : 'Orientador não informado';
+    return nome ? this.properCase(nome) : 'Orientador não informado';
   }
 
   temOrientador(projeto: Projeto): boolean {

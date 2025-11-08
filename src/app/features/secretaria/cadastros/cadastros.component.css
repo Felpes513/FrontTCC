@@ -354,3 +354,54 @@
     order: 3;
   }
 }
+
+@media (max-width: 900px) {
+  .table td.col-nome {
+    white-space: nowrap; /* mantém o nome numa linha */
+    overflow: hidden; /* esconde o excedente */
+    text-overflow: ellipsis; /* ... */
+  }
+}
+
+@media (max-width: 900px) {
+  .table td.col-actions {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table .col-actions .btn {
+    min-width: auto;
+    padding: 6px 10px;
+    font-size: 0.875rem;
+    line-height: 1.1;
+    flex: 0 0 auto;
+  }
+
+  .table .col-actions a.btn {
+    min-width: auto;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    line-height: 1.1;
+    flex: 0 0 auto;
+    width: 96px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .table .col-actions .btn,
+  .table .col-actions a.btn {
+    width: 90px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+}

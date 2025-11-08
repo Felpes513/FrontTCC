@@ -1,6 +1,6 @@
 // src/app/features/orientador/relatorio-form/relatorio-form.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 
@@ -82,7 +82,14 @@ export class RelatorioFormComponent implements OnInit {
   private hidratarFormulario(r: RelatorioMensal | null) {
     if (!r) {
       this.form.patchValue(
-        { resumo: '', atividades: '', bloqueios: '', proximosPassos: '', horas: null, ok: true },
+        {
+          resumo: '',
+          atividades: '',
+          bloqueios: '',
+          proximosPassos: '',
+          horas: null,
+          ok: true,
+        },
         { emitEvent: false }
       );
       return;
@@ -102,7 +109,6 @@ export class RelatorioFormComponent implements OnInit {
     );
   }
 
-  // >>> Parser da observação salva no banco
   private parseObservacao(texto: string): {
     resumo?: string;
     atividades?: string;
@@ -116,10 +122,18 @@ export class RelatorioFormComponent implements OnInit {
       return m ? m[1].trim() : undefined;
     };
 
-    out.resumo = get(/Resumo:\s*([\s\S]*?)(?=\n(?:Atividades:|Bloqueios:|Próximos passos:|Horas no mês:)|$)/i);
-    out.atividades = get(/Atividades:\s*([\s\S]*?)(?=\n(?:Resumo:|Bloqueios:|Próximos passos:|Horas no mês:)|$)/i);
-    out.bloqueios = get(/Bloqueios:\s*([\s\S]*?)(?=\n(?:Resumo:|Atividades:|Próximos passos:|Horas no mês:)|$)/i);
-    out.proximosPassos = get(/Próximos passos:\s*([\s\S]*?)(?=\n(?:Resumo:|Atividades:|Bloqueios:|Horas no mês:)|$)/i);
+    out.resumo = get(
+      /Resumo:\s*([\s\S]*?)(?=\n(?:Atividades:|Bloqueios:|Próximos passos:|Horas no mês:)|$)/i
+    );
+    out.atividades = get(
+      /Atividades:\s*([\s\S]*?)(?=\n(?:Resumo:|Bloqueios:|Próximos passos:|Horas no mês:)|$)/i
+    );
+    out.bloqueios = get(
+      /Bloqueios:\s*([\s\S]*?)(?=\n(?:Resumo:|Atividades:|Próximos passos:|Horas no mês:)|$)/i
+    );
+    out.proximosPassos = get(
+      /Próximos passos:\s*([\s\S]*?)(?=\n(?:Resumo:|Atividades:|Bloqueios:|Horas no mês:)|$)/i
+    );
 
     const horasStr = get(/Horas no mês:\s*([0-9]+)/i);
     out.horas = horasStr ? Number(horasStr) : null;
@@ -127,7 +141,6 @@ export class RelatorioFormComponent implements OnInit {
     return out;
   }
 
-  // ajusta a fonte conforme o modo (orientador x secretaria readonly)
   private verificarSeJaEnviadoNoMes(mes: string) {
     const fonte$ = this.readOnly
       ? this.relatorioService.listarRecebidosSecretaria(mes)
@@ -138,7 +151,7 @@ export class RelatorioFormComponent implements OnInit {
         const doProjeto =
           (lista || []).find((r) => r.projetoId === this.projetoId) || null;
         this.relatorioEnviadoDoMes.set(doProjeto);
-        this.hidratarFormulario(doProjeto); // <<< preenche o formulário
+        this.hidratarFormulario(doProjeto);
       },
       error: () => {
         this.relatorioEnviadoDoMes.set(null);
@@ -161,29 +174,49 @@ export class RelatorioFormComponent implements OnInit {
   }
 
   salvar(): void {
-    if (this.readOnly) return; // bloqueia no modo somente leitura
+    if (this.readOnly) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
     const dto: ConfirmarRelatorioMensalDTO = {
-      mes: this.form.value.referenciaMes!, // 'YYYY-MM'
+      mes: this.form.value.referenciaMes!,
       ok: !!this.form.value.ok,
       observacao: this.montarObservacao(),
     };
 
     this.salvando.set(true);
     this.relatorioService.confirmar(this.projetoId, dto).subscribe({
-      next: (res) => {
+      next: () => {
         this.salvando.set(false);
-        alert(res?.mensagem || 'Relatório confirmado.');
-        this.verificarSeJaEnviadoNoMes(dto.mes);
+        // fecha imediatamente após salvar
+        this.fechar();
       },
       error: () => {
         this.salvando.set(false);
         alert('Erro ao confirmar relatório.');
       },
     });
+  }
+
+  /** Fecha o formulário: prioriza voltar para a página anterior */
+  fechar(): void {
+    if (document.referrer) {
+      window.history.back();
+      return;
+    }
+    if (this.readOnly) {
+      this.router.navigate(['/secretaria/relatorios']);
+    } else {
+      // destino seguro para o orientador
+      this.router.navigate(['/orientador']);
+    }
+  }
+
+  /** Atalho: ESC fecha */
+  @HostListener('document:keydown.escape')
+  onEsc() {
+    this.fechar();
   }
 }

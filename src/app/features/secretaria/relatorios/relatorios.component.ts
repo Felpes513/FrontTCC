@@ -18,12 +18,35 @@ import { Router } from '@angular/router';
 export class RelatoriosComponent implements OnInit {
   private relatorioService = inject(RelatorioService);
   private router = inject(Router);
+
   baixando = false;
   mes = this.toYYYYMM(new Date());
   recebidos: RelatorioMensal[] = [];
   pendentes: PendenciaMensal[] = [];
   carregandoMensal = false;
   erroMensal: string | null = null;
+
+  private readonly lowerWords = new Set([
+    'de',
+    'da',
+    'do',
+    'das',
+    'dos',
+    'e',
+    'di',
+  ]);
+  private properCase(v: string): string {
+    if (!v) return '';
+    return v
+      .toLowerCase()
+      .split(/\s+/)
+      .map((w, i) =>
+        i > 0 && this.lowerWords.has(w)
+          ? w
+          : w.charAt(0).toUpperCase() + w.slice(1)
+      )
+      .join(' ');
+  }
 
   ngOnInit(): void {
     this.carregarMensal();
@@ -52,10 +75,21 @@ export class RelatoriosComponent implements OnInit {
         .pipe(catchError(() => of<PendenciaMensal[]>([]))),
     }).subscribe({
       next: ({ recebidos, pendentes }) => {
-        this.recebidos = recebidos ?? [];
-        this.pendentes = pendentes ?? [];
+        this.recebidos = (recebidos ?? []).map((r) => ({
+          ...r,
+          orientadorNome: r?.orientadorNome
+            ? this.properCase(r.orientadorNome)
+            : r?.orientadorNome,
+        }));
+        this.pendentes = (pendentes ?? []).map((p) => ({
+          ...p,
+          orientadorNome: (p as any)?.orientadorNome
+            ? this.properCase((p as any).orientadorNome)
+            : (p as any)?.orientadorNome,
+        }));
+
         this.carregandoMensal = false;
-        if (!recebidos.length && !pendentes.length) {
+        if (!this.recebidos.length && !this.pendentes.length) {
           this.erroMensal = 'Nenhum dado retornado.';
         }
       },
