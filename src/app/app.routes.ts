@@ -26,7 +26,6 @@ export const routes: Routes = [
       ),
   },
 
-  // SECRETARIA
   {
     path: 'secretaria',
     loadComponent: () =>
@@ -34,42 +33,7 @@ export const routes: Routes = [
         (m) => m.SidenavSecretariaComponent
       ),
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./features/secretaria/dashboard/dashboard.component').then(
-            (m) => m.DashboardComponent
-          ),
-      },
-      {
-        path: 'configuracoes',
-        loadComponent: () =>
-          import(
-            './features/secretaria/configuracoes/configuracoes.component'
-          ).then((m) => m.ConfiguracoesComponent),
-      },
-      {
-        path: 'avaliadores',
-        loadComponent: () =>
-          import(
-            './features/secretaria/listagem-avaliadores/listagem-avaliadores.component'
-          ).then((m) => m.ListagemAvaliadoresComponent),
-      },
-      {
-        path: 'avaliadores/novo',
-        loadComponent: () =>
-          import(
-            './features/secretaria/formulario-avaliador/formulario-avaliador.component'
-          ).then((m) => m.FormularioAvaliadorComponent),
-      },
-      {
-        path: 'notificacoes',
-        loadComponent: () =>
-          import(
-            './features/secretaria/notificacoes/notificacoes.component'
-          ).then((m) => m.NotificacoesComponent),
-      },
+      // ...
       {
         path: 'projetos',
         loadComponent: () =>
@@ -92,26 +56,13 @@ export const routes: Routes = [
           ).then((m) => m.FormularioProjetoComponent),
       },
       {
-        path: 'email',
+        path: 'projetos/:id/bolsas', // 👈 NOVA ROTA
         loadComponent: () =>
           import(
-            './features/secretaria/envio-de-email/envio-de-email.component'
-          ).then((m) => m.EnvioDeEmailComponent),
+            './features/secretaria/atribuir-bolsas/atribuir-bolsas.component'
+          ).then((m) => m.AtribuirBolsasComponent),
       },
-      {
-        path: 'relatorios',
-        loadComponent: () =>
-          import('./features/secretaria/relatorios/relatorios.component').then(
-            (m) => m.RelatoriosComponent
-          ),
-      },
-      {
-        path: 'cadastros',
-        loadComponent: () =>
-          import('./features/secretaria/cadastros/cadastros.component').then(
-            (m) => m.CadastrosComponent // <- certo
-          ),
-      },
+      // ...
     ],
   },
 

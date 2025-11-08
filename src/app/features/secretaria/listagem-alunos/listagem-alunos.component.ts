@@ -88,18 +88,12 @@ export class ListagemAlunosComponent implements OnInit {
             this.aprovadas = aprovados ?? [];
             this.pendentesOuReprovadas = [];
 
-            // ✅ pré-seleciona tudo que já está vinculado (MANTER)
+            // pré-seleciona o que já está vinculado
             this.selecionados = new Set<number>(
               this.aprovadas.map((a) => this.alunoId(a))
             );
 
-            // ⛔ LOCK DESATIVADO:
-            // this.carregarLock();
-            // if (this.limite && this.aprovadas.length >= this.limite) {
-            //   this.bloqueado = true;
-            //   if (!this.bloqueadoEm) this.bloqueadoEm = new Date().toISOString();
-            // }
-
+            // this.carregarLock(); // lock desativado
             this.loadingFlag = false;
           },
           error: () => {
@@ -136,8 +130,12 @@ export class ListagemAlunosComponent implements OnInit {
   }
 
   // ===== API p/ template =====
-  loading() { return this.loadingFlag; }
-  lista() { return this.alunosSecretaria; }
+  loading() {
+    return this.loadingFlag;
+  }
+  lista() {
+    return this.alunosSecretaria;
+  }
   total() {
     return this.modo === 'SECRETARIA'
       ? this.alunosSecretaria.length
@@ -146,7 +144,9 @@ export class ListagemAlunosComponent implements OnInit {
 
   // ===== util ORIENTADOR =====
   alunoId(i: any): number {
-    return (i?.id_aluno ?? i?.aluno_id ?? i?.idAluno ?? i?.aluno?.id ?? i?.id ?? 0);
+    return (
+      i?.id_aluno ?? i?.aluno_id ?? i?.idAluno ?? i?.aluno?.id ?? i?.id ?? 0
+    );
   }
   alunoNome(i: any): string {
     return (
@@ -159,16 +159,12 @@ export class ListagemAlunosComponent implements OnInit {
   }
 
   disabledCheckbox(i: any): boolean {
-    // ⛔ LOCK DESATIVADO:
-    // if (this.bloqueado) return true;
     const id = this.alunoId(i);
     if (this.selecionados.has(id)) return false;
     return this.selecionados.size >= this.limite;
   }
 
   toggleSelecionado(i: any, checked: boolean) {
-    // ⛔ LOCK DESATIVADO:
-    // if (this.bloqueado) return;
     const id = this.alunoId(i);
     if (!id) return;
     if (checked) {
@@ -180,36 +176,29 @@ export class ListagemAlunosComponent implements OnInit {
   }
 
   salvarSelecao() {
-    // ⛔ LOCK DESATIVADO:
-    // if (this.bloqueado) return;
     this.sucessoSelecao = '';
     this.erroSalvarSelecao = '';
     this.salvandoSelecao = true;
 
     const ids = Array.from(this.selecionados);
 
-    this.projetoService.updateAlunosProjeto(this.projetoId, ids).subscribe({
-      next: () => {
-        this.salvandoSelecao = false;
-        this.sucessoSelecao = 'Alunos atualizados com sucesso!';
-
-        // mantém estado local
-        this.selecionados = new Set<number>(ids);
-
-        // ⛔ LOCK DESATIVADO:
-        // this.bloqueadoEm = new Date().toISOString();
-        // if (this.limite && this.selecionados.size >= this.limite) {
-        //   this.salvarLock();
-        // }
-
-        // recarrega
-        this.carregar();
-      },
-      error: (e) => {
-        this.salvandoSelecao = false;
-        this.erroSalvarSelecao = e?.message || 'Falha ao salvar seleção.';
-      },
-    });
+    this.projetoService
+      .updateAlunosProjeto({
+        id_projeto: this.projetoId,
+        ids_alunos_aprovados: ids,
+      })
+      .subscribe({
+        next: () => {
+          this.salvandoSelecao = false;
+          this.sucessoSelecao = 'Alunos atualizados com sucesso!';
+          this.selecionados = new Set<number>(ids);
+          this.carregar();
+        },
+        error: (e) => {
+          this.salvandoSelecao = false;
+          this.erroSalvarSelecao = e?.message || 'Falha ao salvar seleção.';
+        },
+      });
   }
 
   toggleBolsa(i: any, checked: boolean) {
@@ -220,9 +209,10 @@ export class ListagemAlunosComponent implements OnInit {
     if (checked) this.bolsaMarcada.add(id);
     else this.bolsaMarcada.delete(id);
 
-    this.bolsaService.definirBolsa(this.projetoId, id, checked).subscribe({
+    // ✅ usa o método existente no service
+    this.bolsaService.setStatus(id, checked).subscribe({
       next: () => {},
-      error: (e) => {
+      error: (e: any) => {
         if (checked) this.bolsaMarcada.delete(id);
         else this.bolsaMarcada.add(id);
         console.error(e);
