@@ -89,21 +89,6 @@
           </option>
         </select>
 
-        <label for="selectBolsa"><i class="fas fa-coins"></i> Bolsa</label>
-        <select
-          id="selectBolsa"
-          [(ngModel)]="projeto.tipo_bolsa"
-          name="tipo_bolsa"
-          [disabled]="isOrientadorMode"
-        >
-          <option [ngValue]="null">-- Sem bolsa --</option>
-          <option value="PIBIC">PIBIC</option>
-          <option value="PIBITI">PIBITI</option>
-          <option value="FAPESP">FAPESP</option>
-          <option value="CNPq">CNPq</option>
-          <option value="Outra">Outra</option>
-        </select>
-
         <div class="notas-section" *ngIf="modoEdicao">
           <h3><i class="fas fa-graduation-cap"></i> Notas do Projeto</h3>
           <p class="notas-description">

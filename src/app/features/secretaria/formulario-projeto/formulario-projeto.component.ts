@@ -16,7 +16,6 @@ type ProjetoCadastroExt = ProjetoCadastro & {
   nota1?: number | null;
   nota2?: number | null;
   notaFinal?: number | null;
-  tipo_bolsa?: string | null;
 };
 
 @Component({
@@ -156,7 +155,6 @@ export class FormularioProjetoComponent implements OnInit {
         this.projeto.nota1 = this.toNumOrNull(p.nota1);
         this.projeto.nota2 = this.toNumOrNull(p.nota2);
         this.projeto.notaFinal = this.toNumOrNull(p.notaFinal);
-        this.projeto.tipo_bolsa = p.tipo_bolsa ?? null;
 
         this.carregando = false;
       },
@@ -360,7 +358,6 @@ export class FormularioProjetoComponent implements OnInit {
       nota1: null,
       nota2: null,
       notaFinal: null,
-      tipo_bolsa: null,
     };
     this.orientadorSelecionadoId = 0;
     this.emailOrientador = '';

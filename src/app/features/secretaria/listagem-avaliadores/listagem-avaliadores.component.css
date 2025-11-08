@@ -214,3 +214,88 @@
     padding: 7px 10px;
   }
 }
+
+/* ====== MOBILE ====== */
+@media (max-width: 900px) {
+  .avl-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .avl-toolbar .spacer {
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  .table.avl-table thead {
+    display: none;
+  }
+
+  .table.avl-table,
+  .table.avl-table tbody,
+  .table.avl-table tr,
+  .table.avl-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table.avl-table tr {
+    border: 1px solid #e6e6ee;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .table.avl-table td {
+    border: none;
+    display: grid;
+    grid-template-columns: 140px 1fr; /* label + valor */
+    gap: 10px;
+    padding: 10px 12px;
+    position: relative;
+    text-align: left;
+  }
+
+  .table.avl-table td::before {
+    content: attr(data-label);
+    color: #667eea;
+    font-weight: 700;
+  }
+
+  /* >>> Correção do bloco de ações no mobile <<< */
+  .table.avl-table td.actions {
+    display: flex; /* sai do grid */
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 12px;
+  }
+  .table.avl-table td.actions::before {
+    content: "Ações:"; /* se preferir, mostre o label */
+    font-weight: 700;
+    color: #667eea;
+    margin-right: 8px;
+  }
+
+  /* Botões mais “tocáveis” no mobile */
+  .actions .btn {
+    min-width: 42px;
+    height: 36px;
+    padding: 0 10px;
+  }
+}
+
+/* Extra refinamento para telas muito pequenas */
+@media (max-width: 480px) {
+  .container.avl {
+    padding: 18px 16px;
+  }
+  .container.avl h2 {
+    font-size: 1.5rem;
+  }
+
+  /* Se quiser empilhar os botões de ação verticalmente abaixo do label */
+  .table.avl-table td.actions {
+    flex-wrap: wrap;
+    gap: 10px 8px;
+  }
+}

@@ -1,0 +1,35 @@
+<h2><i class="fas fa-coins"></i> Atribuir Bolsas</h2>
+
+<div *ngIf="carregando">Carregando...</div>
+<div *ngIf="erro" class="error">{{ erro }}</div>
+
+<table *ngIf="!carregando && !erro" class="tabela">
+  <thead>
+    <tr>
+      <th>Aluno</th>
+      <th>E-mail</th>
+      <th>Remunerado</th>
+      <th style="text-align: center">Bolsista?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let a of alunos; trackBy: trackByAlunoId">
+      <td>{{ a.nome }}</td>
+      <td>{{ a.email }}</td>
+      <td>{{ a.possuiTrabalhoRemunerado ? "Sim" : "Não" }}</td>
+      <td style="text-align: center">
+        <label class="switch" [class.switch--loading]="a.__loading">
+          <input
+            type="checkbox"
+            [checked]="a.possui_bolsa"
+            (change)="toggleBolsa(a)"
+            [disabled]="a.__loading"
+            [attr.aria-label]="'Alternar bolsa do aluno ' + a.nome"
+            role="switch"
+          />
+          <span class="slider"></span>
+        </label>
+      </td>
+    </tr>
+  </tbody>
+</table>

@@ -3,6 +3,12 @@ import { Aluno } from '@interfaces/aluno';
 
 export type StatusProjeto = 'EM_EXECUCAO' | 'CONCLUIDO';
 
+/** DTO usado pelo endpoint POST /projetos/update-alunos */
+export interface UpdateProjetoAlunosDTO {
+  id_projeto: number;
+  ids_alunos_aprovados: number[]; // ids de ALUNO aprovados pelo orientador
+}
+
 /** Payload mínimo aceito pelo backend ao criar/atualizar projeto (DTO -> backend) */
 export interface ProjetoRequest {
   titulo_projeto: string;
@@ -37,13 +43,13 @@ export interface Projeto {
   quantidadeMaximaAlunos: number;
   nomeOrientador: string;
   nomesAlunos: string[];
-  inscritosTotal?: number; // 👈 novo
+  inscritosTotal?: number;
   status?: StatusProjeto;
   notas?: number[];
   mediaNota?: number;
 }
 
-/** Detalhes completos do projeto (tela de detalhes / response do backend + enriquecimentos) */
+/** Detalhes completos do projeto */
 export interface ProjetoDetalhado {
   id: number;
   nomeProjeto: string;
