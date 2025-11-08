@@ -3,6 +3,15 @@
   background-color: #f8f9fa;
   min-height: 100vh;
 }
+
+/* Overlay invisível que captura clique fora para fechar menus */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 90; /* abaixo do dropdown (100) e acima do resto */
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -117,7 +126,7 @@
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  overflow: visible; /* << não corta o dropdown */
   transition: all 0.3s ease;
   border: 1px solid #f1f5f9;
   animation: fadeIn 0.5s ease-out;
@@ -142,7 +151,7 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  z-index: 10;
+  z-index: 95;
 }
 .menu-trigger {
   background: transparent;
@@ -159,17 +168,21 @@
   background: #f3f4f6;
   color: #1f2937;
 }
+
+/* Dropdown corrigida */
 .menu-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 4px;
+  margin-top: 6px;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  min-width: 240px;
-  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+  min-width: 260px;
+  max-width: 320px;
+  max-height: 60vh;
+  overflow: auto;
   z-index: 100;
 }
 .menu-item {
@@ -209,6 +222,7 @@
   background: #fffbeb;
   color: #b45309;
 }
+
 .card h3 {
   font-size: 19px;
   font-weight: 700;
@@ -411,6 +425,8 @@
   color: #9ca3af;
   font-size: 15px;
 }
+
+/* Responsivo */
 @media (max-width: 768px) {
   .projects-container {
     padding: 20px;
@@ -464,6 +480,7 @@
     padding: 5px 12px;
   }
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;

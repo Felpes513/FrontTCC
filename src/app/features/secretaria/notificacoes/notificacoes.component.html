@@ -11,50 +11,69 @@
     </button>
 
     <div class="paginacao">
-      <button (click)="anterior()" [disabled]="page <= 1">
-        <mat-icon>chevron_left</mat-icon>
+      <button
+        (click)="anterior()"
+        [disabled]="page <= 1"
+        aria-label="Página anterior"
+      >
+        <span class="arrow arrow-left">‹</span>
       </button>
       <span>Página {{ page }} / {{ totalPages }}</span>
-      <button (click)="proxima()" [disabled]="page >= totalPages">
-        <mat-icon>chevron_right</mat-icon>
+      <button
+        (click)="proxima()"
+        [disabled]="page >= totalPages"
+        aria-label="Próxima página"
+      >
+        <span class="arrow arrow-right">›</span>
       </button>
     </div>
   </div>
 
-  <div *ngIf="carregando" class="loading">Carregando…</div>
-  <div *ngIf="erro" class="error">
-    <mat-icon>warning_amber</mat-icon> {{ erro }}
-  </div>
-
+  <!-- LISTA: abaixo da toolbar e acessível por teclado -->
   <ng-container *ngIf="!carregando && !erro">
-    <div
-      *ngFor="let notificacao of notificacoes"
-      class="notificacao"
-      [class.lida]="notificacao.lida"
-      (click)="abrirNotificacao(notificacao)"
-    >
-      <p class="tipo">{{ notificacao.tipo }}</p>
-      <p class="mensagem">
-        <strong>{{ notificacao.mensagem }}</strong>
-      </p>
-      <p class="data">{{ notificacao.data }} às {{ notificacao.hora }}</p>
+    <div class="lista">
+      <div
+        *ngFor="let notificacao of notificacoes"
+        class="notificacao"
+        [class.lida]="notificacao.lida"
+        (click)="abrirNotificacao(notificacao)"
+        tabindex="0"
+        role="button"
+        (keydown.enter)="abrirNotificacao(notificacao)"
+        (keydown.space)="abrirNotificacao(notificacao); $event.preventDefault()"
+        [attr.aria-label]="'Abrir notificação: ' + notificacao.tipo"
+      >
+        <p class="tipo">{{ notificacao.tipo }}</p>
+        <p class="mensagem">
+          <strong>{{ notificacao.mensagem }}</strong>
+        </p>
+        <p class="data">{{ notificacao.data }} às {{ notificacao.hora }}</p>
+      </div>
     </div>
 
-    <p *ngIf="!notificacoes?.length" class="vazio">Sem notificações.</p>
+    <p *ngIf="!notificacoes.length" class="vazio">Sem notificações.</p>
   </ng-container>
 
-  <div class="modal" *ngIf="notificacaoAberta">
-    <div class="modal-conteudo">
-      <button class="fechar" (click)="fecharModal()">
+  <!-- Modal -->
+  <div
+    class="modal"
+    *ngIf="notificacaoAberta"
+    (click)="fecharModal()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="notificacaoTitulo"
+  >
+    <div class="modal-conteudo" (click)="$event.stopPropagation()" tabindex="0">
+      <button class="fechar" (click)="fecharModal()" aria-label="Fechar">
         <mat-icon>close</mat-icon>
       </button>
-      <h3>{{ notificacaoAberta.tipo }}</h3>
+      <h3 id="notificacaoTitulo">{{ notificacaoAberta.tipo }}</h3>
       <p class="mensagem">
         <strong>{{ notificacaoAberta.mensagem }}</strong>
       </p>
-      <small class="data"
-        >{{ notificacaoAberta.data }} às {{ notificacaoAberta.hora }}</small
-      >
+      <small class="data">
+        {{ notificacaoAberta.data }} às {{ notificacaoAberta.hora }}
+      </small>
     </div>
   </div>
 </div>

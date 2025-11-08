@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+} from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { Subscription, interval, of } from 'rxjs';
 import { catchError, startWith, switchMap } from 'rxjs/operators';
@@ -27,6 +34,10 @@ export class SidenavSecretariaComponent implements OnInit, OnDestroy {
   isOrientador = this.auth.hasRole('ORIENTADOR');
   isAluno = this.auth.hasRole('ALUNO');
 
+  // Mobile/menu state
+  isMobile = false;
+  isMenuOpen = true;
+
   papelLegivel = computed(() => {
     const map: Record<Role, string> = {
       SECRETARIA: 'Secretaria',
@@ -37,6 +48,8 @@ export class SidenavSecretariaComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    this.updateLayout(); // define isMobile e isMenuOpen
+
     if (this.isSecretaria) {
       this.notifSub = interval(30000)
         .pipe(
@@ -63,6 +76,26 @@ export class SidenavSecretariaComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.notifSub?.unsubscribe();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.updateLayout();
+  }
+
+  private updateLayout(): void {
+    this.isMobile = window.matchMedia('(max-width: 768px)').matches;
+    // no desktop, mantém sempre aberto; no mobile, inicia fechado
+    this.isMenuOpen = this.isMobile ? false : true;
+  }
+
+  toggleMenu(): void {
+    if (this.isMobile) this.isMenuOpen = !this.isMenuOpen;
+  }
+
+  onNavClick(): void {
+    // ao navegar no mobile, fecha o menu para liberar a tela
+    if (this.isMobile) this.isMenuOpen = false;
   }
 
   confirmarSaida(e: Event) {

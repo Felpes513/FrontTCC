@@ -1,15 +1,27 @@
-import { InscricoesService } from '@services/inscricoes.service';
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  HostListener,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
+
 import { Projeto } from '@interfaces/projeto';
 import { ProjetoService } from '@services/projeto.service';
 import { AuthService } from '@services/auth.service';
-import { forkJoin, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { InscricoesService } from '@services/inscricoes.service';
+
+import { Subject, forkJoin, of } from 'rxjs';
+import {
+  catchError,
+  tap,
+  debounceTime,
+  distinctUntilChanged,
+} from 'rxjs/operators';
 
 @Component({
   selector: 'app-listagem-projetos',
@@ -23,20 +35,34 @@ import { catchError, tap } from 'rxjs/operators';
   ],
   templateUrl: './listagem-projetos.component.html',
   styleUrls: ['./listagem-projetos.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush, // reduz renders desnecessários
 })
 export class ListagemProjetosComponent implements OnInit {
+  // ----- Constantes / estado base -----
   readonly MAX_ESCOLHIDOS = 4;
+
   projetos: (Projeto & { alunosIds?: number[] })[] = [];
+  projetosFiltradosLista: (Projeto & { alunosIds?: number[] })[] = [];
+
   filtro = '';
+  filtroStatus: '' | 'EM_EXECUCAO' | 'CONCLUIDO' = '';
+
   carregando = false;
   erro: string | null = null;
-  filtroStatus = '';
+
   inscrevendoId: number | null = null;
   menuAberto: number | null = null;
+
   isOrientador = false;
   isSecretaria = false;
   isAluno = false;
+
+  // pré-cálculo para evitar funções no template
+  cores = ['#007bff', '#28a745', '#ffc107'] as const;
+  progressoMap = new Map<number, number>();
+
   private inscricoesDoAluno = new Set<number>();
+  private filtro$ = new Subject<string>();
 
   constructor(
     private projetoService: ProjetoService,
@@ -46,13 +72,39 @@ export class ListagemProjetosComponent implements OnInit {
     private inscricoesService: InscricoesService
   ) {}
 
+  // ----- Acessibilidade / UX -----
+  @HostListener('document:keydown.escape')
+  onEscClose() {
+    this.menuAberto = null;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(ev: MouseEvent) {
+    const el = ev.target as HTMLElement;
+    // fecha se clicou fora do menu e do botão
+    if (!el.closest('.menu-dropdown') && !el.closest('.menu-trigger')) {
+      this.menuAberto = null;
+    }
+  }
+
+  // ----- Lifecycle -----
   ngOnInit(): void {
     this.isOrientador = this.authService.hasRole('ORIENTADOR');
     this.isSecretaria = this.authService.hasRole('SECRETARIA');
     this.isAluno = this.authService.hasRole('ALUNO');
+
+    // cache do filtro (evita reexecuções por tecla)
+    this.filtro$
+      .pipe(debounceTime(120), distinctUntilChanged())
+      .subscribe((v) => {
+        this.filtro = v ?? '';
+        this.atualizarProjetosFiltrados();
+      });
+
     this.carregarProjetos();
   }
 
+  // ----- Data loading -----
   trackByFn(index: number, item: Projeto): any {
     return (item as any)?.id ?? index;
   }
@@ -68,6 +120,8 @@ export class ListagemProjetosComponent implements OnInit {
           this.carregando = false;
           this.hidratarSelecionados();
           this.hidratarNotas();
+          this.recalcularProgresso();
+          this.atualizarProjetosFiltrados();
         },
         error: (error) => this.handleLoadError(error),
       });
@@ -81,13 +135,28 @@ export class ListagemProjetosComponent implements OnInit {
         );
         if (invalidos.length)
           console.warn('⚠️ Projetos com ID inválido:', invalidos);
+
         this.projetos = (projetos as any[]) ?? [];
         this.carregando = false;
         this.hidratarSelecionados();
         this.hidratarNotas();
+        this.recalcularProgresso();
+        this.atualizarProjetosFiltrados();
       },
       error: (error) => this.handleLoadError(error),
     });
+  }
+
+  private handleLoadError(error: any) {
+    if (error.status === 0)
+      this.erro = 'Erro de conexão: verifique se a API FastAPI está rodando.';
+    else if (error.status === 404)
+      this.erro =
+        'Endpoint não encontrado: verifique se a rota /projetos está correta.';
+    else if (error.status >= 500)
+      this.erro = 'Erro interno do servidor: verifique os logs da API FastAPI.';
+    else this.erro = error.message || 'Erro desconhecido ao carregar projetos';
+    this.carregando = false;
   }
 
   private hidratarSelecionados() {
@@ -106,6 +175,7 @@ export class ListagemProjetosComponent implements OnInit {
             const ids = (alunos || [])
               .map((a) => Number(a?.id_aluno ?? a?.id ?? a?.aluno?.id ?? 0))
               .filter((n) => !!n);
+
             (p as any).nomesAlunos = nomes;
             (p as any).alunosIds = ids;
             (p as any).inscritosTotal = nomes.length;
@@ -113,7 +183,12 @@ export class ListagemProjetosComponent implements OnInit {
           catchError(() => of(null))
         )
       );
-    if (calls.length) forkJoin(calls).subscribe();
+    if (calls.length) {
+      forkJoin(calls).subscribe(() => {
+        this.recalcularProgresso();
+        this.atualizarProjetosFiltrados();
+      });
+    }
   }
 
   private hidratarNotas() {
@@ -138,36 +213,53 @@ export class ListagemProjetosComponent implements OnInit {
           catchError(() => of(null))
         )
       );
-    if (calls.length) forkJoin(calls).subscribe();
+    if (calls.length) {
+      forkJoin(calls).subscribe(() => this.atualizarProjetosFiltrados());
+    }
   }
 
-  private handleLoadError(error: any) {
-    if (error.status === 0)
-      this.erro = 'Erro de conexão: verifique se a API FastAPI está rodando.';
-    else if (error.status === 404)
-      this.erro =
-        'Endpoint não encontrado: verifique se a rota /projetos está correta.';
-    else if (error.status >= 500)
-      this.erro = 'Erro interno do servidor: verifique os logs da API FastAPI.';
-    else this.erro = error.message || 'Erro desconhecido ao carregar projetos';
-    this.carregando = false;
+  private recalcularProgresso() {
+    this.progressoMap.clear();
+    for (const p of this.projetos) {
+      const id = (p as any).id;
+      if (!this.isIdValido(id)) continue;
+      const escolhidos = this.getQuantidadeAlunos(p as any);
+      const prog = Math.max(
+        0,
+        Math.min((escolhidos / this.MAX_ESCOLHIDOS) * 100, 100)
+      );
+      this.progressoMap.set(id, prog);
+    }
   }
 
-  projetosFiltrados(): Projeto[] {
-    const filtroLower = this.filtro.toLowerCase().trim();
-    return this.projetos.filter((projeto: any) => {
-      const combinaTexto =
-        (projeto.nomeProjeto || '').toLowerCase().includes(filtroLower) ||
-        (projeto.nomeOrientador || '').toLowerCase().includes(filtroLower) ||
-        (projeto.campus || '').toLowerCase().includes(filtroLower);
-      const combinaStatus =
-        !this.isSecretaria ||
-        !this.filtroStatus ||
-        (projeto as any).status === this.filtroStatus;
-      return combinaTexto && combinaStatus;
-    }) as any;
+  // ----- Filtro cacheado (sem funções no template) -----
+  onFiltroChange(valor: string) {
+    this.filtro$.next(valor ?? '');
   }
 
+  setFiltroStatus(status: '' | 'EM_EXECUCAO' | 'CONCLUIDO') {
+    this.filtroStatus = status;
+    this.atualizarProjetosFiltrados();
+  }
+
+  atualizarProjetosFiltrados() {
+    const texto = (this.filtro || '').toLowerCase().trim();
+    const passaTexto = (p: any) =>
+      !texto ||
+      (p?.nomeProjeto || '').toLowerCase().includes(texto) ||
+      (p?.nomeOrientador || '').toLowerCase().includes(texto) ||
+      (p?.campus || '').toLowerCase().includes(texto);
+    const passaStatus = (p: any) =>
+      !this.isSecretaria ||
+      !this.filtroStatus ||
+      p?.status === this.filtroStatus;
+
+    this.projetosFiltradosLista = (this.projetos || []).filter(
+      (p) => passaTexto(p) && passaStatus(p)
+    );
+  }
+
+  // ----- Helpers de exibição -----
   getQuantidadeAlunos(p: Projeto & { alunosIds?: number[] }): number {
     return (p as any).inscritosTotal ?? (p as any).nomesAlunos?.length ?? 0;
   }
@@ -199,15 +291,11 @@ export class ListagemProjetosComponent implements OnInit {
     return 'disponivel';
   }
 
-  getCor(index: number): string {
-    const cores = ['#007bff', '#28a745', '#ffc107'];
-    return cores[index % cores.length];
-  }
-
   toggleMenu(id: number | null): void {
     this.menuAberto = this.menuAberto === id ? null : id;
   }
 
+  // ----- Ações -----
   cancelarProjeto(id: number): void {
     if (!this.isSecretaria) return;
     if (!this.isIdValido(id)) {
@@ -215,7 +303,9 @@ export class ListagemProjetosComponent implements OnInit {
       return;
     }
     if (!confirm('Tem certeza que deseja cancelar este projeto?')) return;
-    if (typeof (this.projetoService as any).cancelarProjeto !== 'function') {
+
+    const svc: any = this.projetoService as any;
+    if (typeof svc.cancelarProjeto !== 'function') {
       this.snackBar.open(
         'Endpoint cancelarProjeto não implementado.',
         'Fechar',
@@ -223,7 +313,7 @@ export class ListagemProjetosComponent implements OnInit {
       );
       return;
     }
-    (this.projetoService as any).cancelarProjeto(id).subscribe({
+    svc.cancelarProjeto(id).subscribe({
       next: (res: any) => {
         this.snackBar.open(res?.mensagem || 'Projeto cancelado.', 'Fechar', {
           duration: 3000,
@@ -234,7 +324,9 @@ export class ListagemProjetosComponent implements OnInit {
         this.snackBar.open(
           e?.error?.detail || 'Erro ao cancelar projeto.',
           'Fechar',
-          { duration: 4000 }
+          {
+            duration: 4000,
+          }
         );
       },
     });
@@ -252,12 +344,15 @@ export class ListagemProjetosComponent implements OnInit {
       )
     )
       return;
+
     const fn = (this.projetoService as any).tornarAlunosInadimplentes;
     if (typeof fn !== 'function') {
       this.snackBar.open(
         'Endpoint tornarAlunosInadimplentes não implementado.',
         'Fechar',
-        { duration: 3500 }
+        {
+          duration: 3500,
+        }
       );
       return;
     }
@@ -266,7 +361,9 @@ export class ListagemProjetosComponent implements OnInit {
         this.snackBar.open(
           res?.mensagem || 'Alunos marcados como inadimplentes.',
           'Fechar',
-          { duration: 3000 }
+          {
+            duration: 3000,
+          }
         );
         this.carregarProjetos();
       },
@@ -290,12 +387,15 @@ export class ListagemProjetosComponent implements OnInit {
       )
     )
       return;
+
     const fn = (this.projetoService as any).tornarOrientadorInadimplente;
     if (typeof fn !== 'function') {
       this.snackBar.open(
         'Endpoint tornarOrientadorInadimplente não implementado.',
         'Fechar',
-        { duration: 3500 }
+        {
+          duration: 3500,
+        }
       );
       return;
     }
@@ -304,7 +404,9 @@ export class ListagemProjetosComponent implements OnInit {
         this.snackBar.open(
           res?.mensagem || 'Orientador marcado como inadimplente.',
           'Fechar',
-          { duration: 3000 }
+          {
+            duration: 3000,
+          }
         );
         this.carregarProjetos();
       },
@@ -324,12 +426,15 @@ export class ListagemProjetosComponent implements OnInit {
     }
     if (!confirm('Marcar ORIENTADOR e ALUNOS como inadimplentes por 2 anos?'))
       return;
+
     const fn = (this.projetoService as any).tornarTodosInadimplentes;
     if (typeof fn !== 'function') {
       this.snackBar.open(
         'Endpoint tornarTodosInadimplentes não implementado.',
         'Fechar',
-        { duration: 3500 }
+        {
+          duration: 3500,
+        }
       );
       return;
     }
@@ -338,7 +443,9 @@ export class ListagemProjetosComponent implements OnInit {
         this.snackBar.open(
           res?.mensagem || 'Todos marcados como inadimplentes.',
           'Fechar',
-          { duration: 3000 }
+          {
+            duration: 3000,
+          }
         );
         this.carregarProjetos();
       },
@@ -431,7 +538,9 @@ export class ListagemProjetosComponent implements OnInit {
       this.snackBar.open(
         'Somente alunos podem se inscrever em projetos.',
         'Fechar',
-        { duration: 3000 }
+        {
+          duration: 3000,
+        }
       );
       return;
     }
@@ -468,7 +577,9 @@ export class ListagemProjetosComponent implements OnInit {
         this.snackBar.open(
           res?.message || 'Inscrição realizada com sucesso!',
           'Fechar',
-          { duration: 3000 }
+          {
+            duration: 3000,
+          }
         );
       },
       error: (e) => {
@@ -488,6 +599,7 @@ export class ListagemProjetosComponent implements OnInit {
     this.router.navigate(['/aluno/relatorios', id]);
   }
 
+  // ----- Utils -----
   jaInscrito(idProjeto: number): boolean {
     return this.inscricoesDoAluno.has(idProjeto);
   }
@@ -506,6 +618,7 @@ export class ListagemProjetosComponent implements OnInit {
   recarregar(): void {
     this.carregarProjetos();
   }
+
   temIdValido(projeto: Projeto): boolean {
     return this.isIdValido((projeto as any).id);
   }
@@ -519,6 +632,7 @@ export class ListagemProjetosComponent implements OnInit {
     );
   }
 
+  // mantido por compatibilidade (não é mais usado no template)
   calcularProgresso(projeto: Projeto): number {
     const escolhidos = this.getQuantidadeAlunos(projeto as any);
     const progresso = (escolhidos / this.MAX_ESCOLHIDOS) * 100;
@@ -546,6 +660,7 @@ export class ListagemProjetosComponent implements OnInit {
       podeVerRelatorio: this.podeVerRelatorio(projeto as any),
     });
   }
+
   debugListaProjetos(): void {
     console.log('🔍 Debug da lista completa:', {
       totalProjetos: this.projetos.length,
