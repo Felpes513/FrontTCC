@@ -104,8 +104,16 @@ export class CadastrosComponent implements OnInit {
   }
 
   match(term: string, ...vals: (string | number | undefined | null)[]) {
-    const f = (term || '').toString().toLowerCase().trim();
-    return vals.some((v) => (v ?? '').toString().toLowerCase().includes(f));
+    const norm = (s: any) =>
+      (s ?? '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    const f = norm(term);
+    return vals.some((v) => norm(v).includes(f));
   }
 
   aprovar(id: number) {
@@ -137,7 +145,7 @@ export class CadastrosComponent implements OnInit {
   }
 
   private transformRow(row: any) {
-    const nomeSrc = row?.nome ?? row?.name ?? '';
+    const nomeSrc = row?.nome_completo ?? row?.nome ?? row?.name ?? '';
     const cpfSrc = row?.cpf ?? row?.CPF ?? '';
     return {
       ...row,

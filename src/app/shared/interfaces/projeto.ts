@@ -34,12 +34,13 @@ export interface ProjetoInscricaoApi {
   created_at?: string | null;
 }
 
-/** Payload mínimo aceito pelo backend ao criar/atualizar projeto (DTO -> backend) */
 export interface ProjetoRequest {
   titulo_projeto: string;
   resumo: string;
   id_orientador: number;
   id_campus: number;
+  cod_projeto?: string; // <- incluir
+  ideia_inicial_b64?: string; // <- incluir (obrigatório no POST)
 }
 
 export interface ProjetoFormulario {

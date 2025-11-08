@@ -1,7 +1,20 @@
 <!-- src/app/features/orientador/relatorio-form/relatorio-form.component.html -->
 <section class="painel">
   <header class="head">
-    <h3>Relatório mensal — Projeto #{{ projetoId }}</h3>
+    <div class="titlebar">
+      <h3>Relatório mensal — Projeto #{{ projetoId }}</h3>
+
+      <!-- Botão fechar (topo) -->
+      <button
+        type="button"
+        class="btn-icon close-btn"
+        (click)="fechar()"
+        aria-label="Fechar formulário"
+        title="Fechar"
+      >
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
     <p class="muted">Preencha o resumo do mês e confirme o envio.</p>
   </header>
 
@@ -15,13 +28,18 @@
       <div class="row" *ngIf="relatorioEnviadoDoMes()">
         <div class="hint">
           ✅ Já existe relatório enviado para
-          <strong>{{ relatorioEnviadoDoMes()!.referenciaMes }}</strong>.
+          <strong>{{ relatorioEnviadoDoMes()!.referenciaMes }}</strong
+          >.
         </div>
       </div>
 
       <div class="row">
         <label>Resumo do Progresso</label>
-        <textarea rows="4" formControlName="resumo" placeholder="Principais avanços do mês"></textarea>
+        <textarea
+          rows="4"
+          formControlName="resumo"
+          placeholder="Principais avanços do mês"
+        ></textarea>
       </div>
 
       <div class="row">
@@ -51,9 +69,13 @@
         </label>
       </div>
 
-      <!-- esconde a ação quando em modo somente leitura -->
-      <div class="actions" *ngIf="!readOnly">
-        <button type="submit" [disabled]="salvando()">
+      <!-- Ações: Fechar sempre visível; Confirmar só se não for readOnly -->
+      <div class="actions">
+        <button type="button" class="btn-secondary" (click)="fechar()">
+          <i class="fas fa-arrow-left"></i> Fechar
+        </button>
+
+        <button *ngIf="!readOnly" type="submit" [disabled]="salvando()">
           <i class="fas fa-save"></i> Confirmar relatório
         </button>
       </div>
@@ -67,8 +89,14 @@
           {{ dataBr(relatorioEnviadoDoMes()!.confirmadoEm) }}.
         </p>
         <p><small>Observação salva:</small></p>
-        <pre style="white-space: pre-wrap; font-size: .9rem; margin: .25rem 0 0 0;">
-{{ relatorioEnviadoDoMes()!.observacao || '—' }}</pre>
+        <pre
+          style="
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            margin: 0.25rem 0 0 0;
+          "
+          >{{ relatorioEnviadoDoMes()!.observacao || "—" }}</pre
+        >
       </ng-container>
       <ng-template #pendente>
         <p class="muted">Nenhum relatório enviado para o mês selecionado.</p>

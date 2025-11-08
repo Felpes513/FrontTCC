@@ -20,15 +20,42 @@
 .head {
   margin-bottom: var(--spacing-md);
 }
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
 .head h3 {
-  margin: 0 0 0.25rem 0;
+  margin: 0;
   font-size: 1.25rem;
   color: var(--text);
 }
 .head p {
-  margin: 0;
+  margin: 0.35rem 0 0 0;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+/* Botão icônico de fechar no topo */
+.btn-icon {
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+.btn-icon:hover {
+  background: #f7f7fb;
+}
+.btn-icon:active {
+  transform: translateY(1px);
 }
 
 .grid {
@@ -108,7 +135,10 @@ form {
   margin-top: 0.75rem;
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
+
+/* Primário */
 .actions button {
   border: none;
   background: var(--accent);
@@ -130,20 +160,16 @@ form {
   cursor: not-allowed;
 }
 
-small {
-  color: var(--muted);
-  display: inline-block;
-  margin-top: 0.25rem;
+/* Secundário (Fechar) */
+.actions .btn-secondary {
+  background: #e5e7eb;
+  color: #111827;
 }
-div a[target="_blank"] {
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 600;
-}
-div a[target="_blank"]:hover {
-  text-decoration: underline;
+.actions .btn-secondary:hover {
+  filter: brightness(0.98);
 }
 
+/* Sidebar */
 .lista-relatorios {
   background: var(--white);
   border: 1px solid var(--line);
@@ -155,39 +181,6 @@ div a[target="_blank"]:hover {
   margin: 0 0 0.75rem 0;
   font-size: 1rem;
   color: var(--text);
-}
-.lista-relatorios ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.5rem;
-}
-.lista-relatorios li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--white);
-}
-.lista-relatorios li i {
-  width: 18px;
-  text-align: center;
-  color: var(--accent);
-}
-.lista-relatorios li strong {
-  margin-right: 0.25rem;
-}
-.lista-relatorios li a {
-  margin-left: auto;
-  font-size: 0.9rem;
-  color: var(--accent);
-  text-decoration: none;
-}
-.lista-relatorios li a:hover {
-  text-decoration: underline;
 }
 .lista-relatorios p {
   color: var(--muted);
@@ -201,6 +194,7 @@ div a[target="_blank"]:hover {
   color: var(--muted);
 }
 
+/* Impressão */
 @media print {
   .painel {
     box-shadow: none;
@@ -208,6 +202,7 @@ div a[target="_blank"]:hover {
     padding: 0;
   }
   .actions,
+  .btn-icon,
   input[type="file"] {
     display: none !important;
   }

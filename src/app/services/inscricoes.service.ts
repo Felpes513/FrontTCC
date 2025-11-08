@@ -70,13 +70,6 @@ export class InscricoesService {
     return this.http.delete(`${this.baseUrl}/inscricoes/${inscricaoId}`);
   }
 
-  // Opcional: se existir no back um endpoint batch
-  excluirEmLote(ids: number[]) {
-    return this.http.request('DELETE', `${this.baseUrl}/inscricoes/_batch`, {
-      body: { ids },
-    });
-  }
-
   uploadDocumento(inscricaoId: number, arquivo: File) {
     const formData = new FormData();
     formData.append('arquivo', arquivo);

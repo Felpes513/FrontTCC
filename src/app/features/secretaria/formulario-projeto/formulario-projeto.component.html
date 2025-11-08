@@ -4,6 +4,27 @@
   <div class="editor-grid">
     <div class="col-form">
       <form class="form-container" (ngSubmit)="salvarProjeto()" *ngIf="projeto">
+        <!-- Somente em edição: ID -->
+        <div *ngIf="modoEdicao" class="mb-2">
+          <label for="idProjeto"
+            ><i class="fas fa-id-badge"></i> ID do Projeto</label
+          >
+          <input id="idProjeto" type="text" [value]="projetoId" readonly />
+        </div>
+
+        <!-- (Opcional) Código do projeto -->
+        <label for="codProjeto"
+          ><i class="fas fa-hashtag"></i> Código do Projeto</label
+        >
+        <input
+          id="codProjeto"
+          type="text"
+          [(ngModel)]="projeto.cod_projeto"
+          name="cod_projeto"
+          placeholder="Ex.: P-2025-AB12CD"
+          [disabled]="isOrientadorMode"
+        />
+
         <label for="titulo"
           ><i class="fas fa-book"></i> Título do Projeto</label
         >
@@ -89,6 +110,29 @@
           </option>
         </select>
 
+        <!-- DOCX inicial (apenas no cadastro) -->
+        <div class="upload-row" *ngIf="!modoEdicao">
+          <label for="docxIdeia"
+            ><i class="fas fa-file-word"></i> Documento inicial (.docx)</label
+          >
+          <div class="upload-controls">
+            <input
+              #docxInput
+              id="docxIdeia"
+              type="file"
+              accept=".docx"
+              (change)="onFileSelected($event, 'docx')"
+              aria-label="Selecionar DOCX inicial"
+              required
+            />
+          </div>
+          <small class="hint"
+            >Obrigatório no cadastro. Será enviado logo após criar o
+            projeto.</small
+          >
+        </div>
+
+        <!-- Notas (apenas em edição) -->
         <div class="notas-section" *ngIf="modoEdicao">
           <h3><i class="fas fa-graduation-cap"></i> Notas do Projeto</h3>
           <p class="notas-description">
@@ -207,8 +251,31 @@
           </div>
         </div>
 
-        <div class="upload-section" *ngIf="modoEdicao">
-          <h3><i class="fas fa-file-upload"></i> Documentos do projeto</h3>
+        <!-- Upload pós-cadastro -->
+        <div class="upload-section" *ngIf="!isOrientadorMode && projetoId > 0">
+          <div
+            class="card-header"
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: var(--spacing-lg);
+            "
+          >
+            <h3 style="margin: 0">
+              <i class="fas fa-file-upload"></i> Documentos do projeto
+            </h3>
+
+            <button
+              type="button"
+              class="btn btn-warning"
+              (click)="avancarEtapa()"
+              [disabled]="!podeAvancar"
+              title="Avançar para a próxima etapa"
+            >
+              <i class="fas fa-forward"></i> {{ labelBotaoAvancar }}
+            </button>
+          </div>
 
           <div class="upload-row">
             <label for="docxFile"
@@ -216,6 +283,7 @@
             >
             <div class="upload-controls">
               <input
+                #docxInput
                 type="file"
                 id="docxFile"
                 accept=".docx"
@@ -253,19 +321,19 @@
             >
             <div class="upload-controls">
               <input
+                #pdfInput
                 type="file"
                 id="pdfFile"
                 accept=".pdf"
                 (change)="onFileSelected($event, 'pdf')"
                 aria-label="Selecionar arquivo PDF"
-                [disabled]="isOrientadorMode"
               />
               <div class="upload-buttons">
                 <button
                   type="button"
                   class="btn-upload"
                   (click)="enviarArquivo('pdf')"
-                  [disabled]="isOrientadorMode || !arquivoPdf"
+                  [disabled]="!arquivoPdf"
                   title="Enviar PDF"
                 >
                   <i class="fas fa-upload"></i> Upload
@@ -280,15 +348,64 @@
                 </button>
               </div>
             </div>
-            <small class="hint" *ngIf="!arquivoPdf && !isOrientadorMode"
+            <small class="hint" *ngIf="!arquivoPdf"
               >Selecione um arquivo .pdf para habilitar o upload.</small
             >
-            <small class="hint" *ngIf="isOrientadorMode"
-              >Upload de PDF é realizado pela Secretaria.</small
-            >
+          </div>
+
+          <small class="hint" *ngIf="!podeAvancar">
+            Para avançar de etapa, envie o PDF desta fase.
+          </small>
+        </div>
+
+        <!-- Histórico -->
+        <div class="history-section" *ngIf="projetoId > 0">
+          <h3><i class="fas fa-history"></i> Histórico de Documentos</h3>
+
+          <div class="cards-history">
+            <div class="history-card" *ngFor="let h of historico">
+              <div class="history-card-header">
+                <i [ngClass]="iconeEtapa(h.etapa)"></i>
+                <div>
+                  <div class="title">{{ tituloEtapa(h.etapa) }}</div>
+                  <div class="subtitle">{{ subtituloEtapa(h.etapa) }}</div>
+                </div>
+              </div>
+
+              <div
+                class="status"
+                [class.nao-enviado]="h.status === 'NAO_ENVIADO'"
+              >
+                {{
+                  h.status === "ENVIADO"
+                    ? "Enviado em " + (h.dataEnvio | date : "dd/MM/yyyy HH:mm")
+                    : "Não enviado"
+                }}
+              </div>
+
+              <div class="actions">
+                <button
+                  type="button"
+                  class="btn ghost"
+                  [disabled]="!h.arquivos?.pdf"
+                  (click)="baixarArquivo('pdf')"
+                >
+                  <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button
+                  type="button"
+                  class="btn ghost"
+                  [disabled]="!h.arquivos?.docx"
+                  (click)="baixarArquivo('docx')"
+                >
+                  <i class="fas fa-file-word"></i> DOCX
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
+        <!-- Ações -->
         <div class="form-actions" *ngIf="!isOrientadorMode">
           <button type="submit">
             <i class="fas fa-save"></i> {{ textoBotao }}
