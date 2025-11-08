@@ -1,13 +1,29 @@
-import { BolsaService } from './../../../services/bolsa.service';
-import { Component, Input, OnInit } from '@angular/core';
+import { BolsaService } from '@services/bolsa.service';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Input,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
 
 import { ProjetoService } from '@services/projeto.service';
 import { InscricoesService } from '@services/inscricoes.service';
+import { ProjetoInscricaoApi } from '@interfaces/projeto';
 
 type Modo = 'SECRETARIA' | 'ORIENTADOR';
+
+interface AlunoSecretariaView {
+  idInscricao: number;
+  idAluno: number;
+  nome: string;
+  matricula: string;
+  email: string;
+  status: string;
+  possuiTrabalhoRemunerado: boolean;
+  documentoNotasUrl?: string | null;
+}
 
 @Component({
   selector: 'app-listagem-alunos',
@@ -15,17 +31,20 @@ type Modo = 'SECRETARIA' | 'ORIENTADOR';
   imports: [CommonModule, FormsModule],
   templateUrl: './listagem-alunos.component.html',
   styleUrls: ['./listagem-alunos.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ListagemAlunosComponent implements OnInit {
   @Input({ required: true }) projetoId!: number;
   @Input() modo: Modo = 'SECRETARIA';
 
-  private _inscricoes: any[] = [];
-  alunosSecretaria: any[] = [];
+  readonly skeletonRows = [1, 2, 3, 4];
+
+  private _inscricoes: ProjetoInscricaoApi[] = [];
+  alunosSecretaria: AlunoSecretariaView[] = [];
 
   // ORIENTADOR
-  aprovadas: any[] = [];
-  pendentesOuReprovadas: any[] = [];
+  aprovadas: ProjetoInscricaoApi[] = [];
+  pendentesOuReprovadas: ProjetoInscricaoApi[] = [];
   selecionados = new Set<number>();
   limite = 4; // até 4 no front
 
@@ -84,7 +103,7 @@ export class ListagemAlunosComponent implements OnInit {
       this.inscricoesService
         .listarAprovadosDoProjeto(this.projetoId)
         .subscribe({
-          next: (aprovados: any[]) => {
+          next: (aprovados: ProjetoInscricaoApi[]) => {
             this.aprovadas = aprovados ?? [];
             this.pendentesOuReprovadas = [];
 
@@ -106,34 +125,28 @@ export class ListagemAlunosComponent implements OnInit {
     }
 
     // ===== SECRETARIA =====
-    forkJoin({
-      inscricoes: this.projetoService.listarInscricoesPorProjeto(
-        this.projetoId
-      ),
-    }).subscribe({
-      next: ({ inscricoes }: any) => {
-        this._inscricoes = Array.isArray(inscricoes) ? inscricoes : [];
-        this.alunosSecretaria = this._inscricoes.map((i) => ({
-          nome: i?.aluno?.nome || i?.nome_aluno || i?.nome || '—',
-          matricula: i?.aluno?.matricula || i?.matricula || '—',
-          email: i?.aluno?.email || i?.email || '—',
-          status: i?.status || i?.situacao || 'PENDENTE',
-          documentoNotasUrl: i?.documentoNotasUrl,
-        }));
-        this.loadingFlag = false;
-      },
-      error: () => {
-        this.loadingFlag = false;
-        this.alunosSecretaria = [];
-      },
-    });
+    this.projetoService
+      .listarInscricoesPorProjeto(this.projetoId)
+      .subscribe({
+        next: (inscricoes: ProjetoInscricaoApi[]) => {
+          this._inscricoes = Array.isArray(inscricoes) ? inscricoes : [];
+          this.alunosSecretaria = this._inscricoes.map((i) =>
+            this.mapAlunoSecretaria(i)
+          );
+          this.loadingFlag = false;
+        },
+        error: () => {
+          this.loadingFlag = false;
+          this.alunosSecretaria = [];
+        },
+      });
   }
 
   // ===== API p/ template =====
   loading() {
     return this.loadingFlag;
   }
-  lista() {
+  lista(): AlunoSecretariaView[] {
     return this.alunosSecretaria;
   }
   total() {
@@ -143,12 +156,12 @@ export class ListagemAlunosComponent implements OnInit {
   }
 
   // ===== util ORIENTADOR =====
-  alunoId(i: any): number {
+  alunoId(i: ProjetoInscricaoApi): number {
     return (
       i?.id_aluno ?? i?.aluno_id ?? i?.idAluno ?? i?.aluno?.id ?? i?.id ?? 0
     );
   }
-  alunoNome(i: any): string {
+  alunoNome(i: ProjetoInscricaoApi): string {
     return (
       i?.aluno?.nome ||
       i?.nome_completo ||
@@ -158,13 +171,13 @@ export class ListagemAlunosComponent implements OnInit {
     );
   }
 
-  disabledCheckbox(i: any): boolean {
+  disabledCheckbox(i: ProjetoInscricaoApi): boolean {
     const id = this.alunoId(i);
     if (this.selecionados.has(id)) return false;
     return this.selecionados.size >= this.limite;
   }
 
-  toggleSelecionado(i: any, checked: boolean) {
+  toggleSelecionado(i: ProjetoInscricaoApi, checked: boolean) {
     const id = this.alunoId(i);
     if (!id) return;
     if (checked) {
@@ -173,6 +186,11 @@ export class ListagemAlunosComponent implements OnInit {
     } else {
       this.selecionados.delete(id);
     }
+  }
+
+  onSelecionadoChange(event: Event, inscricao: ProjetoInscricaoApi) {
+    const target = event.target as HTMLInputElement | null;
+    this.toggleSelecionado(inscricao, !!target?.checked);
   }
 
   salvarSelecao() {
@@ -194,14 +212,19 @@ export class ListagemAlunosComponent implements OnInit {
           this.selecionados = new Set<number>(ids);
           this.carregar();
         },
-        error: (e) => {
+        error: (e: unknown) => {
           this.salvandoSelecao = false;
-          this.erroSalvarSelecao = e?.message || 'Falha ao salvar seleção.';
+          const message =
+            typeof e === 'object' && e && 'message' in e
+              ? String((e as { message: unknown }).message)
+              : null;
+          this.erroSalvarSelecao =
+            message || 'Falha ao salvar seleção.';
         },
       });
   }
 
-  toggleBolsa(i: any, checked: boolean) {
+  toggleBolsa(i: ProjetoInscricaoApi, checked: boolean) {
     if (!this.bloqueado) return;
     const id = this.alunoId(i);
     if (!id) return;
@@ -212,16 +235,49 @@ export class ListagemAlunosComponent implements OnInit {
     // ✅ usa o método existente no service
     this.bolsaService.setStatus(id, checked).subscribe({
       next: () => {},
-      error: (e: any) => {
+      error: (erro: unknown) => {
         if (checked) this.bolsaMarcada.delete(id);
         else this.bolsaMarcada.add(id);
-        console.error(e);
+        console.error(erro);
       },
     });
   }
 
-  temBolsa(i: any) {
+  temBolsa(i: ProjetoInscricaoApi) {
     const id = this.alunoId(i);
     return this.bolsaMarcada.has(id);
+  }
+
+  trackByAlunoSecretaria = (_: number, aluno: AlunoSecretariaView) =>
+    aluno.idInscricao;
+
+  trackByInscricao = (_: number, inscricao: ProjetoInscricaoApi) =>
+    this.alunoId(inscricao);
+
+  trackByIndex = (index: number) => index;
+
+  private mapAlunoSecretaria(
+    inscricao: ProjetoInscricaoApi
+  ): AlunoSecretariaView {
+    const idAluno = this.alunoId(inscricao);
+    const idInscricao = inscricao?.id_inscricao ?? 0;
+
+    return {
+      idInscricao,
+      idAluno,
+      nome:
+        inscricao?.aluno?.nome ||
+        inscricao?.nome_aluno ||
+        inscricao?.nome ||
+        `Aluno #${idAluno || idInscricao}`,
+      matricula:
+        inscricao?.aluno?.matricula || inscricao?.matricula || '—',
+      email: inscricao?.aluno?.email || inscricao?.email || '—',
+      status: inscricao?.status || inscricao?.situacao || 'PENDENTE',
+      possuiTrabalhoRemunerado:
+        inscricao?.possuiTrabalhoRemunerado ??
+        !!inscricao?.possui_trabalho_remunerado,
+      documentoNotasUrl: inscricao?.documentoNotasUrl ?? undefined,
+    };
   }
 }

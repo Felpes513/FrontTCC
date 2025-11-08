@@ -1,4 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { ProjetoService } from '@services/projeto.service';
@@ -22,6 +27,7 @@ type AlunoBolsas = AlunoProjeto & {
   imports: [CommonModule],
   templateUrl: './atribuir-bolsas.component.html',
   styleUrls: ['./atribuir-bolsas.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AtribuirBolsasComponent implements OnInit {
   private route = inject(ActivatedRoute);
