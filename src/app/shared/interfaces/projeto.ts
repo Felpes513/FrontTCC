@@ -2,13 +2,17 @@
 import { Aluno } from '@interfaces/aluno';
 
 export type StatusProjeto = 'EM_EXECUCAO' | 'CONCLUIDO';
+export type EtapaDocumento = 'IDEIA' | 'PARCIAL' | 'FINAL';
+export type StatusEnvio = 'NAO_ENVIADO' | 'ENVIADO';
 
-/** Payload mínimo aceito pelo backend ao criar/atualizar projeto (DTO -> backend) */
+/** Payload aceito pelo backend ao criar/atualizar projeto (DTO -> backend) */
 export interface ProjetoRequest {
   titulo_projeto: string;
   resumo: string;
   id_orientador: number;
   id_campus: number;
+  cod_projeto?: string; // NOVO
+  ideia_inicial_b64?: string; // NOVO (arquivo da etapa "Ideia" em base64)
 }
 
 export interface ProjetoFormulario {
@@ -17,6 +21,7 @@ export interface ProjetoFormulario {
   orientador_nome: string;
   id_campus: number;
   tipo_bolsa?: string | null;
+  cod_projeto?: string; // NOVO (editar/mostrar no form se quiser)
 }
 
 export interface ProjetoCadastro {
@@ -27,6 +32,7 @@ export interface ProjetoCadastro {
   id_campus: number;
   quantidadeMaximaAlunos: number;
   tipo_bolsa?: string | null;
+  cod_projeto?: string; // NOVO
 }
 
 /** Card/listagem simples (view model para listas) */
@@ -37,7 +43,7 @@ export interface Projeto {
   quantidadeMaximaAlunos: number;
   nomeOrientador: string;
   nomesAlunos: string[];
-  inscritosTotal?: number; // 👈 novo
+  inscritosTotal?: number;
   status?: StatusProjeto;
   notas?: number[];
   mediaNota?: number;
@@ -61,4 +67,14 @@ export interface ProjetoDetalhado {
   data_atualizacao?: string;
   status?: string;
   tipo_bolsa?: string | null;
+}
+
+export interface DocumentoHistorico {
+  etapa: EtapaDocumento;
+  status: StatusEnvio;
+  dataEnvio?: Date;
+  arquivos?: {
+    pdf?: { nome: string };
+    docx?: { nome: string };
+  };
 }
