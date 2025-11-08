@@ -9,12 +9,38 @@ export interface UpdateProjetoAlunosDTO {
   ids_alunos_aprovados: number[]; // ids de ALUNO aprovados pelo orientador
 }
 
-/** Payload mínimo aceito pelo backend ao criar/atualizar projeto (DTO -> backend) */
+export interface ProjetoInscricaoApi {
+  id_inscricao?: number;
+  id_aluno?: number;
+  id?: number;
+  aluno_id?: number;
+  idAluno?: number;
+  aluno?: {
+    id?: number;
+    nome?: string;
+    email?: string;
+    matricula?: string;
+  };
+  nome_aluno?: string;
+  nome?: string;
+  nome_completo?: string;
+  email?: string;
+  matricula?: string;
+  status?: string;
+  situacao?: string;
+  possuiTrabalhoRemunerado?: boolean;
+  possui_trabalho_remunerado?: boolean;
+  documentoNotasUrl?: string | null;
+  created_at?: string | null;
+}
+
 export interface ProjetoRequest {
   titulo_projeto: string;
   resumo: string;
   id_orientador: number;
   id_campus: number;
+  cod_projeto?: string; // <- incluir
+  ideia_inicial_b64?: string; // <- incluir (obrigatório no POST)
 }
 
 export interface ProjetoFormulario {

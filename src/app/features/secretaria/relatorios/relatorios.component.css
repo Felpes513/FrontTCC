@@ -20,18 +20,8 @@ h2 {
   border-radius: var(--radius-md);
   background: var(--white);
 }
-tbody td {
-  transition: background 0.15s ease;
-}
-tbody tr.row-link {
-  cursor: pointer;
-}
-tbody tr.row-link:hover td {
-  background: var(--gray-50);
-}
-tbody tr.row-link:active td {
-  background: var(--gray-100);
-}
+
+/* grid/card */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -69,21 +59,36 @@ tbody tr.row-link:active td {
 .badge.warn {
   background: var(--error);
 }
+
+/* tabela geral */
 table {
   width: 100%;
   border-collapse: collapse;
-}
+  table-layout: fixed;
+} /* fixed = colunas mais previsíveis */
 thead th {
-  text-align: left;
+  text-align: center;
   font-weight: 600;
   border-bottom: 1px solid var(--gray-200);
-  padding: 10px;
+  padding: 12px; /* campos um pouco maiores */
   background: var(--gray-50);
+  font-size: 0.96rem;
 }
 tbody td {
   border-bottom: 1px solid var(--gray-100);
-  padding: 10px;
+  padding: 12px; /* campos um pouco maiores */
+  text-align: center; /* centraliza tudo */
+  font-size: 0.95rem;
+  vertical-align: middle;
 }
+tbody td.left {
+  text-align: left;
+} /* primeira coluna à esquerda */
+tbody td.nowrap,
+thead th.nowrap {
+  white-space: nowrap;
+}
+
 .loading {
   color: var(--uscs-blue);
   margin: 8px 0;
@@ -97,6 +102,7 @@ tbody td {
   font-style: italic;
   padding: 10px 0;
 }
+
 .status {
   font-weight: 700;
   padding: 2px 8px;
@@ -115,4 +121,168 @@ tbody td {
   color: var(--gray-500);
   margin-left: 6px;
   font-weight: 400;
+}
+h2 {
+  margin: 0 0 var(--spacing-md);
+  font-size: var(--font-size-2xl);
+}
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.mes-picker label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.mes-picker input[type="month"] {
+  padding: 8px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+
+/* grid/card */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.badge {
+  background: var(--gray-900);
+  color: var(--white);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+}
+.badge.warn {
+  background: var(--error);
+}
+
+/* tabela geral */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+thead th {
+  text-align: center;
+  font-weight: 600;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 12px;
+  background: var(--gray-50);
+  font-size: 0.96rem;
+}
+tbody td {
+  border-bottom: 1px solid var(--gray-100);
+  padding: 12px;
+  text-align: center;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+tbody td.left {
+  text-align: left;
+}
+tbody td.nowrap,
+thead th.nowrap {
+  white-space: nowrap;
+}
+
+.loading {
+  color: var(--uscs-blue);
+  margin: 8px 0;
+}
+.erro {
+  color: var(--error);
+  margin: 8px 0;
+}
+.empty {
+  color: var(--gray-500);
+  font-style: italic;
+  padding: 10px 0;
+}
+
+.status {
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+.status.ok {
+  background: #ecfdf5;
+  color: #065f46;
+}
+.status.nok {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+/* ===== Scroll horizontal “pegável” ===== */
+.table-scroll {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  background: var(--white);
+  box-shadow: inset 8px 0 8px -8px rgba(0, 0, 0, 0.06),
+    inset -8px 0 8px -8px rgba(0, 0, 0, 0.06);
+  /* nada de overflow aqui; fica no .scroller */
+  padding-bottom: 0; /* sem padding para não “tapar” a barra */
+}
+
+.table-scroll .scroller {
+  overflow-x: auto; /* barra fica aqui */
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable; /* reserva espaço p/ barra */
+}
+
+/* força scroll em telas estreitas */
+.table-scroll .scroller table {
+  min-width: 900px;
+}
+
+/* WebKit */
+.table-scroll .scroller::-webkit-scrollbar {
+  height: 14px;
+}
+.table-scroll .scroller::-webkit-scrollbar-track {
+  background: #eef2f7;
+  border-radius: 10px;
+}
+.table-scroll .scroller::-webkit-scrollbar-thumb {
+  background: #c7ced9;
+  border-radius: 10px;
+}
+.table-scroll .scroller::-webkit-scrollbar-thumb:hover {
+  background: #b2bccb;
+}
+
+/* Firefox */
+.table-scroll .scroller {
+  scrollbar-width: thin;
+  scrollbar-color: #c7ced9 #eef2f7;
 }

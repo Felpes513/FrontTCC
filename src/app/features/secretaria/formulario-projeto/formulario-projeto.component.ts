@@ -1,21 +1,32 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { ProjetoService } from '@services/projeto.service';
-import type { ProjetoCadastro, ProjetoDetalhado } from '@interfaces/projeto';
+import type { ProjetoCadastro } from '@interfaces/projeto';
 import type { Orientador } from '@interfaces/orientador';
 import type { Aluno } from '@interfaces/aluno';
 import type { Campus } from '@interfaces/campus';
 import { ListagemAlunosComponent } from '../listagem-alunos/listagem-alunos.component';
 
-// >>> Extensão local do tipo para suportar campos do template
+type EtapaDocumento = 'IDEIA' | 'PARCIAL' | 'FINAL';
+type StatusEnvio = 'ENVIADO' | 'NAO_ENVIADO';
+interface DocumentoHistorico {
+  etapa: EtapaDocumento;
+  status: StatusEnvio;
+  dataEnvio?: Date;
+  arquivos?: { docx?: { nome: string }; pdf?: { nome: string } };
+}
+
 type ProjetoCadastroExt = ProjetoCadastro & {
   nota1?: number | null;
   nota2?: number | null;
   notaFinal?: number | null;
+  tipo_bolsa?: string | null;
+  cod_projeto?: string;
+  ideia_inicial_b64?: string; // <- usado apenas no POST
 };
 
 @Component({
@@ -26,7 +37,6 @@ type ProjetoCadastroExt = ProjetoCadastro & {
   styleUrls: ['./formulario-projeto.component.css'],
 })
 export class FormularioProjetoComponent implements OnInit {
-  // Use o tipo estendido aqui
   projeto: ProjetoCadastroExt = {
     titulo_projeto: '',
     resumo: '',
@@ -34,12 +44,12 @@ export class FormularioProjetoComponent implements OnInit {
     orientador_email: '',
     quantidadeMaximaAlunos: 0,
     id_campus: 0,
-
-    // campos usados no HTML
     nota1: null,
     nota2: null,
     notaFinal: null,
     tipo_bolsa: null,
+    cod_projeto: '',
+    ideia_inicial_b64: '',
   };
 
   orientadores: Orientador[] = [];
@@ -59,22 +69,22 @@ export class FormularioProjetoComponent implements OnInit {
   modoEdicao = false;
   projetoId = 0;
 
-  // Modo orientador
   isOrientadorMode = false;
 
-  // Seleção de alunos (somente para orientador)
-  inscricoes: any[] = [];
-  aprovadas: any[] = [];
-  pendentesOuReprovadas: any[] = [];
-  selecionados = new Set<number>();
-  limite = 0;
-  salvandoSelecao = false;
-  erroSalvarSelecao = '';
-  sucessoSelecao = '';
-
   // Upload
+  @ViewChild('docxInput') docxInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('pdfInput') pdfInput!: ElementRef<HTMLInputElement>;
   arquivoDocx?: File;
   arquivoPdf?: File;
+
+  podeAvancar = false;
+
+  historico: DocumentoHistorico[] = [
+    { etapa: 'IDEIA', status: 'NAO_ENVIADO' },
+    { etapa: 'PARCIAL', status: 'NAO_ENVIADO' },
+    { etapa: 'FINAL', status: 'NAO_ENVIADO' },
+  ];
+  private etapas: EtapaDocumento[] = ['IDEIA', 'PARCIAL', 'FINAL'];
 
   constructor(
     private projetoService: ProjetoService,
@@ -85,7 +95,6 @@ export class FormularioProjetoComponent implements OnInit {
   ngOnInit(): void {
     this.isOrientadorMode =
       (this.route.snapshot.data['modo'] || '').toUpperCase() === 'ORIENTADOR';
-
     this.carregarOrientadores();
     this.verificarModoEdicao();
     this.carregarCampus();
@@ -100,7 +109,6 @@ export class FormularioProjetoComponent implements OnInit {
         this.modoEdicao = true;
         this.carregarProjeto(projetoId);
       } else {
-        console.error('ID do projeto inválido:', id);
         this.router.navigate([
           this.isOrientadorMode
             ? '/orientador/projetos'
@@ -110,7 +118,6 @@ export class FormularioProjetoComponent implements OnInit {
     }
   }
 
-  /** Preenche o form usando apenas GET /projetos/ e cruzando por nome (sem normalização) */
   private carregarProjeto(id: number): void {
     this.carregando = true;
     this.erro = null;
@@ -132,6 +139,7 @@ export class FormularioProjetoComponent implements OnInit {
 
         this.projeto.titulo_projeto = p.titulo_projeto || '';
         this.projeto.resumo = p.resumo || '';
+        this.projeto.cod_projeto = p.cod_projeto || '';
 
         const o = (orientadores || []).find(
           (x: any) =>
@@ -151,48 +159,13 @@ export class FormularioProjetoComponent implements OnInit {
         this.campusSelecionadoId = c?.id_campus || 0;
         this.projeto.id_campus = this.campusSelecionadoId;
 
-        // Se o seu backend já devolver notas/bolsa, aproveite:
-        this.projeto.nota1 = this.toNumOrNull(p.nota1);
-        this.projeto.nota2 = this.toNumOrNull(p.nota2);
-        this.projeto.notaFinal = this.toNumOrNull(p.notaFinal);
+        this.podeAvancar = !!p.has_pdf;
 
         this.carregando = false;
-      },
-      error: (e) => {
-        console.error('Erro ao carregar dados para edição:', e);
-        this.erro = 'Falha ao carregar dados do projeto';
-        this.carregando = false;
-      },
-    });
-  }
-
-  private toNumOrNull(v: any): number | null {
-    const n = Number(v);
-    return isNaN(n) ? null : n;
-  }
-
-  // (Opcional) modo orientador
-  private carregarInscricoesOrientador(
-    idProjeto: number,
-    projeto?: ProjetoDetalhado
-  ) {
-    this.projetoService.listarInscricoesPorProjeto(idProjeto).subscribe({
-      next: (inscricoes) => {
-        this.inscricoes = Array.isArray(inscricoes) ? inscricoes : [];
-        this.aprovadas = this.inscricoes.filter((i) => this.isAprovada(i));
-        this.pendentesOuReprovadas = this.inscricoes.filter(
-          (i) => !this.isAprovada(i)
-        );
-
-        const jaNoProjetoIds = this.extractIdsFromAlunos(
-          projeto?.alunos || projeto?.nomesAlunos || []
-        );
-        jaNoProjetoIds.forEach((id) => this.selecionados.add(id));
       },
       error: () => {
-        this.inscricoes = [];
-        this.aprovadas = [];
-        this.pendentesOuReprovadas = [];
+        this.erro = 'Falha ao carregar dados do projeto';
+        this.carregando = false;
       },
     });
   }
@@ -215,8 +188,7 @@ export class FormularioProjetoComponent implements OnInit {
         this.campusList = Array.isArray(res) ? res : [];
         this.campusFiltrados = [...this.campusList];
       },
-      error: (error) => {
-        console.error('Erro ao carregar campus:', error);
+      error: () => {
         this.erro = 'Erro ao carregar lista de campus';
         this.campusList = [];
         this.campusFiltrados = [];
@@ -232,59 +204,33 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   selecionarOrientador(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const orientadorId = Number(target.value);
-    if (!orientadorId || isNaN(orientadorId)) return;
+    const id = Number((event.target as HTMLSelectElement).value);
+    if (!id || isNaN(id)) return;
 
-    this.orientadorSelecionadoId = orientadorId;
-
-    const orientadorSelecionado = this.orientadores.find(
-      (o) => o.id === orientadorId
-    );
-    if (orientadorSelecionado) {
-      this.projeto.orientador_nome = orientadorSelecionado.nome_completo;
-      this.projeto.orientador_email = orientadorSelecionado.email || '';
-      this.emailOrientador = orientadorSelecionado.email || '';
+    this.orientadorSelecionadoId = id;
+    const orientador = this.orientadores.find((o) => o.id === id);
+    if (orientador) {
+      this.projeto.orientador_nome = orientador.nome_completo;
+      this.projeto.orientador_email = orientador.email || '';
+      this.emailOrientador = orientador.email || '';
     }
   }
 
   selecionarCampus(event: Event): void {
     const id = Number((event.target as HTMLSelectElement).value);
-    const campusSelecionado = this.campusList.find((c) => c.id_campus === id);
-    if (campusSelecionado) {
-      this.projeto.id_campus = campusSelecionado.id_campus;
-      this.campusSelecionadoId = campusSelecionado.id_campus;
+    const campus = this.campusList.find((c) => c.id_campus === id);
+    if (campus) {
+      this.projeto.id_campus = campus.id_campus;
+      this.campusSelecionadoId = campus.id_campus;
     }
   }
 
-  salvarProjeto(): void {
-    if (this.isOrientadorMode) return;
-    if (!this.validarFormulario()) return;
-
-    this.carregando = true;
-    this.erro = null;
-
-    const operacao = this.modoEdicao
-      ? this.projetoService.atualizarProjeto(this.projetoId, this.projeto)
-      : this.projetoService.cadastrarProjetoCompleto(
-          this.projeto,
-          this.orientadorSelecionadoId
-        );
-
-    operacao.subscribe({
-      next: () => {
-        alert(
-          this.modoEdicao
-            ? 'Projeto atualizado com sucesso!'
-            : 'Projeto cadastrado com sucesso!'
-        );
-        this.router.navigate(['/secretaria/projetos']);
-      },
-      error: (error) => {
-        console.error('Erro ao salvar projeto:', error);
-        this.erro = error?.message || 'Erro ao salvar projeto';
-        this.carregando = false;
-      },
+  private readFileAsBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Falha ao ler arquivo.'));
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(file);
     });
   }
 
@@ -311,97 +257,70 @@ export class FormularioProjetoComponent implements OnInit {
     return true;
   }
 
-  aprovarAluno(alunoId: number | undefined): void {
+  async salvarProjeto(): Promise<void> {
     if (this.isOrientadorMode) return;
-    if (!alunoId || alunoId <= 0) return;
-    this.projetoService.aprovarAluno(alunoId).subscribe({
-      next: () => {
-        alert(`Aluno aprovado com sucesso!`);
-        this.alunosInscritos = this.alunosInscritos.filter(
-          (a) => a.id !== alunoId
-        );
-      },
-      error: () => alert('Erro ao aprovar aluno.'),
-    });
-  }
+    if (!this.validarFormulario()) return;
 
-  excluirAluno(alunoId: number | undefined): void {
-    if (this.isOrientadorMode) return;
-    if (!alunoId || alunoId <= 0) return;
-    if (!confirm('Tem certeza que deseja excluir este aluno?')) return;
-    this.projetoService.excluirAluno(alunoId).subscribe({
-      next: () => {
-        alert(`Aluno excluído com sucesso!`);
-        this.alunosInscritos = this.alunosInscritos.filter(
-          (a) => a.id !== alunoId
-        );
-      },
-      error: () => alert('Erro ao excluir aluno.'),
-    });
-  }
-
-  voltar(): void {
-    this.router.navigate([
-      this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos',
-    ]);
-  }
-
-  limparFormulario(): void {
-    if (this.isOrientadorMode) return;
-    this.projeto = {
-      titulo_projeto: '',
-      resumo: '',
-      orientador_nome: '',
-      orientador_email: '',
-      quantidadeMaximaAlunos: 0,
-      id_campus: 0,
-      nota1: null,
-      nota2: null,
-      notaFinal: null,
-    };
-    this.orientadorSelecionadoId = 0;
-    this.emailOrientador = '';
-    this.buscaOrientador = '';
-    this.orientadoresFiltrados = [...this.orientadores];
-    this.alunosInscritos = [];
-    this.campusSelecionadoId = 0;
+    this.carregando = true;
     this.erro = null;
+
+    // No cadastro, DOCX inicial é obrigatório e vai no POST como Base64
+    if (!this.modoEdicao) {
+      if (!this.arquivoDocx) {
+        alert('Selecione o Documento inicial (.docx) para cadastrar.');
+        this.carregando = false;
+        return;
+      }
+      try {
+        this.projeto.ideia_inicial_b64 = await this.readFileAsBase64(
+          this.arquivoDocx
+        );
+      } catch {
+        this.projeto.ideia_inicial_b64 = '';
+      }
+    }
+
+    const operacao = this.modoEdicao
+      ? this.projetoService.atualizarProjeto(this.projetoId, this.projeto)
+      : this.projetoService.cadastrarProjetoCompleto(
+          {
+            ...this.projeto,
+            // se o usuário não informar, o service gera
+            cod_projeto: (this.projeto.cod_projeto || '').trim(),
+            ideia_inicial_b64: this.projeto.ideia_inicial_b64 || '',
+          },
+          this.orientadorSelecionadoId
+        );
+
+    operacao.subscribe({
+      next: (resp: any) => {
+        if (!this.modoEdicao) {
+          const idGerado = resp?.id_projeto ?? resp?.id ?? this.projetoId ?? 0;
+          if (idGerado) this.projetoId = Number(idGerado);
+
+          // Atualiza histórico da etapa IDEIA com o DOCX enviado no POST
+          if (this.arquivoDocx) {
+            this.atualizarHistoricoParaEtapa(
+              'IDEIA',
+              this.arquivoDocx,
+              undefined
+            );
+          }
+          this.modoEdicao = true;
+          this.podeAvancar = false; // aguarda PDF
+          alert('Projeto cadastrado com sucesso!');
+        } else {
+          alert('Projeto atualizado com sucesso!');
+        }
+        this.carregando = false;
+      },
+      error: (error) => {
+        this.erro = error?.message || 'Erro ao salvar projeto';
+        this.carregando = false;
+      },
+    });
   }
 
-  get tituloPagina(): string {
-    if (this.isOrientadorMode) return 'Selecionar alunos do projeto';
-    return this.modoEdicao ? 'Editar Projeto' : 'Cadastrar Projeto';
-  }
-
-  get textoBotao(): string {
-    if (this.isOrientadorMode) return 'Salvar seleção';
-    return this.modoEdicao ? 'Atualizar Projeto' : 'Cadastrar Projeto';
-  }
-
-  // utilitários do modo orientador
-  isAprovada(i: any): boolean {
-    const s = String(i?.status || i?.situacao || '').toUpperCase();
-    return s === 'APROVADO' || s === 'APROVADA' || i?.aprovado === true;
-  }
-
-  isPendente(i: any): boolean {
-    const s = String(i?.status || i?.situacao || 'PENDENTE').toUpperCase();
-    return s.includes('PENDENTE');
-  }
-
-  isReprovada(i: any): boolean {
-    const s = String(i?.status || i?.situacao || '').toUpperCase();
-    return s.startsWith('REPROV');
-  }
-
-  private extractIdsFromAlunos(arr: any[]): number[] {
-    if (!Array.isArray(arr)) return [];
-    return arr
-      .map((a: any) => a?.id ?? a?.id_aluno ?? a)
-      .filter((v: any) => typeof v === 'number');
-  }
-
-  // ==== UPLOAD / DOWNLOAD (usa o service) ====
   onFileSelected(event: Event, tipo: 'docx' | 'pdf') {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
@@ -419,7 +338,6 @@ export class FormularioProjetoComponent implements OnInit {
   enviarArquivo(tipo: 'docx' | 'pdf') {
     if (!this.projetoId)
       return alert('Salve o projeto antes de enviar arquivos.');
-
     const arquivo = tipo === 'docx' ? this.arquivoDocx : this.arquivoPdf;
     if (!arquivo)
       return alert(`Selecione um arquivo ${tipo.toUpperCase()} primeiro.`);
@@ -430,7 +348,10 @@ export class FormularioProjetoComponent implements OnInit {
         : this.projetoService.uploadPdf(this.projetoId, arquivo);
 
     metodo.subscribe({
-      next: () => alert(`${tipo.toUpperCase()} enviado com sucesso!`),
+      next: () => {
+        alert(`${tipo.toUpperCase()} enviado com sucesso!`);
+        if (tipo === 'pdf') this.podeAvancar = true;
+      },
       error: (err) =>
         alert(`Erro ao enviar ${tipo.toUpperCase()}: ${err.message}`),
     });
@@ -455,5 +376,132 @@ export class FormularioProjetoComponent implements OnInit {
       error: (err) =>
         alert(`Erro ao baixar ${tipo.toUpperCase()}: ${err.message}`),
     });
+  }
+
+  get proximaEtapa(): EtapaDocumento | null {
+    for (const e of this.etapas) {
+      const h = this.historico.find((x) => x.etapa === e);
+      if (!h || h.status === 'NAO_ENVIADO') return e;
+    }
+    return null;
+  }
+
+  get labelBotaoAvancar(): string {
+    const proxima = this.proximaEtapa;
+    if (!proxima) return 'Todas as etapas concluídas';
+    return `Avançar para ${this.tituloEtapa(proxima)}`;
+  }
+
+  avancarEtapa(): void {
+    const proxima = this.proximaEtapa;
+    if (!proxima) return alert('Todas as etapas já foram concluídas.');
+    if (!this.projetoId)
+      return alert('Salve o projeto antes de avançar etapa.');
+    if (!this.arquivoPdf) return alert('Envie o PDF desta etapa para avançar.');
+
+    const ok = confirm(
+      `Você deseja avançar para "${this.tituloEtapa(proxima)}"?`
+    );
+    if (!ok) return;
+
+    this.atualizarHistoricoParaEtapa(
+      proxima,
+      this.arquivoDocx,
+      this.arquivoPdf
+    );
+    this.limparInputsUpload();
+    this.podeAvancar = false;
+    alert(`Avançou para "${this.tituloEtapa(proxima)}".`);
+  }
+
+  private atualizarHistoricoParaEtapa(
+    etapa: EtapaDocumento,
+    docx?: File,
+    pdf?: File
+  ) {
+    const idx = this.historico.findIndex((h) => h.etapa === etapa);
+    const novo: DocumentoHistorico =
+      idx >= 0 ? { ...this.historico[idx] } : { etapa, status: 'NAO_ENVIADO' };
+    novo.arquivos = novo.arquivos || {};
+    if (docx) novo.arquivos.docx = { nome: docx.name };
+    if (pdf) novo.arquivos.pdf = { nome: pdf.name };
+    if (novo.arquivos.docx || novo.arquivos.pdf) {
+      novo.status = 'ENVIADO';
+      novo.dataEnvio = new Date();
+    }
+    if (idx >= 0) this.historico[idx] = novo;
+    else this.historico.push(novo);
+  }
+
+  private limparInputsUpload() {
+    if (this.docxInput?.nativeElement) this.docxInput.nativeElement.value = '';
+    if (this.pdfInput?.nativeElement) this.pdfInput.nativeElement.value = '';
+    this.arquivoDocx = undefined;
+    this.arquivoPdf = undefined;
+  }
+
+  tituloEtapa(e: EtapaDocumento): string {
+    return e === 'IDEIA'
+      ? 'Submissão do Projeto (Ideia)'
+      : e === 'PARCIAL'
+      ? 'Monografia Parcial'
+      : 'Monografia Final';
+  }
+  subtituloEtapa(e: EtapaDocumento): string {
+    return e === 'IDEIA'
+      ? 'Primeiro envio'
+      : e === 'PARCIAL'
+      ? 'Segundo envio'
+      : 'Envio final';
+  }
+  iconeEtapa(e: EtapaDocumento): string {
+    return e === 'IDEIA'
+      ? 'fas fa-lightbulb'
+      : e === 'PARCIAL'
+      ? 'fas fa-list'
+      : 'fas fa-graduation-cap';
+  }
+
+  voltar(): void {
+    this.router.navigate([
+      this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos',
+    ]);
+  }
+
+  limparFormulario(): void {
+    if (this.isOrientadorMode) return;
+    this.projeto = {
+      titulo_projeto: '',
+      resumo: '',
+      orientador_nome: '',
+      orientador_email: '',
+      quantidadeMaximaAlunos: 0,
+      id_campus: 0,
+      nota1: null,
+      nota2: null,
+      notaFinal: null,
+      tipo_bolsa: null,
+      cod_projeto: '',
+      ideia_inicial_b64: '',
+    };
+    this.orientadorSelecionadoId = 0;
+    this.emailOrientador = '';
+    this.buscaOrientador = '';
+    this.orientadoresFiltrados = [...this.orientadores];
+    this.alunosInscritos = [];
+    this.campusSelecionadoId = 0;
+    this.erro = null;
+    this.arquivoDocx = undefined;
+    this.arquivoPdf = undefined;
+    this.podeAvancar = false;
+  }
+
+  get tituloPagina(): string {
+    if (this.isOrientadorMode) return 'Selecionar alunos do projeto';
+    return this.modoEdicao ? 'Editar Projeto' : 'Cadastrar Projeto';
+  }
+  get textoBotao(): string {
+    if (this.isOrientadorMode) return 'Salvar seleção';
+    return this.modoEdicao ? 'Atualizar Projeto' : 'Cadastrar Projeto';
   }
 }
