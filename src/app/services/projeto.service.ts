@@ -9,6 +9,7 @@ import {
   ProjetoCadastro,
   ProjetoFormulario,
   UpdateProjetoAlunosDTO, // 👈 novo DTO
+  ProjetoInscricaoApi,
 } from '@interfaces/projeto';
 import { Orientador } from '@interfaces/orientador';
 import { Campus } from '@interfaces/campus';
@@ -253,12 +254,14 @@ export class ProjetoService {
       .pipe(catchError(this.handleError));
   }
 
-  listarInscricoesPorProjeto(idProjeto: number): Observable<any[]> {
+  listarInscricoesPorProjeto(
+    idProjeto: number
+  ): Observable<ProjetoInscricaoApi[]> {
     return this.http
       .get<any[]>(`${this.apiBase}/projetos/${idProjeto}/inscricoes`)
       .pipe(
         map((items: any[]) =>
-          (items || []).map((i) => ({
+          ((items || []).map((i) => ({
             id_inscricao: i.id_inscricao ?? 0,
             id_aluno: i.aluno?.id ?? i.id_aluno ?? 0,
             aluno: {
@@ -275,7 +278,7 @@ export class ProjetoService {
             ),
             created_at: i.created_at ?? null,
             documentoNotasUrl: i.documentoNotasUrl ?? null,
-          }))
+          })) as ProjetoInscricaoApi[])
         )
       );
   }

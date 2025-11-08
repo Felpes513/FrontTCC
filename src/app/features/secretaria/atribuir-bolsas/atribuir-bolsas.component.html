@@ -25,6 +25,8 @@
             (change)="toggleBolsa(a)"
             [disabled]="a.__loading"
             [attr.aria-label]="'Alternar bolsa do aluno ' + a.nome"
+            [attr.aria-checked]="a.possui_bolsa"
+            [attr.aria-busy]="a.__loading ? 'true' : null"
             role="switch"
           />
           <span class="slider"></span>
