@@ -62,7 +62,6 @@ describe('ConfiguracoesComponent', () => {
     component.excluirCurso(2);
     expect(service.excluirCurso).toHaveBeenCalledWith(2);
 
-    component.excluirBolsa(10);
-    expect(service.excluirBolsa).toHaveBeenCalledWith(10);
+
   });
 });

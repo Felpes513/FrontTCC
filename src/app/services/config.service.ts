@@ -29,9 +29,6 @@ export class ConfigService {
     return this.http.delete(`${this.apiUrl}/cursos/${id}`);
   }
 
-  // ===== TIPOS DE BOLSA (CRUD) =====
-  // ⚠️ Estes endpoints assumem /bolsas/tipos no backend.
-  // Se o seu backend expõe outro path, ajuste apenas as URLs abaixo.
   listarTiposBolsa() {
     return this.http.get<any>(`${this.apiUrl}/bolsas/tipos`);
   }

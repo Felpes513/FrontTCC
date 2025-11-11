@@ -21,23 +21,22 @@ export class ConfiguracoesComponent implements OnInit {
   cursos: any[] = [];
   novoCurso = '';
 
-  // ===== Tipos de Bolsa (CRUD) =====
-  tiposBolsa: Array<{ id_bolsa: number; nome: string }> = [];
-  novaBolsa = '';
-
   // ===== Atribuição (alunos) =====
   bolsas: BolsaRow[] = [];
   filtroBolsa = '';
   carregandoBolsas = false;
   erroBolsas: string | null = null;
 
+  // Form de criação de bolsa (POST /api/bolsas/)
+  formBolsa = { id_aluno: null as number | null, possui_bolsa: true };
+  feedbackBolsa: string | null = null;
+
   constructor(private config: ConfigService, private bolsasApi: BolsaService) {}
 
   ngOnInit(): void {
     this.carregarCampus();
     this.carregarCursos();
-    this.carregarTiposBolsa();
-    this.carregarBolsas();
+    this.carregarBolsas(); // <- carrega lista para popular o <select> e a tabela
   }
 
   // ---- Campus ----
@@ -78,41 +77,7 @@ export class ConfiguracoesComponent implements OnInit {
     });
   }
 
-  // ---- Tipos de Bolsa (CRUD) ----
-  carregarTiposBolsa() {
-    this.config.listarTiposBolsa().subscribe({
-      next: (res: any) => {
-        const arr = Array.isArray(res) ? res : res?.bolsas ?? [];
-        this.tiposBolsa = arr.map((x: any) => ({
-          id_bolsa: x.id_bolsa ?? x.id ?? x.idBolsa,
-          nome: x.nome ?? x.bolsa ?? x.descricao,
-        }));
-      },
-      error: () => (this.tiposBolsa = []),
-    });
-  }
-
-  cadastrarTipoBolsa() {
-    const nome = (this.novaBolsa || '').trim();
-    if (!nome) return;
-    this.config.criarTipoBolsa({ nome }).subscribe({
-      next: () => {
-        this.novaBolsa = '';
-        this.carregarTiposBolsa();
-      },
-      error: (e: any) => alert(e?.error?.detail || 'Falha ao criar bolsa'),
-    });
-  }
-
-  excluirTipoBolsa(id_bolsa: number) {
-    if (!confirm('Confirma excluir esta bolsa?')) return;
-    this.config.excluirTipoBolsa(id_bolsa).subscribe({
-      next: () => this.carregarTiposBolsa(),
-      error: () => alert('Falha ao excluir bolsa'),
-    });
-  }
-
-  // ---- Atribuição (alunos) ----
+  // ---- Bolsas: listar/filtrar/alternar ----
   carregarBolsas() {
     this.carregandoBolsas = true;
     this.erroBolsas = null;
@@ -127,6 +92,31 @@ export class ConfiguracoesComponent implements OnInit {
       error: () => {
         this.erroBolsas = 'Falha ao carregar bolsas';
         this.carregandoBolsas = false;
+      },
+    });
+  }
+
+  cadastrarBolsaAluno() {
+    this.feedbackBolsa = null;
+
+    const id = this.formBolsa.id_aluno;
+    const flag = !!this.formBolsa.possui_bolsa;
+
+    if (!id || id < 1) {
+      alert('Selecione um aluno válido.');
+      return;
+    }
+
+    this.bolsasApi.create(id, flag).subscribe({
+      next: () => {
+        this.feedbackBolsa = 'Bolsa criada com sucesso!';
+        this.carregarBolsas();
+        this.formBolsa = { id_aluno: null, possui_bolsa: true };
+        setTimeout(() => (this.feedbackBolsa = null), 3000);
+      },
+      error: (e) => {
+        const msg = e?.error?.detail || 'Falha ao criar registro de bolsa!';
+        alert(msg);
       },
     });
   }
@@ -161,9 +151,7 @@ export class ConfiguracoesComponent implements OnInit {
     return (value || '')
       .toLowerCase()
       .split(/\s+/)
-      .map((w, i) =>
-        i > 0 && lower.has(w) ? w : w[0]?.toUpperCase() + w.slice(1)
-      )
+      .map((w, i) => (i > 0 && lower.has(w) ? w : w[0]?.toUpperCase() + w.slice(1)))
       .join(' ');
   }
 }

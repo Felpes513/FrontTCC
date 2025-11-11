@@ -1,17 +1,20 @@
-.projects-container {
-  padding: 30px;
-  background-color: #f8f9fa;
-  min-height: 100vh;
-}
-
-/* Overlay invisível que captura clique fora para fechar menus */
 .menu-overlay {
   position: fixed;
   inset: 0;
   background: transparent;
-  z-index: 90; /* abaixo do dropdown (100) e acima do resto */
+  z-index: 90;
 }
 
+/* Layout principal */
+.projects-container {
+  padding: 30px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header e filtros */
 .header {
   display: flex;
   justify-content: space-between;
@@ -44,20 +47,25 @@
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
-.btn-add {
+
+/* Botões de ação (header) */
+.btn-add,
+.btn-reload {
   padding: 12px 20px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #fff;
   border: 0;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
-  text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
+}
+.btn-add {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  text-decoration: none;
   box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 .btn-add:hover {
@@ -66,18 +74,7 @@
   box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
 .btn-reload {
-  padding: 12px 20px;
   background: linear-gradient(135deg, #10b981, #059669);
-  color: #fff;
-  border: 0;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 .btn-reload:hover {
@@ -90,6 +87,8 @@
   cursor: not-allowed;
   transform: none;
 }
+
+/* Filtros de status */
 .filter-buttons {
   display: flex;
   gap: 10px;
@@ -116,17 +115,22 @@
   color: #fff;
   box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
+
+/* Grid de cards */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 25px;
+  min-height: 240px;
 }
+
+/* Card */
 .card {
   position: relative;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: visible; /* << não corta o dropdown */
+  overflow: visible;
   transition: all 0.3s ease;
   border: 1px solid #f1f5f9;
   animation: fadeIn 0.5s ease-out;
@@ -147,6 +151,16 @@
   padding: 22px;
   position: relative;
 }
+.card h3 {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #1f2937;
+  line-height: 1.3;
+  padding-right: 32px;
+}
+
+/* Menu do card */
 .card-menu {
   position: absolute;
   top: 16px;
@@ -168,8 +182,6 @@
   background: #f3f4f6;
   color: #1f2937;
 }
-
-/* Dropdown corrigida */
 .menu-dropdown {
   position: absolute;
   top: 100%;
@@ -222,15 +234,15 @@
   background: #fffbeb;
   color: #b45309;
 }
-
-.card h3 {
-  font-size: 19px;
-  font-weight: 700;
-  margin: 0 0 12px 0;
-  color: #1f2937;
-  line-height: 1.3;
-  padding-right: 32px;
+.menu-item.success {
+  color: #16a34a;
 }
+.menu-item.success:hover {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+/* Infos do card */
 .orientador-info,
 .campus-info,
 .alunos-info {
@@ -285,6 +297,8 @@
   background: linear-gradient(135deg, #dbeafe, #bfdbfe);
   transform: scale(1.05);
 }
+
+/* Ações do card */
 .card-actions {
   padding: 16px 24px;
   background: #f9fafb;
@@ -295,9 +309,9 @@
   position: relative;
   z-index: 2;
 }
-.btn-edit {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #fff;
+.btn-edit,
+.btn-delete,
+.btn-report {
   border: 0;
   padding: 10px 16px;
   border-radius: 8px;
@@ -308,10 +322,14 @@
   align-items: center;
   gap: 6px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
   flex: 1;
   justify-content: center;
   text-decoration: none;
+  color: #fff;
+}
+.btn-edit {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
 }
 .btn-edit:hover {
   background: linear-gradient(135deg, #d97706, #b45309);
@@ -325,20 +343,7 @@
 }
 .btn-delete {
   background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: #fff;
-  border: 0;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
-  flex: 1;
-  justify-content: center;
 }
 .btn-delete:hover {
   background: linear-gradient(135deg, #dc2626, #b91c1c);
@@ -346,21 +351,7 @@
 }
 .btn-report {
   background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  color: #fff;
-  border: 0;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
-  flex: 1;
-  justify-content: center;
-  text-decoration: none;
 }
 .btn-report:hover {
   background: linear-gradient(135deg, #7c3aed, #6d28d9);
@@ -372,36 +363,62 @@
   cursor: not-allowed;
   transform: none;
 }
-.btn-clear-filter {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #6b7280, #4b5563);
-  color: #fff;
+
+/* Paginação fixa no rodapé */
+.pagination {
+  margin-top: auto;
+  padding-top: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.page-btn,
+.page-number {
   border: 0;
+  padding: 10px 14px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s ease;
+  background: #ffffff;
+  color: #374151;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
-.btn-clear-filter:hover {
-  background: linear-gradient(135deg, #4b5563, #374151);
+.page-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 20px;
+}
+.page-btn:hover,
+.page-number:hover {
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  background: #f9fafb;
 }
-.btn-retry {
-  padding: 10px 20px;
+.page-number.active {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #fff;
-  border: 0;
-  border-radius: 8px;
-  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.pagination .page-label {
+  min-width: 100px;
+  text-align: center;
   font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s ease;
+  color: #111827;
 }
-.btn-retry:hover {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
-  transform: translateY(-1px);
-}
+
+/* Estados */
 .loading,
 .error-message,
 .no-projects,
@@ -425,8 +442,65 @@
   color: #9ca3af;
   font-size: 15px;
 }
+.btn-clear-filter,
+.btn-retry {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+.btn-clear-filter {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+.btn-clear-filter:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+  transform: translateY(-1px);
+}
+.btn-retry:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+}
+
+/* ====== Scrollbar ====== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+/* Ocultar barras apenas quando o body estiver com a classe */
+.hide-scrollbars,
+.hide-scrollbars * {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbars::-webkit-scrollbar,
+.hide-scrollbars *::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
 
 /* Responsivo */
+@media (max-width: 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 @media (max-width: 768px) {
   .projects-container {
     padding: 20px;
@@ -456,6 +530,9 @@
   .btn-report {
     width: 100%;
   }
+  .pagination {
+    padding-top: 40px;
+  }
 }
 @media (max-width: 480px) {
   .projects-container {
@@ -481,6 +558,7 @@
   }
 }
 
+/* Animação */
 @keyframes fadeIn {
   from {
     opacity: 0;

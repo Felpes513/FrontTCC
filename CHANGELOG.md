@@ -1,5 +1,250 @@
 # Changelog - FrontTCC
 
+## [Data: 09/11/2025] - Melhorias de UI/UX e refatorações
+
+### 🎯 Resumo Geral
+- **16 arquivos modificados**
+- **730 inserções**, **453 deleções**
+- Melhorias significativas na interface de listagem de projetos
+- Refatoração do componente de configurações (bolsas)
+- Melhorias no formulário de projeto
+- Remoção de componentes de debug não utilizados
+- Aprimoramentos de estilos e responsividade
+
+---
+
+### ✨ Implementações
+
+#### 1. **Melhorias no Componente de Listagem de Projetos**
+- ✅ Implementado sistema de paginação responsivo com cálculo dinâmico de tamanho de página
+- ✅ Adicionado scroll automático para o topo ao mudar de página ou filtrar
+- ✅ Implementado sistema de menu dropdown para ações de projeto (Secretaria)
+- ✅ Adicionado suporte para múltiplas ações: concluir, cancelar, tornar inadimplente
+- ✅ Implementado cálculo e exibição de progresso de projetos (barra de progresso)
+- ✅ Adicionado sistema de filtros por status (Todos, Em Execução, Concluídos)
+- ✅ Melhorada exibição de notas e média de projetos
+- ✅ Implementado sistema de hidratação de dados (alunos selecionados e notas)
+- ✅ Adicionado suporte para diferentes modos de visualização (Secretaria, Orientador, Aluno)
+- ✅ Melhorada responsividade com grid adaptativo (4 colunas → 2 → 1)
+- ✅ Implementado controle de scrollbars (ocultação condicional)
+- ✅ Adicionado sistema de debounce para filtros de busca
+
+#### 2. **Refatoração do Componente de Configurações (Bolsas)**
+- ✅ Refatorado método `cadastrarBolsaAluno()` para usar novo endpoint `POST /bolsas/`
+- ✅ Implementado método `create()` no `BolsaService` para criação de bolsas
+- ✅ Melhorado formulário de cadastro de bolsa com seleção de aluno e checkbox de status
+- ✅ Adicionado feedback visual após criação de bolsa
+- ✅ Melhorada função de filtro de bolsas com normalização de texto
+- ✅ Implementado toggle otimista de status de bolsa (atualização imediata com rollback em caso de erro)
+- ✅ Adicionada formatação `properCase` para nomes de alunos na listagem
+
+#### 3. **Melhorias no Formulário de Projeto**
+- ✅ Refatorado método `listarOrientadoresAprovados()` para usar endpoint específico
+- ✅ Melhorado carregamento de projeto em modo de edição
+- ✅ Adicionado suporte para exibição de notas do projeto (Nota 1, Nota 2, Nota Final)
+- ✅ Implementado sistema de status visual para notas (Aprovado, Reprovado, Pendente)
+- ✅ Melhorada validação de formulário com mensagens mais claras
+- ✅ Adicionado suporte para diferentes modos de visualização (SECRETARIA, ORIENTADOR, ALUNO)
+- ✅ Implementado controle de campos read-only baseado no modo de visualização
+
+#### 4. **Serviço de Projeto (ProjetoService)**
+- ✅ Adicionado método `listarOrientadoresAprovados()` para filtrar apenas orientadores aprovados
+- ✅ Melhorado método `listarInscricoesPorProjeto()` com melhor tratamento de dados
+- ✅ Refatorado método `cadastrarProjetoCompleto()` com validações aprimoradas
+- ✅ Adicionado método `listarNotasDoProjeto()` para buscar notas de avaliação
+
+#### 5. **Serviço de Bolsa (BolsaService)**
+- ✅ Implementado método `create()` para criação de registro de bolsa
+- ✅ Implementado método `setStatus()` para atualização de status de bolsa
+- ✅ Interface `BolsaRow` movida para arquivo dedicado (`shared/interfaces/bolsa.ts`)
+
+#### 6. **Melhorias de Estilos Globais**
+- ✅ Adicionado suporte para estilos de scrollbar customizados
+- ✅ Implementado sistema de ocultação de scrollbars (`.hide-scrollbars`)
+- ✅ Melhorados estilos de selects nativos com seta SVG embutida
+- ✅ Adicionado suporte para acessibilidade em selects (min-height em mobile)
+
+---
+
+### 🐛 Correções
+
+#### 1. **Componente de Configurações**
+- ✅ Corrigido endpoint de criação de bolsa para usar `POST /bolsas/` ao invés de tipos
+- ✅ Corrigido método `cadastrarBolsaAluno()` para usar `BolsaService.create()`
+- ✅ Melhorado tratamento de erros com mensagens mais descritivas
+- ✅ Corrigido reset de formulário após criação bem-sucedida
+
+#### 2. **Listagem de Projetos**
+- ✅ Corrigido cálculo de paginação para evitar páginas inválidas
+- ✅ Corrigido scroll para topo ao mudar de página
+- ✅ Corrigido fechamento de menu dropdown ao clicar fora
+- ✅ Corrigido tratamento de projetos sem ID válido
+- ✅ Melhorado tratamento de erros de carregamento com mensagens específicas
+
+#### 3. **Formulário de Projeto**
+- ✅ Corrigido carregamento de orientador em modo de edição
+- ✅ Corrigido carregamento de campus em modo de edição
+- ✅ Melhorado tratamento de projetos não encontrados
+
+#### 4. **Rotas (app.routes.ts)**
+- ✅ Removida rota de debug (`health`) não utilizada
+- ✅ Mantidas rotas de reset de senha para diferentes perfis
+
+---
+
+### 🗑️ Remoções
+
+#### 1. **Componente de Debug (Health)**
+- ❌ Removido componente `health.component.ts` completamente
+- ❌ Removido arquivo de teste `health.component.spec.ts`
+- **Motivo**: Componente de debug não utilizado em produção
+- **Impacto**: Nenhum, componente não estava sendo usado
+
+#### 2. **Serviço de Configurações**
+- ❌ Removidos métodos de tipos de bolsa não utilizados:
+  - `listarTiposBolsa()`
+  - `criarTipoBolsa()`
+  - `excluirTipoBolsa()`
+- **Motivo**: Funcionalidade de tipos de bolsa não está sendo utilizada
+- **Nota**: Métodos podem ser restaurados se necessário no futuro
+
+---
+
+### 🎨 Melhorias de UI/UX
+
+#### 1. **Listagem de Projetos**
+- ✅ Design moderno com cards com gradientes e sombras
+- ✅ Animações suaves de hover e transições
+- ✅ Barra de progresso visual para status de preenchimento
+- ✅ Menu dropdown elegante com ícones e cores semânticas
+- ✅ Paginação fixa no rodapé com indicador de página atual
+- ✅ Estados visuais claros (loading, erro, vazio, sem resultados)
+- ✅ Responsividade completa (desktop, tablet, mobile)
+- ✅ Grid adaptativo: 4 colunas → 2 colunas → 1 coluna
+
+#### 2. **Formulário de Projeto**
+- ✅ Seção de notas com cards individuais e status visual
+- ✅ Indicadores de status (Aprovado ✓, Reprovado ✗, Pendente ⏳)
+- ✅ Melhor organização visual de campos
+- ✅ Feedback visual para campos desabilitados (read-only)
+
+#### 3. **Configurações (Bolsas)**
+- ✅ Formulário inline para cadastro rápido
+- ✅ Feedback visual após criação de bolsa
+- ✅ Toggle switch estilizado para status de bolsa
+- ✅ Tabela responsiva com filtro em tempo real
+
+---
+
+### 🔄 Refatorações
+
+#### 1. **Código**
+- ✅ Refatorado componente de listagem de projetos com melhor separação de responsabilidades
+- ✅ Extraída lógica de paginação para métodos privados
+- ✅ Melhorada organização de métodos por funcionalidade
+- ✅ Refatorado sistema de filtros com Subject e debounce
+- ✅ Melhorada tipagem com interfaces específicas
+
+#### 2. **Estrutura**
+- ✅ Interface `BolsaRow` movida para `shared/interfaces/bolsa.ts`
+- ✅ Melhorada organização de imports
+- ✅ Removido código não utilizado
+
+#### 3. **Performance**
+- ✅ Implementado debounce para filtros (120ms)
+- ✅ Otimizado carregamento de dados com forkJoin
+- ✅ Melhorado cálculo de paginação (evita recálculos desnecessários)
+- ✅ Implementado trackBy para melhor performance do *ngFor
+
+---
+
+### 📊 Estatísticas de Alterações
+
+#### Arquivos Modificados (16 arquivos)
+- `src/app/app.routes.ts` - 9 linhas alteradas (remoção de rota de debug)
+- `src/app/features/secretaria/configuracoes/configuracoes.component.html` - 46 linhas alteradas
+- `src/app/features/secretaria/configuracoes/configuracoes.component.spec.ts` - 3 linhas alteradas
+- `src/app/features/secretaria/configuracoes/configuracoes.component.ts` - 76 linhas alteradas
+- `src/app/features/secretaria/formulario-projeto/formulario-projeto.component.html` - 50 linhas alteradas
+- `src/app/features/secretaria/formulario-projeto/formulario-projeto.component.ts` - 73 linhas alteradas
+- `src/app/features/secretaria/listagem-projetos/listagem-projetos.component.css` - 246 linhas alteradas (redesign completo)
+- `src/app/features/secretaria/listagem-projetos/listagem-projetos.component.html` - 427 linhas alteradas (redesign completo)
+- `src/app/features/secretaria/listagem-projetos/listagem-projetos.component.spec.ts` - 27 linhas alteradas
+- `src/app/features/secretaria/listagem-projetos/listagem-projetos.component.ts` - 153 linhas alteradas
+- `src/app/services/config.service.ts` - 3 linhas removidas (métodos não utilizados)
+- `src/app/services/projeto.service.ts` - 28 linhas alteradas
+- `src/app/shared/interfaces/bolsa.ts` - 8 linhas alteradas
+- `src/styles.css` - 9 linhas adicionadas (scrollbars e selects)
+
+#### Arquivos Removidos
+- `src/app/debug/health.component.ts` - 8 linhas
+- `src/app/debug/health.component.spec.ts` - 17 linhas
+
+---
+
+### 🚀 Melhorias de Performance
+
+- ✅ Debounce em filtros de busca (120ms)
+- ✅ Otimização de renderização com trackBy
+- ✅ Lazy loading de dados com forkJoin
+- ✅ Cálculo dinâmico de tamanho de página baseado em viewport
+- ✅ Scroll otimizado com scrollIntoView
+
+---
+
+### 🔒 Melhorias de Segurança
+
+- ✅ Validação aprimorada de IDs antes de requisições
+- ✅ Tratamento de erros mais robusto
+- ✅ Validação de permissões por perfil (Secretaria, Orientador, Aluno)
+
+---
+
+### 📝 Notas Técnicas
+
+#### Novos Métodos e Funcionalidades
+- `ListagemProjetosComponent.computePageSize()`: Calcula tamanho de página baseado em viewport
+- `ListagemProjetosComponent.scrollToTopOfList()`: Scroll suave para o topo
+- `ListagemProjetosComponent.hidratarSelecionados()`: Carrega alunos selecionados
+- `ListagemProjetosComponent.hidratarNotas()`: Carrega notas de projetos
+- `BolsaService.create()`: Cria registro de bolsa
+- `BolsaService.setStatus()`: Atualiza status de bolsa
+- `ProjetoService.listarOrientadoresAprovados()`: Lista apenas orientadores aprovados
+
+#### Dependências
+- Nenhuma nova dependência adicionada
+- Nenhuma dependência removida
+
+---
+
+### ✅ Testes e Validações
+
+- ✅ Testado fluxo de listagem de projetos com paginação
+- ✅ Testado sistema de filtros e busca
+- ✅ Testado cadastro de bolsa
+- ✅ Testado toggle de status de bolsa
+- ✅ Testado formulário de projeto em diferentes modos
+- ✅ Testado responsividade em diferentes tamanhos de tela
+- ✅ Testado scroll e navegação
+
+---
+
+### 🎯 Próximos Passos Sugeridos
+
+1. Adicionar testes unitários para novos métodos implementados
+2. Implementar cache para dados de projetos
+3. Adicionar loading skeleton durante carregamento
+4. Implementar infinite scroll como alternativa à paginação
+5. Adicionar exportação de dados (Excel/PDF) para listagem de projetos
+
+---
+
+**Desenvolvedor:** Felipe Souza Moreira  
+**Data:** 09 de Novembro de 2025  
+**Branch:** `main`
+
+---
+
 ## [Data: 08/11/2025] - Qualidade e automação de testes
 
 ### 🎯 Resumo Geral

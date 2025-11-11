@@ -418,6 +418,15 @@ textarea:focus {
   height: 10px;
 }
 
+.hide-scrollbars {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbars::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 ::-webkit-scrollbar-track {
   background: var(--gray-100);
 }

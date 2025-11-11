@@ -46,11 +46,6 @@ export class ProjetoService {
     return (b64 || '').replace(/^data:.*;base64,/, '');
   }
 
-  /**
-   * Cadastra projeto já atendendo aos requisitos do backend:
-   * - cod_projeto (gerado se vier vazio)
-   * - ideia_inicial_b64 (Base64 "cru", sem prefixo data-url)
-   */
   cadastrarProjetoCompleto(
     projeto: ProjetoCadastro & {
       cod_projeto?: string;
@@ -97,7 +92,6 @@ export class ProjetoService {
           resumo: formulario.resumo || '',
           id_orientador: orientador.id,
           id_campus: formulario.id_campus,
-          // se você quiser usar esse caminho, lembre que aqui também precisaria de cod_projeto/ideia_inicial_b64
           cod_projeto: 'P-' + new Date().getFullYear() + '-TEMP',
           ideia_inicial_b64: '',
         };
@@ -203,11 +197,9 @@ export class ProjetoService {
           resumo: formulario.resumo || '',
           id_orientador: orientador.id,
           id_campus: formulario.id_campus,
-          // atualização não exige ideia_inicial_b64; não enviaremos aqui
-          cod_projeto: (formulario as any).cod_projeto, // se desejar permitir edição do código
+          cod_projeto: (formulario as any).cod_projeto,
           ideia_inicial_b64: undefined as any,
         };
-        // remove campos undefined para não sujar o body
         Object.keys(payload).forEach(
           (k) => (payload as any)[k] === undefined && delete (payload as any)[k]
         );
@@ -222,6 +214,24 @@ export class ProjetoService {
     return this.http
       .get<{ projetos: any[] }>(this.apiUrlProjetos)
       .pipe(map((res) => res.projetos ?? []));
+  }
+
+  /** Concluir projeto: tenta POST /concluir; se não existir, faz PATCH status=CONCLUIDO */
+  concluirProjeto(id: number): Observable<{ mensagem: string }> {
+    return this.http
+      .post<{ mensagem: string }>(`${this.apiUrlProjetos}${id}/concluir`, {})
+      .pipe(
+        catchError((err: HttpErrorResponse) => {
+          if (err.status === 404 || err.status === 405) {
+            return this.http
+              .patch<{ mensagem: string }>(`${this.apiUrlProjetos}${id}`, {
+                status: 'CONCLUIDO',
+              })
+              .pipe(catchError(this.handleError));
+          }
+          return this.handleError(err);
+        })
+      );
   }
 
   excluirProjeto(id: number): Observable<ApiMensagem> {

@@ -37,235 +37,270 @@
     </button>
   </div>
 
-  <div *ngIf="carregando" class="loading">
-    <p><mat-icon>sync</mat-icon> Carregando projetos...</p>
-  </div>
+  <!-- Área flex que cresce e empurra a paginação para baixo -->
+  <div class="content-area">
+    <!-- sentinela para scroll to top -->
+    <span #topSentinel></span>
 
-  <div *ngIf="erro" class="error-message">
-    <p><mat-icon>warning_amber</mat-icon> {{ erro }}</p>
-    <button class="btn-retry" (click)="recarregar()">
-      <mat-icon>refresh</mat-icon> Tentar novamente
-    </button>
-  </div>
+    <div *ngIf="carregando" class="loading">
+      <p><mat-icon>sync</mat-icon> Carregando projetos...</p>
+    </div>
 
-  <!-- usa a lista cacheada -->
-  <div *ngIf="!carregando && !erro" class="card-grid">
-    <div
-      *ngFor="
-        let projeto of projetosFiltradosLista;
-        let i = index;
-        trackBy: trackByFn
-      "
-      class="card"
-    >
+    <div *ngIf="erro" class="error-message">
+      <p><mat-icon>warning_amber</mat-icon> {{ erro }}</p>
+      <button class="btn-retry" (click)="recarregar()">
+        <mat-icon>refresh</mat-icon> Tentar novamente
+      </button>
+    </div>
+
+    <div *ngIf="!carregando && !erro" class="card-grid">
       <div
-        class="progress-bar"
-        [ngStyle]="{
-          width: calcularProgresso(projeto) + '%',
-          background: cores[i % cores.length]
-        }"
-      ></div>
+        *ngFor="let projeto of paginatedList; let i = index; trackBy: trackByFn"
+        class="card"
+      >
+        <div
+          class="progress-bar"
+          [ngStyle]="{
+            width: calcularProgresso(projeto) + '%',
+            background: cores[i % cores.length]
+          }"
+        ></div>
 
-      <div class="card-body">
-        <div class="card-menu" *ngIf="isSecretaria">
-          <button
-            class="menu-trigger"
-            (click)="toggleMenu(projeto.id)"
-            type="button"
-            [attr.aria-expanded]="menuAberto === projeto.id"
-            aria-haspopup="menu"
-          >
-            <mat-icon>more_vert</mat-icon>
-          </button>
+        <div class="card-body">
+          <div class="card-menu" *ngIf="isSecretaria">
+            <button
+              class="menu-trigger"
+              (click)="toggleMenu(projeto.id)"
+              type="button"
+              [attr.aria-expanded]="menuAberto === projeto.id"
+              aria-haspopup="menu"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
 
-          <div
-            class="menu-dropdown"
-            *ngIf="menuAberto === projeto.id"
-            role="menu"
-          >
-            <button
-              class="menu-item danger"
-              (click)="cancelarProjeto(projeto.id); toggleMenu(null)"
-              type="button"
-              role="menuitem"
+            <div
+              class="menu-dropdown"
+              *ngIf="menuAberto === projeto.id"
+              role="menu"
             >
-              <mat-icon>block</mat-icon> Cancelar Projeto
-            </button>
-            <button
-              class="menu-item warning"
-              (click)="tornarAlunosInadimplentes(projeto.id); toggleMenu(null)"
-              type="button"
-              role="menuitem"
-            >
-              <mat-icon>report_problem</mat-icon> Tornar Alunos Inadimplentes
-            </button>
-            <button
-              class="menu-item warning"
-              (click)="
-                tornarOrientadorInadimplente(projeto.id); toggleMenu(null)
-              "
-              type="button"
-              role="menuitem"
-            >
-              <mat-icon>report_problem</mat-icon> Tornar Orientador Inadimplente
-            </button>
-            <button
-              class="menu-item danger"
-              (click)="tornarTodosInadimplentes(projeto.id); toggleMenu(null)"
-              type="button"
-              role="menuitem"
-            >
-              <mat-icon>cancel</mat-icon> Tornar Todos Inadimplentes
-            </button>
+              <button
+                class="menu-item danger"
+                (click)="cancelarProjeto(projeto.id); toggleMenu(null)"
+                type="button"
+                role="menuitem"
+              >
+                <mat-icon>block</mat-icon> Cancelar Projeto
+              </button>
+              <button
+                class="menu-item warning"
+                (click)="
+                  tornarAlunosInadimplentes(projeto.id); toggleMenu(null)
+                "
+                type="button"
+                role="menuitem"
+              >
+                <mat-icon>report_problem</mat-icon> Tornar Alunos Inadimplentes
+              </button>
+              <button
+                class="menu-item warning"
+                (click)="
+                  tornarOrientadorInadimplente(projeto.id); toggleMenu(null)
+                "
+                type="button"
+                role="menuitem"
+              >
+                <mat-icon>report_problem</mat-icon> Tornar Orientador
+                Inadimplente
+              </button>
+              <button
+                class="menu-item danger"
+                (click)="tornarTodosInadimplentes(projeto.id); toggleMenu(null)"
+                type="button"
+                role="menuitem"
+              >
+                <mat-icon>cancel</mat-icon> Tornar Todos Inadimplentes
+              </button>
+              <button
+                class="menu-item success"
+                (click)="concluirProjeto(projeto.id); toggleMenu(null)"
+                type="button"
+                role="menuitem"
+              >
+                <mat-icon>flag_circle</mat-icon> Concluir Projeto
+              </button>
+            </div>
           </div>
-        </div>
 
-        <h3>{{ projeto.nomeProjeto }}</h3>
+          <h3>{{ projeto.nomeProjeto }}</h3>
 
-        <div class="orientador-info">
-          <mat-icon>person</mat-icon>
-          <strong>Orientador:</strong>
-          <span [class.orientador-vazio]="!temOrientador(projeto)">
-            {{ getOrientadorNome(projeto) }}
-          </span>
-        </div>
-
-        <div class="campus-info">
-          <mat-icon>school</mat-icon>
-          <strong>Campus:</strong> {{ projeto.campus }}
-        </div>
-
-        <div class="alunos-info" *ngIf="projeto.notas?.length">
-          <mat-icon>grade</mat-icon>
-          <strong>Notas:</strong>
-          <span class="chip">Média: {{ projeto.mediaNota }}</span>
-        </div>
-
-        <div class="alunos-lista" *ngIf="temAlunos(projeto)">
-          <strong>Alunos Participantes:</strong>
-          <div class="chips">
-            <span class="chip" *ngFor="let aluno of projeto.nomesAlunos">
-              <mat-icon>person</mat-icon> {{ aluno }}
+          <div class="orientador-info">
+            <mat-icon>person</mat-icon>
+            <strong>Orientador:</strong>
+            <span [class.orientador-vazio]="!temOrientador(projeto)">
+              {{ getOrientadorNome(projeto) }}
             </span>
           </div>
+
+          <div class="campus-info">
+            <mat-icon>school</mat-icon>
+            <strong>Campus:</strong> {{ projeto.campus }}
+          </div>
+
+          <div class="alunos-info" *ngIf="projeto.notas?.length">
+            <mat-icon>grade</mat-icon>
+            <strong>Notas:</strong>
+            <span class="chip">Média: {{ projeto.mediaNota }}</span>
+          </div>
+
+          <div class="alunos-lista" *ngIf="temAlunos(projeto)">
+            <strong>Alunos Participantes:</strong>
+            <div class="chips">
+              <span class="chip" *ngFor="let aluno of projeto.nomesAlunos">
+                <mat-icon>person</mat-icon> {{ aluno }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <ng-container *ngIf="isSecretaria">
+            <button (click)="editarProjeto(projeto.id)" class="btn-edit">
+              <mat-icon>edit</mat-icon> Editar
+            </button>
+            <button (click)="excluirProjeto(projeto.id)" class="btn-delete">
+              <mat-icon>delete</mat-icon> Excluir
+            </button>
+          </ng-container>
+
+          <ng-container *ngIf="!isSecretaria && isOrientador">
+            <ng-container *ngIf="temIdValido(projeto); else orientadorDisabled">
+              <a
+                class="btn-report"
+                [routerLink]="['/orientador/relatorios', projeto.id]"
+                title="Relatórios do Projeto"
+              >
+                <mat-icon>assignment</mat-icon> Relatórios
+              </a>
+              <a
+                class="btn-edit"
+                [routerLink]="['/orientador/projetos', projeto.id]"
+                title="Selecionar alunos do projeto"
+              >
+                <mat-icon>group_add</mat-icon> Selecionar Alunos
+              </a>
+            </ng-container>
+            <ng-template #orientadorDisabled>
+              <button class="btn-report" disabled title="Projeto sem ID">
+                <mat-icon>assignment</mat-icon> Relatórios
+              </button>
+              <button class="btn-edit" disabled title="Projeto sem ID">
+                <mat-icon>group_add</mat-icon> Selecionar Alunos
+              </button>
+            </ng-template>
+          </ng-container>
+
+          <ng-container *ngIf="isAluno">
+            <ng-container *ngIf="temIdValido(projeto); else alunoDisabled">
+              <a
+                class="btn-report"
+                [routerLink]="['/aluno/projetos', projeto.id]"
+                title="Visualizar informações do projeto"
+              >
+                <mat-icon>visibility</mat-icon> Ver Projeto
+              </a>
+              <button
+                type="button"
+                class="btn-add"
+                (click)="inscrever(projeto)"
+                [disabled]="isLotado(projeto) || inscrevendoId === projeto.id"
+                [title]="
+                  isLotado(projeto)
+                    ? 'Seleção finalizada'
+                    : 'Inscrever-se no projeto'
+                "
+              >
+                <mat-icon>check_circle</mat-icon>
+                {{
+                  inscrevendoId === projeto.id
+                    ? "Inscrevendo..."
+                    : "Inscrever-se"
+                }}
+              </button>
+            </ng-container>
+
+            <ng-template #alunoDisabled>
+              <a class="btn-report" title="Projeto sem ID" disabled>
+                <mat-icon>visibility</mat-icon> Ver Projeto
+              </a>
+              <button type="button" class="btn-add" disabled>
+                <mat-icon>check_circle</mat-icon> Inscrever-se
+              </button>
+            </ng-template>
+          </ng-container>
         </div>
       </div>
+    </div>
 
-      <div class="card-actions">
-        <ng-container *ngIf="isSecretaria">
-          <button (click)="editarProjeto(projeto.id)" class="btn-edit">
-            <mat-icon>edit</mat-icon> Editar
-          </button>
-          <button (click)="excluirProjeto(projeto.id)" class="btn-delete">
-            <mat-icon>delete</mat-icon> Excluir
-          </button>
-        </ng-container>
+    <div
+      *ngIf="!carregando && !erro && projetos.length === 0"
+      class="no-projects"
+    >
+      <h3><mat-icon>folder</mat-icon> Nenhum projeto encontrado</h3>
+      <p *ngIf="isSecretaria">Comece criando seu primeiro projeto!</p>
+      <p *ngIf="!isSecretaria && isOrientador">
+        Você ainda não está vinculado a um projeto.
+      </p>
+      <p *ngIf="!isSecretaria && !isOrientador">
+        Não há projetos disponíveis no momento.
+      </p>
+      <button
+        class="btn-add"
+        *ngIf="isSecretaria"
+        [routerLink]="['/secretaria/projetos/novo']"
+      >
+        <mat-icon>add</mat-icon> Criar primeiro projeto
+      </button>
+    </div>
 
-        <ng-container *ngIf="!isSecretaria && isOrientador">
-          <ng-container *ngIf="temIdValido(projeto); else orientadorDisabled">
-            <a
-              class="btn-report"
-              [routerLink]="['/orientador/relatorios', projeto.id]"
-              title="Relatórios do Projeto"
-            >
-              <mat-icon>assignment</mat-icon> Relatórios
-            </a>
-            <a
-              class="btn-edit"
-              [routerLink]="['/orientador/projetos', projeto.id]"
-              title="Selecionar alunos do projeto"
-            >
-              <mat-icon>group_add</mat-icon> Selecionar Alunos
-            </a>
-          </ng-container>
-          <ng-template #orientadorDisabled>
-            <button class="btn-report" disabled title="Projeto sem ID">
-              <mat-icon>assignment</mat-icon> Relatórios
-            </button>
-            <button class="btn-edit" disabled title="Projeto sem ID">
-              <mat-icon>group_add</mat-icon> Selecionar Alunos
-            </button>
-          </ng-template>
-        </ng-container>
-
-        <ng-container *ngIf="isAluno">
-          <ng-container *ngIf="temIdValido(projeto); else alunoDisabled">
-            <button
-              type="button"
-              class="btn-add"
-              (click)="inscrever(projeto)"
-              [disabled]="isLotado(projeto) || inscrevendoId === projeto.id"
-              [title]="
-                isLotado(projeto)
-                  ? 'Seleção finalizada'
-                  : 'Inscrever-se no projeto'
-              "
-            >
-              <mat-icon>check_circle</mat-icon>
-              {{
-                inscrevendoId === projeto.id ? "Inscrevendo..." : "Inscrever-se"
-              }}
-            </button>
-
-            <a
-              class="btn-report"
-              [routerLink]="['/aluno/relatorios', projeto.id]"
-            >
-              <mat-icon>assignment</mat-icon> Meu Relatório
-            </a>
-          </ng-container>
-
-          <ng-template #alunoDisabled>
-            <button type="button" class="btn-add" disabled>
-              <mat-icon>check_circle</mat-icon> Inscrever-se
-            </button>
-            <button type="button" class="btn-report" disabled>
-              <mat-icon>assignment</mat-icon> Meu Relatório
-            </button>
-          </ng-template>
-        </ng-container>
-      </div>
+    <div
+      *ngIf="
+        !carregando &&
+        !erro &&
+        projetos.length > 0 &&
+        projetosFiltradosLista.length === 0
+      "
+      class="no-results"
+    >
+      <h3><mat-icon>search</mat-icon> Nenhum resultado encontrado</h3>
+      <p>Tente ajustar os termos da sua busca.</p>
+      <button
+        class="btn-clear-filter"
+        (click)="onFiltroChange(''); setFiltroStatus('')"
+        *ngIf="isSecretaria"
+      >
+        <mat-icon>backspace</mat-icon> Limpar filtro
+      </button>
     </div>
   </div>
 
-  <div
-    *ngIf="!carregando && !erro && projetos.length === 0"
-    class="no-projects"
-  >
-    <h3><mat-icon>folder</mat-icon> Nenhum projeto encontrado</h3>
-    <p *ngIf="isSecretaria">Comece criando seu primeiro projeto!</p>
-    <p *ngIf="!isSecretaria && isOrientador">
-      Você ainda não está vinculado a um projeto.
-    </p>
-    <p *ngIf="!isSecretaria && !isOrientador">
-      Não há projetos disponíveis no momento.
-    </p>
+  <!-- Paginação fixada no rodapé da área -->
+  <div class="pagination">
     <button
-      class="btn-add"
-      *ngIf="isSecretaria"
-      [routerLink]="['/secretaria/projetos/novo']"
+      class="page-btn"
+      (click)="prevPage()"
+      [disabled]="currentPage === 1"
     >
-      <mat-icon>add</mat-icon> Criar primeiro projeto
+      ‹
     </button>
-  </div>
 
-  <div
-    *ngIf="
-      !carregando &&
-      !erro &&
-      projetos.length > 0 &&
-      projetosFiltradosLista.length === 0
-    "
-    class="no-results"
-  >
-    <h3><mat-icon>search</mat-icon> Nenhum resultado encontrado</h3>
-    <p>Tente ajustar os termos da sua busca.</p>
+    <span class="page-label">Página {{ currentPage }} / {{ totalPages }}</span>
+
     <button
-      class="btn-clear-filter"
-      (click)="onFiltroChange(''); setFiltroStatus('')"
-      *ngIf="isSecretaria"
+      class="page-btn"
+      (click)="nextPage()"
+      [disabled]="currentPage === totalPages"
     >
-      <mat-icon>backspace</mat-icon> Limpar filtro
+      ›
     </button>
   </div>
 </div>

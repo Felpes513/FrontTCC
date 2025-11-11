@@ -57,35 +57,43 @@
       </div>
     </mat-tab>
 
-    <!-- ===== BOLSAS (usar exatamente o seu HTML) ===== -->
     <mat-tab label="Bolsas">
       <div class="form-section">
-        <!-- ========== Tipos de Bolsa (CRUD) ========== -->
         <h3>Cadastrar Bolsa</h3>
-        <form (ngSubmit)="cadastrarTipoBolsa()" class="crud-inline">
-          <input
-            type="text"
-            [(ngModel)]="novaBolsa"
-            name="nomeBolsa"
-            placeholder="Nome da bolsa (ex.: Bolsa PIBIC)"
+        <form (ngSubmit)="cadastrarBolsaAluno()" class="crud-inline">
+          <select
+            [(ngModel)]="formBolsa.id_aluno"
+            name="idAluno"
             required
-          />
+            title="Selecione o aluno"
+          >
+            <option [ngValue]="null" disabled selected>
+              Selecione um aluno
+            </option>
+            <option *ngFor="let a of bolsas" [ngValue]="a.id_aluno">
+              {{ a.nome_completo }} — {{ a.email }}
+            </option>
+          </select>
+
+          <label style="margin: 0 0.5rem">
+            <input
+              type="checkbox"
+              [(ngModel)]="formBolsa.possui_bolsa"
+              name="possuiBolsa"
+            />
+            Bolsista?
+          </label>
+
           <button type="submit">Salvar</button>
         </form>
 
-        <h4>Bolsas cadastradas</h4>
-        <ul class="list">
-          <li *ngFor="let b of tiposBolsa">
-            <span>{{ b.nome }}</span>
-            <button class="danger" (click)="excluirTipoBolsa(b.id_bolsa)">
-              Excluir
-            </button>
-          </li>
-        </ul>
+        <div *ngIf="feedbackBolsa" class="muted" style="margin-top: 0.5rem">
+          {{ feedbackBolsa }}
+        </div>
 
         <hr class="section-divider" />
 
-        <!-- ========== Atribuição para Alunos ========== -->
+        <!-- ========== Atribuição para Alunos (deixa como está) ========== -->
         <h3>Alunos (atribuição de bolsas)</h3>
         <div class="bolsas-filter">
           <input

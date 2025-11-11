@@ -1,4 +1,12 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  HostListener,
+  ViewChild,
+  ElementRef,
+  Renderer2,
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -32,7 +40,12 @@ import {
   styleUrls: ['./listagem-projetos.component.css'],
 })
 export class ListagemProjetosComponent implements OnInit {
+  @ViewChild('topSentinel') topSentinel?: ElementRef<HTMLSpanElement>;
+
   readonly MAX_ESCOLHIDOS = 4;
+
+  pageSize = 8;
+  currentPage = 1;
 
   projetos: (Projeto & { alunosIds?: number[] })[] = [];
   projetosFiltradosLista: (Projeto & { alunosIds?: number[] })[] = [];
@@ -60,7 +73,8 @@ export class ListagemProjetosComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private inscricoesService: InscricoesService
+    private inscricoesService: InscricoesService,
+    private renderer: Renderer2
   ) {}
 
   @HostListener('document:keydown.escape')
@@ -77,6 +91,8 @@ export class ListagemProjetosComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.renderer.addClass(document.body, 'hide-scrollbars');
+    this.pageSize = this.computePageSize();
     this.isOrientador = this.authService.hasRole('ORIENTADOR');
     this.isSecretaria = this.authService.hasRole('SECRETARIA');
     this.isAluno = this.authService.hasRole('ALUNO');
@@ -88,14 +104,34 @@ export class ListagemProjetosComponent implements OnInit {
         this.atualizarProjetosFiltrados();
       });
 
-    // inicializa a lista cacheada vazia para não ficar preso no estado de loading
     this.atualizarProjetosFiltrados();
     this.carregarProjetos();
+  }
+
+  ngOnDestroy() {
+    this.renderer.removeClass(document.body, 'hide-scrollbars');
+  }
+
+  private computePageSize(): number {
+    if (typeof window === 'undefined') return 8;
+    const w = window.innerWidth || 1920;
+    return w >= 1025 ? 8 : 4;
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    const newSize = this.computePageSize();
+    if (newSize !== this.pageSize) {
+      this.pageSize = newSize;
+      // garante que a página atual continue válida
+      this.refreshPages();
+    }
   }
 
   trackByFn(index: number, item: Projeto): any {
     return (item as any)?.id ?? index;
   }
+
   private readonly lowerWords = new Set([
     'de',
     'da',
@@ -105,6 +141,58 @@ export class ListagemProjetosComponent implements OnInit {
     'e',
     'di',
   ]);
+
+  get readonlyMode(): boolean {
+    return !this.authService.hasRole('ORIENTADOR');
+  }
+
+  get totalPages(): number {
+    return Math.max(
+      1,
+      Math.ceil((this.projetosFiltradosLista?.length || 0) / this.pageSize)
+    );
+  }
+
+  get paginatedList() {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return (this.projetosFiltradosLista || []).slice(
+      start,
+      start + this.pageSize
+    );
+  }
+
+  setPage(p: number) {
+    if (p < 1 || p > this.totalPages) return;
+    this.currentPage = p;
+    this.scrollToTopOfList();
+  }
+
+  nextPage() {
+    this.setPage(this.currentPage + 1);
+  }
+
+  prevPage() {
+    this.setPage(this.currentPage - 1);
+  }
+
+  private refreshPages() {
+    const pages = this.totalPages;
+    if (this.currentPage > pages) this.currentPage = pages;
+    if (this.currentPage < 1) this.currentPage = 1;
+
+    this.scrollToTopOfList();
+  }
+
+  private scrollToTopOfList(): void {
+    if (this.topSentinel?.nativeElement) {
+      this.topSentinel.nativeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   private properCase(value: string): string {
     if (!value) return '';
@@ -118,6 +206,7 @@ export class ListagemProjetosComponent implements OnInit {
       )
       .join(' ');
   }
+
   carregarProjetos(): void {
     this.carregando = true;
     this.erro = null;
@@ -126,10 +215,8 @@ export class ListagemProjetosComponent implements OnInit {
       this.projetos = (projetos ?? []) as any[];
       this.carregando = false;
 
-      // já mostra algo na tela
       this.atualizarProjetosFiltrados();
 
-      // enriquece dados e reatualiza a lista quando chegar
       this.hidratarSelecionados();
       this.hidratarNotas();
     };
@@ -226,9 +313,24 @@ export class ListagemProjetosComponent implements OnInit {
       forkJoin(calls).subscribe(() => this.atualizarProjetosFiltrados());
   }
 
-  // ---------- Filtro cacheado ----------
   onFiltroChange(valor: string) {
     this.filtro$.next(valor ?? '');
+    this.currentPage = 1;
+    this.resetScrollAndFocus();
+  }
+
+  private resetScrollAndFocus() {
+    try {
+      this.topSentinel?.nativeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    } catch {}
+    setTimeout(() => {
+      document
+        .querySelector<HTMLElement>('.card-grid [data-projeto-card]')
+        ?.focus?.();
+    }, 0);
   }
 
   setFiltroStatus(status: '' | 'EM_EXECUCAO' | 'CONCLUIDO') {
@@ -253,6 +355,8 @@ export class ListagemProjetosComponent implements OnInit {
     this.projetosFiltradosLista = (this.projetos || []).filter(
       (p) => passaTexto(p) && passaStatus(p)
     );
+
+    this.refreshPages();
   }
 
   // ---------- Helpers ----------
@@ -291,7 +395,41 @@ export class ListagemProjetosComponent implements OnInit {
     this.menuAberto = this.menuAberto === id ? null : id;
   }
 
-  // ---------- Ações ----------
+  concluirProjeto(id: number): void {
+    if (!this.isSecretaria) return;
+    if (!this.isIdValido(id)) {
+      this.snackBar.open('ID inválido.', 'Fechar', { duration: 2500 });
+      return;
+    }
+    if (!confirm('Deseja marcar este projeto como concluído?')) return;
+
+    const svc: any = this.projetoService as any;
+    if (typeof svc.concluirProjeto !== 'function') {
+      this.snackBar.open(
+        'Endpoint concluirProjeto não implementado.',
+        'Fechar',
+        { duration: 3500 }
+      );
+      return;
+    }
+
+    svc.concluirProjeto(id).subscribe({
+      next: (res: any) => {
+        this.snackBar.open(res?.mensagem || 'Projeto concluído.', 'Fechar', {
+          duration: 3000,
+        });
+        this.carregarProjetos();
+      },
+      error: (e: any) => {
+        this.snackBar.open(
+          e?.error?.detail || 'Erro ao concluir projeto.',
+          'Fechar',
+          { duration: 4000 }
+        );
+      },
+    });
+  }
+
   cancelarProjeto(id: number): void {
     if (!this.isSecretaria) return;
     if (!this.isIdValido(id)) {
@@ -609,7 +747,6 @@ export class ListagemProjetosComponent implements OnInit {
     );
   }
 
-  // mantido (não usado no template, mas útil)
   calcularProgresso(projeto: Projeto): number {
     const escolhidos = this.getQuantidadeAlunos(projeto as any);
     const progresso = (escolhidos / this.MAX_ESCOLHIDOS) * 100;

@@ -23,7 +23,9 @@ class ProjetoServiceStub {
 }
 
 class AuthServiceStub {
-  hasRole = jasmine.createSpy().and.callFake((role: string) => role === 'SECRETARIA');
+  hasRole = jasmine
+    .createSpy()
+    .and.callFake((role: string) => role === 'SECRETARIA');
 }
 
 class RouterStub {
@@ -58,13 +60,17 @@ describe('ListagemProjetosComponent', () => {
 
     const fixture = TestBed.createComponent(ListagemProjetosComponent);
     component = fixture.componentInstance;
-    projetoService = TestBed.inject(ProjetoService) as unknown as ProjetoServiceStub;
+    projetoService = TestBed.inject(
+      ProjetoService
+    ) as unknown as ProjetoServiceStub;
     component.ngOnInit();
   });
 
   it('should load and normalise project data', () => {
     expect(component.projetos.length).toBe(1);
-    expect(component.getOrientadorNome(component.projetos[0] as any)).toBe('Joao da Silva');
+    expect(component.getOrientadorNome(component.projetos[0] as any)).toBe(
+      'Joao da Silva'
+    );
   });
 
   it('should filter by status', () => {
@@ -79,5 +85,20 @@ describe('ListagemProjetosComponent', () => {
     expect(component.menuAberto).toBe(1);
     component.toggleMenu(1);
     expect(component.menuAberto).toBeNull();
+  });
+
+  it('should paginate to 8 items per page', () => {
+    (component as any).projetos = Array.from({ length: 10 }).map((_, i) => ({
+      id: i + 1,
+      nomeProjeto: `P${i + 1}`,
+      campus: '',
+      quantidadeMaximaAlunos: 0,
+      nomeOrientador: '',
+      nomesAlunos: [],
+    }));
+    component.atualizarProjetosFiltrados();
+    expect(component.paginatedList.length).toBe(8);
+    component.nextPage();
+    expect(component.paginatedList.length).toBe(2);
   });
 });

@@ -26,7 +26,7 @@ type ProjetoCadastroExt = ProjetoCadastro & {
   notaFinal?: number | null;
   tipo_bolsa?: string | null;
   cod_projeto?: string;
-  ideia_inicial_b64?: string; // <- usado apenas no POST
+  ideia_inicial_b64?: string;
 };
 
 @Component({
@@ -37,6 +37,16 @@ type ProjetoCadastroExt = ProjetoCadastro & {
   styleUrls: ['./formulario-projeto.component.css'],
 })
 export class FormularioProjetoComponent implements OnInit {
+  // ---- MODO DE VISUALIZAÇÃO ----
+  viewMode: 'SECRETARIA' | 'ORIENTADOR' | 'ALUNO' = 'SECRETARIA';
+  get isReadOnly() {
+    return this.viewMode !== 'SECRETARIA';
+  }
+  get isOrientadorMode() {
+    return this.viewMode === 'ORIENTADOR';
+  }
+
+  // ---- STATE ----
   projeto: ProjetoCadastroExt = {
     titulo_projeto: '',
     resumo: '',
@@ -69,8 +79,6 @@ export class FormularioProjetoComponent implements OnInit {
   modoEdicao = false;
   projetoId = 0;
 
-  isOrientadorMode = false;
-
   // Upload
   @ViewChild('docxInput') docxInput!: ElementRef<HTMLInputElement>;
   @ViewChild('pdfInput') pdfInput!: ElementRef<HTMLInputElement>;
@@ -93,27 +101,26 @@ export class FormularioProjetoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.isOrientadorMode =
-      (this.route.snapshot.data['modo'] || '').toUpperCase() === 'ORIENTADOR';
+    this.viewMode = (this.route.snapshot.data['modo'] || 'SECRETARIA')
+      .toString()
+      .toUpperCase() as any;
+
+    // Listas são úteis mesmo em read-only para exibir nomes formatados
     this.carregarOrientadores();
     this.verificarModoEdicao();
     this.carregarCampus();
   }
 
   private verificarModoEdicao(): void {
-    const id = this.route.snapshot.params['id'];
-    if (id) {
-      const projetoId = Number(id);
+    const idParam = this.route.snapshot.params['id'];
+    if (idParam) {
+      const projetoId = Number(idParam);
       if (!isNaN(projetoId) && projetoId > 0) {
         this.projetoId = projetoId;
         this.modoEdicao = true;
         this.carregarProjeto(projetoId);
       } else {
-        this.router.navigate([
-          this.isOrientadorMode
-            ? '/orientador/projetos'
-            : '/secretaria/projetos',
-        ]);
+        this.voltar();
       }
     }
   }
@@ -128,26 +135,30 @@ export class FormularioProjetoComponent implements OnInit {
       campus: this.projetoService.listarCampus(),
     }).subscribe({
       next: ({ projetos, orientadores, campus }) => {
+        // Compatível com fontes que usam id_projeto ou id
         const p = (projetos || []).find(
-          (x: any) => Number(x.id_projeto) === Number(id)
+          (x: any) =>
+            Number(x.id_projeto) === Number(id) || Number(x.id) === Number(id)
         );
+
         if (!p) {
           this.erro = 'Projeto não encontrado';
           this.carregando = false;
           return;
         }
 
-        this.projeto.titulo_projeto = p.titulo_projeto || '';
+        this.projeto.titulo_projeto = p.titulo_projeto || p.nomeProjeto || '';
         this.projeto.resumo = p.resumo || '';
         this.projeto.cod_projeto = p.cod_projeto || '';
 
         const o = (orientadores || []).find(
           (x: any) =>
             (x.nome_completo || '').trim().toLowerCase() ===
-            (p.orientador || '').trim().toLowerCase()
+            (p.orientador || p.nomeOrientador || '').trim().toLowerCase()
         );
         this.orientadorSelecionadoId = o?.id || 0;
-        this.projeto.orientador_nome = p.orientador || o?.nome_completo || '';
+        this.projeto.orientador_nome =
+          p.orientador || p.nomeOrientador || o?.nome_completo || '';
         this.emailOrientador = o?.email || '';
         this.projeto.orientador_email = this.emailOrientador;
 
@@ -159,6 +170,7 @@ export class FormularioProjetoComponent implements OnInit {
         this.campusSelecionadoId = c?.id_campus || 0;
         this.projeto.id_campus = this.campusSelecionadoId;
 
+        // Se seu backend já retorna isso:
         this.podeAvancar = !!p.has_pdf;
 
         this.carregando = false;
@@ -258,13 +270,12 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   async salvarProjeto(): Promise<void> {
-    if (this.isOrientadorMode) return;
+    if (this.isReadOnly) return; // bloqueia ALUNO/ORIENTADOR
     if (!this.validarFormulario()) return;
 
     this.carregando = true;
     this.erro = null;
 
-    // No cadastro, DOCX inicial é obrigatório e vai no POST como Base64
     if (!this.modoEdicao) {
       if (!this.arquivoDocx) {
         alert('Selecione o Documento inicial (.docx) para cadastrar.');
@@ -285,7 +296,6 @@ export class FormularioProjetoComponent implements OnInit {
       : this.projetoService.cadastrarProjetoCompleto(
           {
             ...this.projeto,
-            // se o usuário não informar, o service gera
             cod_projeto: (this.projeto.cod_projeto || '').trim(),
             ideia_inicial_b64: this.projeto.ideia_inicial_b64 || '',
           },
@@ -298,7 +308,6 @@ export class FormularioProjetoComponent implements OnInit {
           const idGerado = resp?.id_projeto ?? resp?.id ?? this.projetoId ?? 0;
           if (idGerado) this.projetoId = Number(idGerado);
 
-          // Atualiza histórico da etapa IDEIA com o DOCX enviado no POST
           if (this.arquivoDocx) {
             this.atualizarHistoricoParaEtapa(
               'IDEIA',
@@ -307,7 +316,7 @@ export class FormularioProjetoComponent implements OnInit {
             );
           }
           this.modoEdicao = true;
-          this.podeAvancar = false; // aguarda PDF
+          this.podeAvancar = false;
           alert('Projeto cadastrado com sucesso!');
         } else {
           alert('Projeto atualizado com sucesso!');
@@ -336,6 +345,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   enviarArquivo(tipo: 'docx' | 'pdf') {
+    if (this.isReadOnly) return; // bloqueia ALUNO/ORIENTADOR
     if (!this.projetoId)
       return alert('Salve o projeto antes de enviar arquivos.');
     const arquivo = tipo === 'docx' ? this.arquivoDocx : this.arquivoPdf;
@@ -393,6 +403,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   avancarEtapa(): void {
+    if (this.isReadOnly) return; // bloqueia ALUNO/ORIENTADOR
     const proxima = this.proximaEtapa;
     if (!proxima) return alert('Todas as etapas já foram concluídas.');
     if (!this.projetoId)
@@ -463,13 +474,17 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   voltar(): void {
-    this.router.navigate([
-      this.isOrientadorMode ? '/orientador/projetos' : '/secretaria/projetos',
-    ]);
+    const base =
+      this.viewMode === 'ALUNO'
+        ? '/aluno/projetos'
+        : this.viewMode === 'ORIENTADOR'
+        ? '/orientador/projetos'
+        : '/secretaria/projetos';
+    this.router.navigate([base]);
   }
 
   limparFormulario(): void {
-    if (this.isOrientadorMode) return;
+    if (this.isReadOnly) return; // bloqueia ALUNO/ORIENTADOR
     this.projeto = {
       titulo_projeto: '',
       resumo: '',
@@ -497,11 +512,13 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   get tituloPagina(): string {
-    if (this.isOrientadorMode) return 'Selecionar alunos do projeto';
+    if (this.viewMode === 'ALUNO') return 'Projeto';
+    if (this.viewMode === 'ORIENTADOR') return 'Selecionar alunos do projeto';
     return this.modoEdicao ? 'Editar Projeto' : 'Cadastrar Projeto';
   }
+
   get textoBotao(): string {
-    if (this.isOrientadorMode) return 'Salvar seleção';
+    if (this.viewMode !== 'SECRETARIA') return 'Salvar seleção';
     return this.modoEdicao ? 'Atualizar Projeto' : 'Cadastrar Projeto';
   }
 }

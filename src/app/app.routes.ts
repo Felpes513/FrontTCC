@@ -152,7 +152,6 @@ export const routes: Routes = [
     ],
   },
 
-  // ALUNO
   {
     path: 'aluno',
     canActivate: [alunoGuard],
@@ -170,11 +169,12 @@ export const routes: Routes = [
           ).then((m) => m.ListagemProjetosComponent),
       },
       {
-        path: 'relatorios/:projetoId',
+        path: 'projetos/:id',
         loadComponent: () =>
           import(
-            './features/orientador/relatorio-form/relatorio-form.component'
-          ).then((m) => m.RelatorioFormComponent),
+            './features/secretaria/formulario-projeto/formulario-projeto.component'
+          ).then((m) => m.FormularioProjetoComponent),
+        data: { modo: 'ALUNO' },
       },
     ],
   },
@@ -217,6 +217,5 @@ export const routes: Routes = [
       ),
   },
 
-  // Fallback
   { path: '**', redirectTo: '' },
 ];

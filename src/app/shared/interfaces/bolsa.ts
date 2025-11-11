@@ -1,4 +1,6 @@
-export interface Bolsa {
-  id_bolsa: number;
-  bolsa: string;
+export interface BolsaRow {
+  id_aluno: number;
+  nome_completo: string;
+  email: string;
+  possui_bolsa: boolean;
 }
