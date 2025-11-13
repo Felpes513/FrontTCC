@@ -112,8 +112,8 @@
   color: var(--gray-600);
   font-size: var(--font-size-xs);
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
+  flex-direction: column; /* <- permite RA/Email em linhas separadas */
+  gap: 4px;
   line-height: 1.4;
 }
 .mini .sep {

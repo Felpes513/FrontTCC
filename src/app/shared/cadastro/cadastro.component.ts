@@ -147,7 +147,7 @@ export class RegisterComponent implements OnInit {
           this.sucesso = 'Cadastro realizado com sucesso! Redirecionando...';
           setTimeout(
             () =>
-              this.router.navigate(['/login'], {
+              this.router.navigate(['/'], {
                 queryParams: { perfil: 'orientador' },
               }),
             1500
@@ -189,7 +189,7 @@ export class RegisterComponent implements OnInit {
           this.sucesso = 'Cadastro realizado com sucesso! Redirecionando...';
           setTimeout(
             () =>
-              this.router.navigate(['/login'], {
+              this.router.navigate(['/'], {
                 queryParams: { perfil: 'aluno' },
               }),
             1500

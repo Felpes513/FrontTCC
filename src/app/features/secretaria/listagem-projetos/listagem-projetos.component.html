@@ -37,9 +37,7 @@
     </button>
   </div>
 
-  <!-- Área flex que cresce e empurra a paginação para baixo -->
   <div class="content-area">
-    <!-- sentinela para scroll to top -->
     <span #topSentinel></span>
 
     <div *ngIf="carregando" class="loading">
@@ -53,10 +51,17 @@
       </button>
     </div>
 
+    <div
+      class="menu-overlay"
+      *ngIf="menuAberto !== null"
+      (click)="toggleMenu(null)"
+    ></div>
+
     <div *ngIf="!carregando && !erro" class="card-grid">
       <div
         *ngFor="let projeto of paginatedList; let i = index; trackBy: trackByFn"
         class="card"
+        data-projeto-card
       >
         <div
           class="progress-bar"
@@ -70,10 +75,11 @@
           <div class="card-menu" *ngIf="isSecretaria">
             <button
               class="menu-trigger"
-              (click)="toggleMenu(projeto.id)"
               type="button"
+              (click)="toggleMenu(projeto.id)"
               [attr.aria-expanded]="menuAberto === projeto.id"
               aria-haspopup="menu"
+              aria-label="Abrir ações do projeto"
             >
               <mat-icon>more_vert</mat-icon>
             </button>
@@ -85,80 +91,104 @@
             >
               <button
                 class="menu-item danger"
-                (click)="cancelarProjeto(projeto.id); toggleMenu(null)"
                 type="button"
                 role="menuitem"
+                (click)="cancelarProjeto(projeto.id); toggleMenu(null)"
               >
                 <mat-icon>block</mat-icon> Cancelar Projeto
               </button>
               <button
                 class="menu-item warning"
+                type="button"
+                role="menuitem"
                 (click)="
                   tornarAlunosInadimplentes(projeto.id); toggleMenu(null)
                 "
-                type="button"
-                role="menuitem"
               >
                 <mat-icon>report_problem</mat-icon> Tornar Alunos Inadimplentes
               </button>
               <button
                 class="menu-item warning"
+                type="button"
+                role="menuitem"
                 (click)="
                   tornarOrientadorInadimplente(projeto.id); toggleMenu(null)
                 "
-                type="button"
-                role="menuitem"
               >
                 <mat-icon>report_problem</mat-icon> Tornar Orientador
                 Inadimplente
               </button>
               <button
                 class="menu-item danger"
-                (click)="tornarTodosInadimplentes(projeto.id); toggleMenu(null)"
                 type="button"
                 role="menuitem"
+                (click)="tornarTodosInadimplentes(projeto.id); toggleMenu(null)"
               >
                 <mat-icon>cancel</mat-icon> Tornar Todos Inadimplentes
               </button>
               <button
                 class="menu-item success"
-                (click)="concluirProjeto(projeto.id); toggleMenu(null)"
                 type="button"
                 role="menuitem"
+                (click)="concluirProjeto(projeto.id); toggleMenu(null)"
               >
                 <mat-icon>flag_circle</mat-icon> Concluir Projeto
               </button>
             </div>
           </div>
 
-          <h3>{{ projeto.nomeProjeto }}</h3>
+          <h3 class="titulo" [title]="projeto.nomeProjeto">
+            {{ projeto.nomeProjeto }}
+          </h3>
 
           <div class="orientador-info">
             <mat-icon>person</mat-icon>
             <strong>Orientador:</strong>
-            <span [class.orientador-vazio]="!temOrientador(projeto)">
-              {{ getOrientadorNome(projeto) }}
+            <span
+              class="truncate"
+              [class.orientador-vazio]="!temOrientador(projeto)"
+              [title]="getOrientadorNome(projeto)"
+            >
+              {{ getOrientadorNomeCurto(projeto) }}
             </span>
           </div>
 
           <div class="campus-info">
             <mat-icon>school</mat-icon>
-            <strong>Campus:</strong> {{ projeto.campus }}
+            <strong>Campus:</strong>
+            <span>{{ projeto.campus || "—" }}</span>
           </div>
 
+          <!-- Notas (se houver) -->
           <div class="alunos-info" *ngIf="projeto.notas?.length">
             <mat-icon>grade</mat-icon>
             <strong>Notas:</strong>
             <span class="chip">Média: {{ projeto.mediaNota }}</span>
           </div>
 
-          <div class="alunos-lista" *ngIf="temAlunos(projeto)">
+          <!-- SEMPRE exibe o bloco 'Alunos Participantes' -->
+          <div class="alunos-lista">
             <strong>Alunos Participantes:</strong>
-            <div class="chips">
-              <span class="chip" *ngFor="let aluno of projeto.nomesAlunos">
-                <mat-icon>person</mat-icon> {{ aluno }}
+            <div
+              class="chips"
+              *ngIf="getNomesAlunos(projeto).length > 0; else semAlunos"
+            >
+              <span
+                class="chip"
+                *ngFor="let a of getNomesAlunos(projeto) | slice : 0 : 2"
+              >
+                <mat-icon>person</mat-icon> {{ a }}
+              </span>
+              <span
+                class="chip count"
+                *ngIf="getNomesAlunos(projeto).length > 2"
+              >
+                +{{ getNomesAlunos(projeto).length - 2 }}
               </span>
             </div>
+            <ng-template #semAlunos>
+              <span class="no-alunos">Nenhum aluno cadastrado</span>
+            </ng-template>
           </div>
         </div>
 
@@ -177,23 +207,21 @@
               <a
                 class="btn-report"
                 [routerLink]="['/orientador/relatorios', projeto.id]"
-                title="Relatórios do Projeto"
               >
                 <mat-icon>assignment</mat-icon> Relatórios
               </a>
               <a
                 class="btn-edit"
                 [routerLink]="['/orientador/projetos', projeto.id]"
-                title="Selecionar alunos do projeto"
               >
                 <mat-icon>group_add</mat-icon> Selecionar Alunos
               </a>
             </ng-container>
             <ng-template #orientadorDisabled>
-              <button class="btn-report" disabled title="Projeto sem ID">
+              <button class="btn-report" disabled>
                 <mat-icon>assignment</mat-icon> Relatórios
               </button>
-              <button class="btn-edit" disabled title="Projeto sem ID">
+              <button class="btn-edit" disabled>
                 <mat-icon>group_add</mat-icon> Selecionar Alunos
               </button>
             </ng-template>
@@ -204,7 +232,6 @@
               <a
                 class="btn-report"
                 [routerLink]="['/aluno/projetos', projeto.id]"
-                title="Visualizar informações do projeto"
               >
                 <mat-icon>visibility</mat-icon> Ver Projeto
               </a>
@@ -227,11 +254,10 @@
                 }}
               </button>
             </ng-container>
-
             <ng-template #alunoDisabled>
-              <a class="btn-report" title="Projeto sem ID" disabled>
-                <mat-icon>visibility</mat-icon> Ver Projeto
-              </a>
+              <a class="btn-report" disabled
+                ><mat-icon>visibility</mat-icon> Ver Projeto</a
+              >
               <button type="button" class="btn-add" disabled>
                 <mat-icon>check_circle</mat-icon> Inscrever-se
               </button>
@@ -283,7 +309,6 @@
     </div>
   </div>
 
-  <!-- Paginação fixada no rodapé da área -->
   <div class="pagination">
     <button
       class="page-btn"
@@ -292,9 +317,7 @@
     >
       ‹
     </button>
-
     <span class="page-label">Página {{ currentPage }} / {{ totalPages }}</span>
-
     <button
       class="page-btn"
       (click)="nextPage()"

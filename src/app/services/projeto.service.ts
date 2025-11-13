@@ -109,26 +109,6 @@ export class ProjetoService {
     );
   }
 
-  listarAlunosCadastrados(id_projeto: number): Observable<
-    Array<{
-      id: number;
-      nome: string;
-      email: string;
-      possuiTrabalhoRemunerado: boolean;
-      id_inscricao?: number;
-    }>
-  > {
-    return this.http.get<
-      Array<{
-        id: number;
-        nome: string;
-        email: string;
-        possuiTrabalhoRemunerado: boolean;
-        id_inscricao?: number;
-      }>
-    >(`${this.apiUrlProjetos}${id_projeto}/alunos-cadastrados`);
-  }
-
   updateAlunosProjeto(
     dto: UpdateProjetoAlunosDTO
   ): Observable<{ mensagem: string }> {

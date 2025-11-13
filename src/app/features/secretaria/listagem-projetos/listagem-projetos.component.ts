@@ -44,7 +44,7 @@ export class ListagemProjetosComponent implements OnInit {
 
   readonly MAX_ESCOLHIDOS = 4;
 
-  pageSize = 8;
+  pageSize = 6;
   currentPage = 1;
 
   projetos: (Projeto & { alunosIds?: number[] })[] = [];
@@ -113,9 +113,9 @@ export class ListagemProjetosComponent implements OnInit {
   }
 
   private computePageSize(): number {
-    if (typeof window === 'undefined') return 8;
+    if (typeof window === 'undefined') return 6;
     const w = window.innerWidth || 1920;
-    return w >= 1025 ? 8 : 4;
+    return w >= 1025 ? 6 : 3;
   }
 
   @HostListener('window:resize')
@@ -123,7 +123,6 @@ export class ListagemProjetosComponent implements OnInit {
     const newSize = this.computePageSize();
     if (newSize !== this.pageSize) {
       this.pageSize = newSize;
-      // garante que a página atual continue válida
       this.refreshPages();
     }
   }
@@ -151,6 +150,21 @@ export class ListagemProjetosComponent implements OnInit {
       1,
       Math.ceil((this.projetosFiltradosLista?.length || 0) / this.pageSize)
     );
+  }
+
+  private firstWords(nome: string, n = 2): string {
+    if (!nome) return '';
+    const parts = nome.trim().split(/\s+/).filter(Boolean);
+    return parts.slice(0, n).join(' ');
+  }
+
+  getOrientadorNomeCurto(projeto: Projeto): string {
+    return this.firstWords(this.getOrientadorNome(projeto), 2);
+  }
+
+  getNomesAlunos(projeto: any): string[] {
+    const arr = Array.isArray(projeto?.nomesAlunos) ? projeto.nomesAlunos : [];
+    return arr.map((n: string) => this.firstWords(this.properCase(n), 2));
   }
 
   get paginatedList() {

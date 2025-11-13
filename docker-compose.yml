@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fronttcc-frontend
+    ports:
+      - "8080:80"
+    volumes:
+      # Para desenvolvimento: montar o código fonte (opcional)
+      # - ./src:/app/src
+      # - ./dist:/app/dist
+      # Nota: nginx.conf está incluído no build do Dockerfile
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - fronttcc-network
+
+networks:
+  fronttcc-network:
+    driver: bridge
+

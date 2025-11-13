@@ -20,7 +20,7 @@ export class ConfigService {
 
   // ===== CURSOS =====
   listarCursos() {
-    return this.http.get<{ cursos: any[] }>(`${this.apiUrl}/cursos`);
+    return this.http.get<{ cursos: any[] }>(`${this.apiUrl}/cursos/`);
   }
   criarCurso(body: any) {
     return this.http.post(`${this.apiUrl}/cursos/`, body);

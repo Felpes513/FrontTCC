@@ -87,12 +87,9 @@ export class LoginComponent {
 
   forgotPassword(event: Event) {
     event.preventDefault();
-    const map: Record<typeof this.perfil, string> = {
-      aluno: '/aluno/reset-password',
-      orientador: '/orientador/reset-password',
-      secretaria: '/secretaria/reset-password',
-    };
-    this.router.navigate([map[this.perfil]]);
+    this.router.navigate(['/reset-password'], {
+      queryParams: { perfil: this.perfil },
+    });
   }
 
   goToRegister() {

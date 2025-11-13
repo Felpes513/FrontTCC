@@ -105,7 +105,6 @@ export class FormularioProjetoComponent implements OnInit {
       .toString()
       .toUpperCase() as any;
 
-    // Listas são úteis mesmo em read-only para exibir nomes formatados
     this.carregarOrientadores();
     this.verificarModoEdicao();
     this.carregarCampus();
@@ -135,7 +134,6 @@ export class FormularioProjetoComponent implements OnInit {
       campus: this.projetoService.listarCampus(),
     }).subscribe({
       next: ({ projetos, orientadores, campus }) => {
-        // Compatível com fontes que usam id_projeto ou id
         const p = (projetos || []).find(
           (x: any) =>
             Number(x.id_projeto) === Number(id) || Number(x.id) === Number(id)
@@ -170,7 +168,6 @@ export class FormularioProjetoComponent implements OnInit {
         this.campusSelecionadoId = c?.id_campus || 0;
         this.projeto.id_campus = this.campusSelecionadoId;
 
-        // Se seu backend já retorna isso:
         this.podeAvancar = !!p.has_pdf;
 
         this.carregando = false;
@@ -270,7 +267,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   async salvarProjeto(): Promise<void> {
-    if (this.isReadOnly) return; // bloqueia ALUNO/ORIENTADOR
+    if (this.isReadOnly) return;
     if (!this.validarFormulario()) return;
 
     this.carregando = true;
@@ -305,19 +302,11 @@ export class FormularioProjetoComponent implements OnInit {
     operacao.subscribe({
       next: (resp: any) => {
         if (!this.modoEdicao) {
-          const idGerado = resp?.id_projeto ?? resp?.id ?? this.projetoId ?? 0;
-          if (idGerado) this.projetoId = Number(idGerado);
-
-          if (this.arquivoDocx) {
-            this.atualizarHistoricoParaEtapa(
-              'IDEIA',
-              this.arquivoDocx,
-              undefined
-            );
-          }
-          this.modoEdicao = true;
-          this.podeAvancar = false;
+          // ✅ comportamento: após cadastrar, fecha/volta
           alert('Projeto cadastrado com sucesso!');
+          this.carregando = false;
+          this.voltar();
+          return;
         } else {
           alert('Projeto atualizado com sucesso!');
         }
@@ -345,7 +334,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   enviarArquivo(tipo: 'docx' | 'pdf') {
-    if (this.isReadOnly) return; // bloqueia ALUNO/ORIENTADOR
+    if (this.isReadOnly) return;
     if (!this.projetoId)
       return alert('Salve o projeto antes de enviar arquivos.');
     const arquivo = tipo === 'docx' ? this.arquivoDocx : this.arquivoPdf;
@@ -403,7 +392,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   avancarEtapa(): void {
-    if (this.isReadOnly) return; // bloqueia ALUNO/ORIENTADOR
+    if (this.isReadOnly) return;
     const proxima = this.proximaEtapa;
     if (!proxima) return alert('Todas as etapas já foram concluídas.');
     if (!this.projetoId)
@@ -484,7 +473,7 @@ export class FormularioProjetoComponent implements OnInit {
   }
 
   limparFormulario(): void {
-    if (this.isReadOnly) return; // bloqueia ALUNO/ORIENTADOR
+    if (this.isReadOnly) return;
     this.projeto = {
       titulo_projeto: '',
       resumo: '',

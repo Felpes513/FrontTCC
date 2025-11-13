@@ -36,6 +36,17 @@ describe('BolsaService', () => {
     req.flush(mock);
   });
 
+  it('should create bolsa', () => {
+    service.create(1, true).subscribe((res) => {
+      expect(res).toBeTruthy();
+    });
+
+    const req = http.expectOne(`${base}/`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ id_aluno: 1, possui_bolsa: true });
+    req.flush({ id_aluno: 1, possui_bolsa: true });
+  });
+
   it('should update the bolsa status', () => {
     service.setStatus(1, true).subscribe((res) => {
       expect(res).toEqual({ id_aluno: 1, possui_bolsa: true });
